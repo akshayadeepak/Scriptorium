@@ -1,0 +1,1400 @@
+{
+	"info": {
+		"_postman_id": "891e702d-8a40-4b9d-9607-9f8b33b5a86b",
+		"name": "309 collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "30133622"
+	},
+	"item": [
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Signup",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    let jsonData = pm.response.json();",
+									"    if (jsonData.token && jsonData.user && jsonData.user.id) {",
+									"        pm.environment.set(\"authToken\", jsonData.token);",
+									"        pm.environment.set(\"userId\", jsonData.user.id);",
+									"    } else {",
+									"        console.log(\"Token or User ID not found in the response.\");",
+									"    }",
+									"} else {",
+									"    console.log(\"API call was not successful. Status code:\", pm.response.code);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let requestData = pm.request.body ? pm.request.body.toJSON() : null;",
+									"",
+									"if (requestData && requestData.mode === \"raw\") {",
+									"    let body = JSON.parse(requestData.raw);",
+									"    let email = body.email;",
+									"    let password = body.password;",
+									"",
+									"    pm.environment.set(\"email\", email);",
+									"    pm.environment.set(\"password\", password);",
+									"",
+									"} else {",
+									"    console.log(\"No username or password found in the request body.\");",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"exampleuser\",\n    \"password\": \"examplepassword\",\n    \"email\": \"example3@email.com\",\n    \"phoneNumber\": \"0123456789\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/auth/signup"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "     {\n       \"email\": \"{{email}}\",\n       \"password\": \"{{password}}\"\n     }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/auth/login"
+					},
+					"response": []
+				},
+				{
+					"name": "Get user information",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/user/getUser?userId={{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"user",
+								"getUser"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Profile",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/auth/profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Edit user information",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"exampleuser1\",\n    \"email\": \"example1@email.com\",\n    \"phoneNumber\": \"0123456789\",\n    \"firstName\": \"first\",\n    \"lastName\": \"last\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/auth/edit-profile?userId={{id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"auth",
+								"edit-profile"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/user/deleteUser?userId={{id}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"user",
+								"deleteUser"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Blog post",
+			"item": [
+				{
+					"name": "Create new blog post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    let jsonData = pm.response.json();",
+									"    if (jsonData.id) {",
+									"        pm.environment.set(\"blogId\", jsonData.id);",
+									"    } else {",
+									"        console.log(\"Blog ID not found in the response.\");",
+									"    }",
+									"} else {",
+									"    console.log(\"API call was not successful. Status code:\", pm.response.code);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"My New Blog Post 3\",\n  \"content\": \"This is the content of my new blog post.\",\n  \"tags\": [\"tag1\", \"tag2\"],\n  \"templateId\": {{codeId}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/blog"
+					},
+					"response": []
+				},
+				{
+					"name": "Get all blog posts (sorted by rating)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blog?sortBy=rating",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "rating"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all blog posts (sorted by reports)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blog?sortBy=reports",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "reports"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get blog post by tag",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blog?tagName=tag1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog"
+							],
+							"query": [
+								{
+									"key": "tagName",
+									"value": "tag1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get blog post by author",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blog?authorId={{userId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog"
+							],
+							"query": [
+								{
+									"key": "authorId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get blog post by template",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blog?templateId={{codeId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog"
+							],
+							"query": [
+								{
+									"key": "templateId",
+									"value": "{{codeId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit blog information",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Blog Title\",\n    \"content\": \"Updated content of the blog post.\",\n    \"tags\": [\"updatedTag1\", \"updatedTag2\"],\n    \"links\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/blog/posts/{{blogId}}"
+					},
+					"response": []
+				},
+				{
+					"name": "Hide blog post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/blog/posts/{{blogId}}?action=upvote",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"posts",
+								"{{blogId}}"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "upvote"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upvote blog post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/blog/posts/{{blogId}}?action=upvote",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"posts",
+								"{{blogId}}"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "upvote"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Downvote blog post",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/blog/posts/{{blogId}}?action=downvote",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"posts",
+								"{{blogId}}"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "downvote"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete blog post",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "http://localhost:3000/api/blog/posts/{{blogId}}"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Comment",
+			"item": [
+				{
+					"name": "Create a new comment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    let jsonData = pm.response.json();",
+									"    if (jsonData.id) {",
+									"        pm.environment.set(\"commentId\", jsonData.id);",
+									"    } else {",
+									"        console.log(\"Comment ID not found in the response.\");",
+									"    }",
+									"} else {",
+									"    console.log(\"API call was not successful. Status code:\", pm.response.code);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"This is a sample comment.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/blog/posts/{{blogId}}/comments"
+					},
+					"response": []
+				},
+				{
+					"name": "Get comments from post",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "http://localhost:3000/api/blog/posts/{{blogId}}/comments"
+					},
+					"response": []
+				},
+				{
+					"name": "Edit comment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"Updated content!\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/blog/posts/{{blogId}}/comments?commentId={{commentId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"posts",
+								"{{blogId}}",
+								"comments"
+							],
+							"query": [
+								{
+									"key": "commentId",
+									"value": "{{commentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete comment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/blog/posts/{{blogId}}/comments?commentId={{commentId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"posts",
+								"{{blogId}}",
+								"comments"
+							],
+							"query": [
+								{
+									"key": "commentId",
+									"value": "{{commentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Code template",
+			"item": [
+				{
+					"name": "Create code template",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    let jsonData = pm.response.json();",
+									"    if (jsonData.id) {",
+									"        pm.environment.set(\"codeId\", jsonData.id);",
+									"    } else {",
+									"        console.log(\"Code template ID not found in the response.\");",
+									"    }",
+									"} else {",
+									"    console.log(\"API call was not successful. Status code:\", pm.response.code);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Example Template\",\n  \"explanation\": \"This template demonstrates how to use a specific feature.\",\n  \"tags\": [\"example\", \"template\", \"feature\", \"newTag\"],\n  \"language\": \"JavaScript\",\n  \"content\": \"console.log('Hello, World!');\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/template"
+					},
+					"response": []
+				},
+				{
+					"name": "Fork code template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"templateId\": {{codeId}}\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/fork"
+					},
+					"response": []
+				},
+				{
+					"name": "Get all code templates",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": "http://localhost:3000/api/code/template"
+					},
+					"response": []
+				},
+				{
+					"name": "Get code template by tag",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/code/template?search={{tagName}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"code",
+								"template"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "{{tagName}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get code template by explanation",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/code/template?search=\"specific\"",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"code",
+								"template"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": "\"specific\""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit code template",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "   {\n     \"id\": {{codeId}}, \n     \"title\": \"Updated Template Title\",\n     \"explanation\": \"Updated explanation for the template.\",\n     \"tags\": [\"updated\", \"template\"],\n     \"language\": \"JavaScript\",\n     \"content\": \"console.log('Updated content');\"\n   }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/template"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete code template",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/code/template?id={{codeId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"code",
+								"template"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "{{codeId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Run code",
+			"item": [
+				{
+					"name": "Run Python no args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"print(\\\"Hello, World!\\\")\",\n    \"language\": \"python\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run Python with args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"import sys\\nprint(\\\"Arguments:\\\", sys.argv[1])\",\n    \"language\": \"python\",\n    \"stdin\": \"hello\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run Java no args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"public class HelloWorld {\\n    public static void main(String[] args) {\\n        System.out.println(\\\"Hello, World!\\\");\\n    }\\n}\",\n    \"language\": \"java\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run Java with args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"public class Main {\\n    public static void main(String[] args) {\\n        System.out.println(\\\"Arguments:\\\");\\n        for (String arg : args) {\\n            System.out.println(arg);\\n        }\\n    }\\n}\",\n    \"language\": \"java\",\n    \"stdin\": \"hello\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run JavaScript no args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"console.log(\\\"Hello, World!\\\")\",\n    \"language\": \"js\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run JavaScript with args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"process.argv.forEach((val, index) => {\\n    if (index > 1) {\\n        console.log(\\\"Arguments:\\\", val);\\n    }\\n});\",\n    \"language\": \"js\",\n    \"stdin\": \"hello\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run C++ no args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"#include <iostream>\\n\\nint main() {\\n    std::cout << \\\"Hello, World!\\\" << std::endl;\\n    return 0;\\n}\",\n    \"language\": \"cpp\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run C++ with args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"#include <iostream>\\n\\nint main(int argc, char *argv[]) {\\n    std::cout << \\\"Arguments:\\\" << std::endl;\\n    for (int i = 1; i < argc; i++) {\\n        std::cout << argv[i] << std::endl;\\n    }\\n    return 0;\\n}\",\n    \"language\": \"cpp\",\n    \"stdin\": \"hello\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run C no args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"#include <stdio.h>\\n\\nint main() {\\n    printf(\\\"Hello, World!\\\\n\\\");\\n    return 0;\\n}\",\n    \"language\": \"c\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				},
+				{
+					"name": "Run C with args",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"#include <stdio.h>\\n\\nint main(int argc, char *argv[]) {\\n    printf(\\\"Arguments:\\\\n\\\");\\n    for (int i = 1; i < argc; i++) {\\n        printf(\\\"%s\\\\n\\\", argv[i]);\\n    }\\n    return 0;\\n}\",\n    \"language\": \"c\",\n    \"stdin\": \"hello\"\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/code/run"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Report",
+			"item": [
+				{
+					"name": "Create report blog post",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    let jsonData = pm.response.json();",
+									"    if (jsonData.id) {",
+									"        pm.environment.set(\"reportId\", jsonData.id);",
+									"    } else {",
+									"        console.log(\"Report ID not found in the response.\");",
+									"    }",
+									"} else {",
+									"    console.log(\"API call was not successful. Status code:\", pm.response.code);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "   {\n     \"blogPostId\": {{blogId}}, \n     \"content\": \"This is a report for a blog post.\"\n   }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/blog/report"
+					},
+					"response": []
+				},
+				{
+					"name": "Create report comment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "   {\n     \"commentId\": {{commentId}}, \n     \"content\": \"This is a report for a blog post.\"\n   }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/blog/report"
+					},
+					"response": []
+				},
+				{
+					"name": "Get reports for blog post",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/blog/report?blogPostId={{blogId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"report"
+							],
+							"query": [
+								{
+									"key": "blogPostId",
+									"value": "{{blogId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get reports for comment",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:3000/api/blog/report?commentId={{commentId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"report"
+							],
+							"query": [
+								{
+									"key": "commentId",
+									"value": "{{commentId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit report",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"reportId\": {{reportId}}, \n  \"content\": \"Updated report content.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/blog/report"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete report",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:3000/api/blog/report?reportId={{reportId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"blog",
+								"report"
+							],
+							"query": [
+								{
+									"key": "reportId",
+									"value": "{{reportId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tag",
+			"item": [
+				{
+					"name": "Create tag",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    let jsonData = pm.response.json();",
+									"    if (jsonData.id) {",
+									"        pm.environment.set(\"tagId\", jsonData.id);",
+									"        pm.environment.set(\"tagName\", jsonData.name);",
+									"    } else {",
+									"        console.log(\"Tag ID not found in the response.\");",
+									"    }",
+									"} else {",
+									"    console.log(\"API call was not successful. Status code:\", pm.response.code);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": " {\n     \"name\": \"newTag\"\n   }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:3000/api/tag"
+					},
+					"response": []
+				},
+				{
+					"name": "Get tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:3000/api/tag"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete tag",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:3000/api/tag?id={{tagId}}",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"api",
+								"tag"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "{{tagId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

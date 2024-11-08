@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id                Int             @id @default(autoincrement())
+  username          String          @unique
+  password          String
+  permission        String          @default("USER")
+  email             String          @unique
+  phoneNumber       String?          @unique
+  avatar            String?
+  firstName         String?
+  lastName          String?
+  createdAt         DateTime        @default(now())  
+  posts             blogPost[]
+  comments          Comment[] 
+  createdTemplates  codeTemplate[]
+  savedTemplates    codeTemplate[]  @relation("UserSavedTemplates")
+}
+
+model blogPost {
+  id          Int       @id @default(autoincrement())
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+  title       String
+  tags        Tag[]     @relation("BlogPostTags")
+  content     String
+  links       codeTemplate[]
+  comments    Comment[]
+  ratings     Int       @default(0)
+  reports     Report[]
+  hiddenFlag  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model Comment {
+  id                Int         @id @default(autoincrement())
+  authorId          Int
+  author            User        @relation(fields: [authorId], references: [id])
+  content           String
+  blogPostId        Int
+  blogPost          blogPost    @relation(fields: [blogPostId], references: [id])
+  ratings           Int         @default(0)
+  parentCommentId   Int?
+  parentComment     Comment?    @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  childrenComments  Comment[]   @relation("CommentReplies")
+  reports           Report[]
+  hiddenFlag        Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+}
+
+model codeTemplate {
+  id                Int             @id @default(autoincrement())
+  authorId          Int
+  author            User            @relation(fields: [authorId], references: [id])
+  language          String
+  title             String
+  content           String
+  explanation       String?         // Add this field
+  tags              Tag[]           @relation("CodeTemplateTags")  
+  blogPost          blogPost[]              
+  fork              Boolean         @default(false)
+  parentTemplateId  Int?
+  parentTemplate    codeTemplate?   @relation("TemplateChildren", fields: [parentTemplateId], references: [id])
+  childTemplates    codeTemplate[]  @relation("TemplateChildren")
+  savedByUsers      User[]          @relation("UserSavedTemplates")
+}
+
+model Report {
+  id          Int       @id @default(autoincrement())
+  blogPostId  Int?
+  commentId   Int?
+  blogPost    blogPost? @relation(fields: [blogPostId], references: [id])
+  comment     Comment?  @relation(fields: [commentId], references: [id])
+  content     String
+  createdAt   DateTime  @default(now())
+}
+
+model Tag {
+  id        Int             @id @default(autoincrement())
+  name      String          @unique
+  blogPosts blogPost[]      @relation("BlogPostTags")
+  templates codeTemplate[]  @relation("CodeTemplateTags")
+}
