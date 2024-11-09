@@ -1,0 +1,249 @@
+/* Page Container */
+.pageContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f3f4f6;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+/* Header and Navigation */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e1e8ed;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.navLeft, .navRight {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  width: 40px;
+  height: auto;
+  cursor: pointer;
+}
+
+.navLink {
+  font-size: 0.9rem;
+  color: #1da1f2;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.navLink:hover {
+  color: #00cfc1;
+}
+
+.navButton, .signupButton {
+  font-size: 0.9rem;
+  color: #1da1f2;
+  background: none;
+  border: 1px solid #1da1f2;
+  padding: 0.3rem 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.signupButton {
+  background-color: #1da1f2;
+  color: #ffffff;
+}
+
+.signupButton:hover, .navButton:hover {
+  background-color: #00cfc1;
+  color: #ffffff;
+  border-color: #00cfc1;
+}
+
+.avatar {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border: 1px solid #e1e8ed;
+}
+
+/* Search Bar */
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.searchInput {
+  padding: 0.5rem;
+  border: 1px solid #e1e8ed;
+  width: 200px;
+  transition: border-color 0.3s;
+}
+
+.searchInput:focus {
+  border-color: #1da1f2;
+}
+
+.searchButton {
+  padding: 0.5rem 1rem;
+  background-color: #1da1f2;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.searchButton:hover {
+  background-color: #00cfc1;
+}
+
+/* Hero Section */
+.heroSection {
+  position: relative;
+  text-align: center;
+  padding: 3rem 2rem;
+  background-image: url('../images/homepageimage.png'); /* Ensure the path is correct */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* White Background Box for Text */
+.heroTextBackground {
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  max-width: 600px;
+}
+
+.heroTitle {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333333; /* Changed to black for contrast */
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: #555555; /* Dark grey for better contrast */
+  margin-bottom: 1.5rem;
+}
+
+.heroButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  background-color: #1da1f2;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.heroButton:hover {
+  background-color: #00cfc1;
+}
+
+/* Features Section */
+.featureSection {
+  display: flex;
+  gap: 1.5rem;
+  margin: 2rem 2rem;
+}
+
+.featureCard {
+  flex: 1;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border: 1px solid #e1e8ed;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.featureCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+.featureCard h3 {
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+.featureCard p {
+  font-size: 0.9rem;
+  color: #666666;
+}
+
+/* Code Templates Section */
+.templateSection, .blogSection {
+  padding: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.templateGrid, .blogGrid {
+  display: flex;
+  gap: 1rem;
+}
+
+.templateCard, .blogCard {
+  flex: 1;
+  padding: 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #e1e8ed;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+}
+
+.templateCard:hover, .blogCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.templateCard h3, .blogCard h3 {
+  font-size: 1.2rem;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.templateCard p, .blogCard p {
+  font-size: 0.9rem;
+  color: #666666;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  border-top: 1px solid #e1e8ed;
+  font-size: 0.9rem;
+  color: #666666;
+}
+
+.footerLink {
+  color: #1da1f2;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footerLink:hover {
+  color: #00cfc1;
+}
