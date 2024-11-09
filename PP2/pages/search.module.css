@@ -1,0 +1,171 @@
+
+/* Page Container */
+.pageContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f3f4f6;
+  color: #333;
+  font-family: Arial, sans-serif;
+}
+
+/* Top Navigation */
+.topNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.backButton {
+  padding: 0.5rem 1rem;
+  background-color: #e1e8ed;
+  color: #333;
+  border: 1px solid #d1d5d9;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.backButton:hover {
+  background-color: #d1d5d9;
+}
+
+.authButtons {
+  display: flex;
+  align-items: center;
+}
+
+.loginButton, .signupButton {
+  padding: 0.5rem 1rem;
+  background-color: #1da1f2;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+}
+
+.signupButton {
+  background-color: #ffffff;
+  color: #1da1f2;
+  border: 1px solid #1da1f2;
+}
+
+.logoutButton {
+  padding: 0.5rem 1rem;
+  background-color: #ffffff;
+  color: #1da1f2;
+  border: 1px solid #1da1f2;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  transition: background-color 0.3s;
+}
+
+.logoutButton:hover {
+  background-color: #e1e8ed;
+}
+
+/* Profile Picture Styling */
+.profilePic {
+  height: 40px;
+  width: 40px;
+  border: 1px solid #d1d5d9; /* Gray outline */
+  cursor: pointer;
+  border-radius: 0; /* Square frame */
+}
+
+/* Search Header */
+.searchHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e1e8ed;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 600px;
+  padding: 0.75rem;
+  border: 1px solid #d1d5d9;
+  border-radius: 0;
+  font-size: 1rem;
+  margin-right: 0.5rem;
+  transition: border-color 0.3s;
+}
+
+.searchInput:focus {
+  border-color: #1da1f2;
+}
+
+.searchButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #1da1f2;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.3s;
+}
+
+.searchButton:hover {
+  background-color: #00cfc1;
+}
+
+/* Results Container */
+.resultsContainer {
+  padding: 2rem 4rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.resultsTitle {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: left;
+}
+
+.resultsSection {
+  margin-bottom: 2rem;
+}
+
+.resultsSection h2 {
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.resultsList {
+  list-style: none;
+  padding: 0;
+}
+
+.resultItem {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #d1d5d9;
+  border-radius: 0;
+  background-color: #ffffff;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.resultItemTitle {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+  color: #1a73e8;
+}
+
+.resultItem p {
+  margin: 0.5rem 0;
+  color: #666;
+}

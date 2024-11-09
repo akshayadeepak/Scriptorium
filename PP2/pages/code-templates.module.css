@@ -1,0 +1,151 @@
+/* Full Page Container */
+.pageContainer {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+}
+
+/* Top Navigation with Back Button and Auth Buttons */
+.topNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.backButton {
+  padding: 0.5rem 1rem;
+  background-color: #e1e8ed;
+  color: #333;
+  border: 1px solid #d1d5d9;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  transition: background-color 0.3s;
+}
+
+.backButton:hover {
+  background-color: #d1d5d9;
+}
+
+.authButtons {
+  display: flex;
+  align-items: center;
+}
+
+.navButton, .signupButton, .logoutButton {
+  padding: 0.5rem 1rem;
+  color: #1da1f2;
+  background-color: #ffffff;
+  border: 1px solid #1da1f2;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-left: 0.5rem;
+  border-radius: 0;
+}
+
+.signupButton {
+  background-color: #1da1f2;
+  color: #ffffff;
+}
+
+.profilePic {
+  height: 40px;
+  width: 40px;
+  border: 1px solid #d1d5d9;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  border-radius: 0;
+}
+
+/* Success and Error Messages */
+.success {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}
+
+/* Form Section for Creating Templates */
+.formSection {
+  background: #ffffff;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.inputField,
+.textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  border: 1px solid #ddd;
+  border-radius: 0;
+}
+
+.textarea {
+  min-height: 100px;
+}
+
+.createButton {
+  padding: 0.5rem 1rem;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.3s;
+}
+
+.createButton:hover {
+  background-color: #218838;
+}
+
+/* Templates List Section */
+.templatesList {
+  margin-top: 2rem;
+}
+
+.templateItem {
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 0;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.templateItem h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.templateItem p {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.deleteButton {
+  padding: 0.5rem;
+  background-color: #dc3545;
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  border-radius: 0;
+  transition: background-color 0.3s;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}

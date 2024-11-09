@@ -10,6 +10,8 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentMessage, setCurrentMessage] = useState(0);
+
+  // Messages to rotate in the hero section
   const messages = [
     "Discover tools for coding, sharing, and learning.",
     "Join a community of creators and developers.",
@@ -22,8 +24,8 @@ export default function Home() {
     setIsLoggedIn(!!token);
   }, []);
 
+  // Cycle messages in hero section every 3 seconds
   useEffect(() => {
-    // Rotate messages every 3 seconds
     const interval = setInterval(() => {
       setCurrentMessage((prev) => (prev + 1) % messages.length);
     }, 3000);
@@ -35,8 +37,11 @@ export default function Home() {
     setIsLoggedIn(false);
   };
 
+  // Handle search button click to navigate to the search results page
   const handleSearch = () => {
-    router.push(`/search?query=${searchTerm}`);
+    if (searchTerm.trim()) {
+      router.push(`/search?query=${searchTerm}`);
+    }
   };
 
   return (
@@ -48,6 +53,7 @@ export default function Home() {
           <span className={styles.navLink} onClick={() => router.push('/home')}>Home</span>
           <span className={styles.navLink} onClick={() => router.push('/blog')}>Blog</span>
           <span className={styles.navLink} onClick={() => router.push('/code')}>Run Code</span>
+          <span className={styles.navLink} onClick={() => router.push('/code-templates')}>Code Templates</span>
         </div>
         <div className={styles.navRight}>
           <div className={styles.searchBar}>
@@ -96,6 +102,10 @@ export default function Home() {
             <h3>Blog</h3>
             <p>Read, write, and share insights with the community, and discover valuable tutorials.</p>
           </div>
+          <div className={styles.featureCard} onClick={() => router.push('/code-templates')}>
+            <h3>Code Templates</h3>
+            <p>Create, save, and share reusable code templates to streamline your projects.</p>
+          </div>
         </section>
 
         {/* Code Templates Section */}
@@ -125,7 +135,7 @@ export default function Home() {
             {/* Placeholder Blog Post Cards */}
             <div className={styles.blogCard}>
               <h3>Cryptographer wins Turing Award</h3>
-              <p>Mark Mu recently won a turing award for their contributions to the pina colada algorithm</p>
+              <p>Mark Mu recently won a Turing award for their contributions to the pina colada algorithm.</p>
             </div>
             <div className={styles.blogCard}>
               <h3>Getting Started with Next.js</h3>
