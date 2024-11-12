@@ -64,16 +64,16 @@ export default function Home() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className={styles.searchInput}
             />
-            <button onClick={handleSearch} className={styles.searchButton}>Search</button>
+            <button onClick={handleSearch} className={`${styles.searchButton} ${styles.navButtonBase}`}>Search</button>
           </div>
           {!isLoggedIn ? (
             <>
-              <button className={styles.navButton} onClick={() => router.push('/login')}>Log In</button>
-              <button className={styles.signupButton} onClick={() => router.push('/signup')}>Sign Up</button>
+              <button className={`${styles.navButton} ${styles.navButtonBase}`} onClick={() => router.push('/login')}>Log In</button>
+              <button className={`${styles.signupButton} ${styles.navButtonBase}`} onClick={() => router.push('/signup')}>Sign Up</button>
             </>
           ) : (
             <>
-              <button className={styles.navButton} onClick={handleLogout}>Log Out</button>
+              <button className={`${styles.navButton} ${styles.navButtonBase}`} onClick={handleLogout}>Log Out</button>
               <Image src={avatarPlaceholder} alt="User Avatar" className={styles.avatar} onClick={() => router.push('/profile')} />
             </>
           )}
