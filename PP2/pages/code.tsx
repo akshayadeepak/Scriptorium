@@ -207,7 +207,7 @@ export default function Code() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Left Column - Code Entry */}
                         <div className="h-[calc(100vh-120px)]">
-                            <div className="px-4 py-2 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                            <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
                                 <span>
                                     {language === 'python' && 'main.py'}
                                     {language === 'java' && 'Main.java'}
@@ -237,18 +237,13 @@ export default function Code() {
                             <div className="h-[calc(100%-40px)] relative">
                                 <div className="h-full border border-gray-300 rounded-b-lg overflow-hidden">
                                     <div className="flex h-full">
-                                        <div className="p-4 pr-0 w-[50px] flex flex-col font-mono text-sm text-gray-400 select-none bg-gray-50 border-r border-gray-300">
-                                            {code.split('\n').map((_, i) => (
-                                                <div key={i} className="h-[20px] flex items-center justify-center w-full">
-                                                    <span className="w-8 text-center">
+                                        <div className="py-2 w-12 flex-none overflow-hidden bg-gray-50 border-r border-gray-300">
+                                            <div className="font-mono text-sm text-gray-400 select-none" style={{ lineHeight: '20px' }}>
+                                                {Array.from({ length: code.split('\n').length + 1 }, (_, i) => (
+                                                    <div key={i} className="h-[20px] text-center">
                                                         {i + 1}
-                                                    </span>
-                                                </div>
-                                            ))}
-                                            <div className="h-[20px] flex items-center justify-center w-full">
-                                                <span className="w-8 text-center">
-                                                    {code.split('\n').length + 1}
-                                                </span>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                         <textarea
@@ -256,9 +251,15 @@ export default function Code() {
                                             value={code}
                                             onChange={(e) => setCode(e.target.value)}
                                             onKeyDown={handleTab}
-                                            className="flex-1 p-4 font-mono text-sm focus:outline-none resize-none overflow-auto"
+                                            className="flex-1 py-2 px-4 font-mono text-sm focus:outline-none resize-none overflow-auto"
                                             placeholder="Enter your code here..."
                                             style={{ lineHeight: '20px' }}
+                                            onScroll={(e) => {
+                                                const lineNumbers = e.currentTarget.previousSibling as HTMLElement;
+                                                if (lineNumbers) {
+                                                    lineNumbers.scrollTop = e.currentTarget.scrollTop;
+                                                }
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -278,10 +279,10 @@ export default function Code() {
 
                         {/* Right Column - Output */}
                         <div className="h-[calc(100vh-120px)]">
-                            <div className="px-4 py-2 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0">
+                            <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex items-center">
                                 Output
                             </div>
-                            <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col">
+                            <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col overflow-hidden">
                                 <textarea
                                     readOnly
                                     value={output || error}
