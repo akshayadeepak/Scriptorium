@@ -234,34 +234,36 @@ export default function Code() {
                                     </button>
                                 </div>
                             </div>
-                            <div className="h-[calc(100%-40px)]">
-                                <div className={`flex h-full w-full ${activeTab === 2 ? 'rounded-none border-b-0' : 'rounded-b-lg'} border border-gray-300 overflow-hidden`}>
-                                    <div className="p-4 pr-0 w-[50px] flex flex-col font-mono text-sm text-gray-400 select-none bg-gray-50 border-r border-gray-300">
-                                        {code.split('\n').map((_, i) => (
-                                            <div key={i} className="h-[20px] flex items-center justify-center w-full">
+                            <div className="h-[calc(100%-40px)] relative">
+                                <div className="h-full border border-gray-300 rounded-b-lg overflow-hidden">
+                                    <div className="flex h-full">
+                                        <div className="p-4 pr-0 w-[50px] flex flex-col font-mono text-sm text-gray-400 select-none bg-gray-50 border-r border-gray-300">
+                                            {code.split('\n').map((_, i) => (
+                                                <div key={i} className="h-[20px] flex items-center justify-center w-full">
+                                                    <span className="w-8 text-center">
+                                                        {i + 1}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                            <div className="h-[20px] flex items-center justify-center w-full">
                                                 <span className="w-8 text-center">
-                                                    {i + 1}
+                                                    {code.split('\n').length + 1}
                                                 </span>
                                             </div>
-                                        ))}
-                                        <div className="h-[20px] flex items-center justify-center w-full">
-                                            <span className="w-8 text-center">
-                                                {code.split('\n').length + 1}
-                                            </span>
                                         </div>
+                                        <textarea
+                                            ref={textareaRef}
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            onKeyDown={handleTab}
+                                            className="flex-1 p-4 font-mono text-sm focus:outline-none resize-none overflow-auto"
+                                            placeholder="Enter your code here..."
+                                            style={{ lineHeight: '20px' }}
+                                        />
                                     </div>
-                                    <textarea
-                                        ref={textareaRef}
-                                        value={code}
-                                        onChange={(e) => setCode(e.target.value)}
-                                        onKeyDown={handleTab}
-                                        className="flex-1 p-4 font-mono text-sm focus:outline-none resize-none overflow-auto"
-                                        placeholder="Enter your code here..."
-                                        style={{ lineHeight: '20px' }}
-                                    />
                                 </div>
                                 {activeTab === 2 && (
-                                    <div className="w-full border border-gray-300 rounded-b-lg bg-gray-50 p-4">
+                                    <div className="absolute bottom-0 left-0 right-0 bg-gray-100 border border-gray-300 p-4 rounded-b-lg">
                                         <input
                                             type="text"
                                             value={stdin}
