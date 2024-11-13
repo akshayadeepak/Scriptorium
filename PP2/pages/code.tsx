@@ -221,7 +221,7 @@ export default function Code() {
                                         className={`px-3 py-1 text-sm rounded transition-colors ${
                                             activeTab === 2 
                                                 ? 'bg-gray-300 text-gray-700' 
-                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                : 'px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         }`}
                                     >
                                         Stdin
@@ -279,8 +279,17 @@ export default function Code() {
 
                         {/* Right Column - Output */}
                         <div className="h-[calc(100vh-120px)]">
-                            <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex items-center">
-                                Output
+                            <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                                <span>Output</span>
+                                <button
+                                    onClick={() => {
+                                        setOutput('');
+                                        setError('');
+                                    }}
+                                    className="px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                >
+                                    Clear
+                                </button>
                             </div>
                             <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col overflow-hidden">
                                 <textarea

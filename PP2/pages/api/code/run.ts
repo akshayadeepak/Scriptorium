@@ -103,10 +103,9 @@ export default async function handler(
                 return res.status(200).json({ output });
             } catch (error: any) {
                 cleanupFiles(file);
-                if (error.code === 1 && error.output) {
-                    return res.status(200).json({ output: error.output });
-                }
-                return res.status(400).json({ error: error.message });
+                return res.status(400).json({ 
+                    error: error.output || error.message || 'Compilation/Runtime error'
+                });
             }
         } else {
             try {
