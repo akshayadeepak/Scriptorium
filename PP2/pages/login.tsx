@@ -31,9 +31,11 @@ export default function Login() {
 
             if (response.ok) {
                 const data = await response.json();
-                login(data.token, data.user);
+                await login(data.token, data.user);
                 setSuccess('Login successful!');
-                router.push('/');
+                setTimeout(() => {
+                    router.push('/');
+                }, 500);
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'Login failed');

@@ -226,6 +226,19 @@ export default function Code() {
                                     >
                                         Stdin
                                     </button>
+                                    {user && (
+                                        <button
+                                            onClick={handleSaveClick}
+                                            disabled={!code.trim()}
+                                            className={`px-3 py-1 text-sm rounded transition-colors ${
+                                                code.trim() 
+                                                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            Save
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handleRunCode}
                                         className="px-3 py-1 text-sm rounded transition-colors bg-green-500 text-white hover:bg-green-600"
