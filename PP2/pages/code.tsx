@@ -134,10 +134,10 @@ export default function Code() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex flex-col">
+        <div className="h-screen flex flex-col bg-gray-100">
             <Navbar />
             
-            <div className="flex flex-1">
+            <div className="flex-1 flex overflow-hidden">
                 {/* Language Icons Sidebar */}
                 <div className="w-16 bg-white shadow-lg p-2 flex flex-col space-y-4">
                     <button 
@@ -203,92 +203,107 @@ export default function Code() {
                 </div>
 
                 {/* Main content */}
-                <div className="flex-1 bg-white shadow-lg p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                <div className="flex-1 p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Left Column - Code Entry */}
-                        <div className="h-full">
-                            <textarea
-                                ref={textareaRef}
-                                value={code}
-                                onChange={(e) => setCode(e.target.value)}
-                                onKeyDown={handleTab}
-                                className="w-full h-full p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                                placeholder="Enter your code here..."
-                            />
-                        </div>
-
-                        {/* Right Column - Controls & Output */}
-                        <div className="space-y-4">
-                            <div className="flex space-x-2">
-                                {activeTab !== 2 && (
+                        <div className="h-[calc(100vh-120px)]">
+                            <div className="px-4 py-2 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                                <span>
+                                    {language === 'python' && 'main.py'}
+                                    {language === 'java' && 'Main.java'}
+                                    {language === 'cpp' && 'main.cpp'}
+                                    {language === 'c' && 'main.c'}
+                                    {language === 'js' && 'script.js'}
+                                </span>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setActiveTab(activeTab === 2 ? 1 : 2)}
+                                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                                            activeTab === 2 
+                                                ? 'bg-gray-300 text-gray-700' 
+                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        Stdin
+                                    </button>
                                     <button
                                         onClick={handleRunCode}
-                                        className="px-4 py-2 rounded-md transition-colors bg-green-500 text-white hover:bg-green-600"
+                                        className="px-3 py-1 text-sm rounded transition-colors bg-green-500 text-white hover:bg-green-600"
                                     >
                                         Run
                                     </button>
-                                )}
-                                <button
-                                    onClick={() => setActiveTab(activeTab === 2 ? 1 : 2)}
-                                    className={`px-4 py-2 rounded-md transition-colors ${
-                                        activeTab === 2 
-                                            ? 'bg-blue-500 text-white' 
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
-                                >
-                                    Provide Input
-                                </button>
+                                </div>
                             </div>
-
-                            {activeTab === 2 && (
-                                <>
-                                    <input
-                                        type="text"
-                                        value={stdin}
-                                        onChange={handleStdinChange}
-                                        placeholder="Enter input..."
-                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            <div className="h-[calc(100%-40px)]">
+                                <div className={`flex h-full w-full ${activeTab === 2 ? 'rounded-none border-b-0' : 'rounded-b-lg'} border border-gray-300 overflow-hidden`}>
+                                    <div className="p-4 pr-0 w-[50px] flex flex-col font-mono text-sm text-gray-400 select-none bg-gray-50 border-r border-gray-300">
+                                        {code.split('\n').map((_, i) => (
+                                            <div key={i} className="h-[20px] flex items-center justify-center w-full">
+                                                <span className="w-8 text-center">
+                                                    {i + 1}
+                                                </span>
+                                            </div>
+                                        ))}
+                                        <div className="h-[20px] flex items-center justify-center w-full">
+                                            <span className="w-8 text-center">
+                                                {code.split('\n').length + 1}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={code}
+                                        onChange={(e) => setCode(e.target.value)}
+                                        onKeyDown={handleTab}
+                                        className="flex-1 p-4 font-mono text-sm focus:outline-none resize-none overflow-auto"
+                                        placeholder="Enter your code here..."
+                                        style={{ lineHeight: '20px' }}
                                     />
-                                    <button
-                                        onClick={handleRunCode}
-                                        className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-                                    >
-                                        Run with Input
-                                    </button>
-                                </>
-                            )}
-
-                            {output && (
-                                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                    <h3 className="text-sm font-medium text-gray-700 mb-2">Output:</h3>
-                                    <pre className="whitespace-pre-wrap break-words text-sm font-mono bg-white p-3 rounded-md">
-                                        {output}
-                                    </pre>
                                 </div>
-                            )}
+                                {activeTab === 2 && (
+                                    <div className="w-full border border-gray-300 rounded-b-lg bg-gray-50 p-4">
+                                        <input
+                                            type="text"
+                                            value={stdin}
+                                            onChange={handleStdinChange}
+                                            placeholder="Enter input..."
+                                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
-                            {error && (
-                                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                                    <h3 className="text-sm font-medium text-red-700 mb-2">Error:</h3>
-                                    <pre className="whitespace-pre-wrap break-words text-sm font-mono text-red-600">
-                                        {error}
-                                    </pre>
-                                </div>
-                            )}
-
-                            {user && (
-                                <button 
-                                    onClick={handleSaveClick}
-                                    disabled={!code.trim()}
-                                    className={`w-full py-2 rounded-md transition-colors ${
-                                        code.trim() 
-                                            ? 'bg-green-500 text-white hover:bg-green-600' 
-                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        {/* Right Column - Output */}
+                        <div className="h-[calc(100vh-120px)]">
+                            <div className="px-4 py-2 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0">
+                                Output
+                            </div>
+                            <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col">
+                                <textarea
+                                    readOnly
+                                    value={output || error}
+                                    className={`flex-1 p-4 font-mono text-sm resize-none focus:outline-none overflow-auto ${
+                                        error ? 'text-red-500' : 'text-gray-700'
                                     }`}
-                                >
-                                    Save Code
-                                </button>
-                            )}
+                                    placeholder="Output will appear here..."
+                                />
+                                {user && (
+                                    <div className="p-4 border-t border-gray-300">
+                                        <button 
+                                            onClick={handleSaveClick}
+                                            disabled={!code.trim()}
+                                            className={`w-full py-2 rounded-md transition-colors ${
+                                                code.trim() 
+                                                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                            }`}
+                                        >
+                                            Save Code
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import styles from './index.module.css';
 import logo from '../images/logo.jpg'; // Logo path
 import avatarPlaceholder from '../images/placeholderpfp.webp';
+import Navbar from '../components/Navbar';
 
 export default function Home() {
   const router = useRouter();
@@ -46,39 +47,7 @@ export default function Home() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Navigation Bar */}
-      <header className={styles.header}>
-        <div className={styles.navLeft}>
-          <Image src={logo} alt="Scriptorium Logo" className={styles.logo} />
-          <span className={styles.navLink} onClick={() => router.push('/home')}>Home</span>
-          <span className={styles.navLink} onClick={() => router.push('/blog')}>Blog</span>
-          <span className={styles.navLink} onClick={() => router.push('/code')}>Run Code</span>
-          <span className={styles.navLink} onClick={() => router.push('/code-templates')}>Code Templates</span>
-        </div>
-        <div className={styles.navRight}>
-          <div className={styles.searchBar}>
-            <input
-              type="text"
-              placeholder="Search blog posts, code templates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={styles.searchInput}
-            />
-            <button onClick={handleSearch} className={`${styles.searchButton} ${styles.navButtonBase}`}>Search</button>
-          </div>
-          {!isLoggedIn ? (
-            <>
-              <button className={`${styles.navButton} ${styles.navButtonBase}`} onClick={() => router.push('/login')}>Log In</button>
-              <button className={`${styles.signupButton} ${styles.navButtonBase}`} onClick={() => router.push('/signup')}>Sign Up</button>
-            </>
-          ) : (
-            <>
-              <button className={`${styles.navButton} ${styles.navButtonBase}`} onClick={handleLogout}>Log Out</button>
-              <Image src={avatarPlaceholder} alt="User Avatar" className={styles.avatar} onClick={() => router.push('/profile')} />
-            </>
-          )}
-        </div>
-      </header>
+      <Navbar />
 
       {/* Main Content Section */}
       <main className={styles.mainContent}>
