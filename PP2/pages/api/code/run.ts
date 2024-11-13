@@ -70,10 +70,14 @@ export default async function handler(
             return res.status(400).json({ error: 'Language not supported' });
     }
 
-    // Append stdin to the command if provided
     if (stdin) {
-        command += ` ${stdin}`;
-    }
+        console.log("stdin");
+        const argsList = stdin.trim().split(/\s+/).filter((arg: string) => arg.length > 0);
+        const finalCommand = argsList.length > 0 
+            ? `${command} ${argsList.map((arg: string) => `"${arg}"`).join(' ')}`
+            : command;
+        command = finalCommand;
+    } 
 
     try {
         fs.writeFileSync(file, code);
@@ -82,6 +86,7 @@ export default async function handler(
             return new Promise((resolve, reject) => {
                 exec(cmd, (error, stdout, stderr) => {
                     if (error) {
+                        error.output = stdout || stderr;
                         reject(error);
                     } else {
                         resolve(stdout || stderr);
@@ -98,6 +103,9 @@ export default async function handler(
                 return res.status(200).json({ output });
             } catch (error: any) {
                 cleanupFiles(file);
+                if (error.code === 1 && error.output) {
+                    return res.status(200).json({ output: error.output });
+                }
                 return res.status(400).json({ error: error.message });
             }
         } else {
