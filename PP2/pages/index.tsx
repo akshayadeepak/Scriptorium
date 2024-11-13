@@ -63,15 +63,15 @@ export default function Home() {
 
         {/* Features Section */}
         <section className={styles.featureSection}>
-          <div className={styles.featureCard} onClick={() => router.push('/code')}>
+          <div className={`${styles.featureCard} rounded-xl`} onClick={() => router.push('/code')}>
             <h3>Run Code</h3>
             <p>Experiment with code in multiple languages, test solutions, and collaborate instantly.</p>
           </div>
-          <div className={styles.featureCard} onClick={() => router.push('/blog')}>
+          <div className={`${styles.featureCard} rounded-xl`} onClick={() => router.push('/blog')}>
             <h3>Blog</h3>
             <p>Read, write, and share insights with the community, and discover valuable tutorials.</p>
           </div>
-          <div className={styles.featureCard} onClick={() => router.push('/code-templates')}>
+          <div className={`${styles.featureCard} rounded-xl`} onClick={() => router.push('/code-templates')}>
             <h3>Code Templates</h3>
             <p>Create, save, and share reusable code templates to streamline your projects.</p>
           </div>
@@ -82,15 +82,15 @@ export default function Home() {
           <h2 className={styles.sectionTitle}>Popular Code Templates</h2>
           <div className={styles.templateGrid}>
             {/* Placeholder Template Cards */}
-            <div className={styles.templateCard}>
+            <div className={`${styles.templateCard} rounded-xl`}>
               <h3>JavaScript Array Algorithms</h3>
               <p>A collection of useful array manipulation functions for JavaScript projects.</p>
             </div>
-            <div className={styles.templateCard}>
+            <div className={`${styles.templateCard} rounded-xl`}>
               <h3>Python Mass Data Processing</h3>
               <p>Parallelized data processing utilities for data science and machine learning.</p>
             </div>
-            <div className={styles.templateCard}>
+            <div className={`${styles.templateCard} rounded-xl`}>
               <h3>Java HTTP Client</h3>
               <p>Reusable HTTP client functions for making API requests in Java.</p>
             </div>
@@ -102,15 +102,15 @@ export default function Home() {
           <h2 className={styles.sectionTitle}>Featured Blog Posts</h2>
           <div className={styles.blogGrid}>
             {/* Placeholder Blog Post Cards */}
-            <div className={styles.blogCard}>
+            <div className={`${styles.blogCard} rounded-xl`}>
               <h3>Cryptographer wins Turing Award</h3>
               <p>Mark Mu recently won a Turing award for their contributions to the pina colada algorithm.</p>
             </div>
-            <div className={styles.blogCard}>
+            <div className={`${styles.blogCard} rounded-xl`}>
               <h3>Getting Started with Next.js</h3>
               <p>A comprehensive guide to building web applications with Next.js.</p>
             </div>
-            <div className={styles.blogCard}>
+            <div className={`${styles.blogCard} rounded-xl`}>
               <h3>10 Rust Tips & Tricks</h3>
               <p>Enhance your Rust skills with these practical tips and tricks.</p>
             </div>
