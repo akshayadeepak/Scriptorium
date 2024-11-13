@@ -3,12 +3,21 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
-import avatarPlaceholder from '../images/placeholderpfp.webp';
+import Navbar from '../components/Navbar';
+
+// Add this interface at the top of the file, after the imports
+interface CodeTemplate {
+  id: number;
+  title: string;
+  explanation: string;
+  tags: string[];
+  language: string;
+  content: string;
+}
 
 const CodeTemplates = () => {
   const { isLoggedIn, user, logout } = useAuth();
-  const router = useRouter();
-  const [templates, setTemplates] = useState([]);
+  const [templates, setTemplates] = useState<CodeTemplate[]>([]);
   const [newTemplate, setNewTemplate] = useState({
     title: '',
     explanation: '',
@@ -98,29 +107,7 @@ const CodeTemplates = () => {
   return (
     <div className={styles.pageContainer}>
       {/* Top Navigation */}
-      <nav className={styles.topNav}>
-        <button onClick={() => router.push('/')} className={styles.backButton}>
-          Back to Homepage
-        </button>
-        <div className={styles.authButtons}>
-          {isLoggedIn ? (
-            <>
-              <button onClick={logout} className={styles.logoutButton}>Logout</button>
-              <Image
-                src={avatarPlaceholder}
-                alt="User Avatar"
-                className={styles.profilePic}
-                onClick={() => router.push('/profile')}
-              />
-            </>
-          ) : (
-            <>
-              <button className={styles.navButton} onClick={() => router.push('/login')}>Log In</button>
-              <button className={styles.signupButton} onClick={() => router.push('/signup')}>Sign Up</button>
-            </>
-          )}
-        </div>
-      </nav>
+      <Navbar />
 
       <h1>Code Templates</h1>
       {error && <p className={styles.error}>{error}</p>}
