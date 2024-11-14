@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import styles from './index.module.css';
-import logo from '../images/logo.jpg'; // Logo path
-import avatarPlaceholder from '../images/placeholderpfp.webp';
 import Navbar from '../components/Navbar';
 
 export default function Home() {
@@ -56,7 +53,7 @@ export default function Home() {
             <h1 className={styles.heroTitle}>Welcome to Scriptorium</h1>
             <p className={styles.heroSubtitle}>{messages[currentMessage]}</p>
             {!isLoggedIn && (
-              <button onClick={() => router.push('/signup')} className={styles.heroButton}>Get Started</button>
+              <button onClick={() => router.push('/signup')} className={`${styles.heroButton} rounded`}>Get Started</button>
             )}
           </div>
         </section>

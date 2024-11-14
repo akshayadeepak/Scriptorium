@@ -2,6 +2,13 @@ import React, { useState, useContext, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Image from 'next/image';
+import styles from './code.module.css';
+import CodeMirror from '@uiw/react-codemirror';
+import { python } from '@codemirror/lang-python';
+import { java } from '@codemirror/lang-java';
+import { cpp } from '@codemirror/lang-cpp';
+import { javascript } from '@codemirror/lang-javascript';
+import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
 
 export default function Code() {
     const [code, setCode] = useState('');
@@ -133,201 +140,347 @@ export default function Code() {
         }
     };
 
-    return (
-        <div className="h-screen flex flex-col bg-gray-100">
-            <Navbar />
+    // Language-specific syntax checkers
+    const pythonChecker = (view: any) => {
+        const diagnostics: Diagnostic[] = [];
+        const text = view.state.doc.toString();
+        
+        // Check for basic Python syntax errors
+        const lines = text.split('\n');
+        lines.forEach((line: string, index: number) => {
+            const trimmed = line.trim();
             
-            <div className="flex-1 flex overflow-hidden">
-                {/* Language Icons Sidebar */}
-                <div className="w-16 bg-white shadow-lg p-2 flex flex-col space-y-4">
-                    <button 
-                        onClick={() => setLanguage('python')}
-                        className={`p-2 rounded-lg transition-colors ${language === 'python' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                        title="Python"
-                    >
-                        <Image 
-                            src="/icons/python.png" 
-                            alt="Python" 
-                            width={32} 
-                            height={32} 
-                        />
-                    </button>
-                    <button 
-                        onClick={() => setLanguage('java')}
-                        className={`p-2 rounded-lg transition-colors ${language === 'java' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                        title="Java"
-                    >
-                        <Image 
-                            src="/icons/java.png" 
-                            alt="Java" 
-                            width={32} 
-                            height={32} 
-                        />
-                    </button>
-                    <button 
-                        onClick={() => setLanguage('cpp')}
-                        className={`p-2 rounded-lg transition-colors ${language === 'cpp' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                        title="C++"
-                    >
-                        <Image 
-                            src="/icons/cpp.png" 
-                            alt="C++" 
-                            width={32} 
-                            height={32} 
-                        />
-                    </button>
-                    <button 
-                        onClick={() => setLanguage('c')}
-                        className={`p-2 rounded-lg transition-colors ${language === 'c' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                        title="C"
-                    >
-                        <Image 
-                            src="/icons/c.png" 
-                            alt="C" 
-                            width={32} 
-                            height={32} 
-                        />
-                    </button>
-                    <button 
-                        onClick={() => setLanguage('js')}
-                        className={`p-2 rounded-lg transition-colors ${language === 'js' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                        title="JavaScript"
-                    >
-                        <Image 
-                            src="/icons/javascript.png" 
-                            alt="JavaScript" 
-                            width={32} 
-                            height={32} 
-                        />
-                    </button>
-                </div>
+            // Check print statement syntax
+            if (trimmed.startsWith('print ') && !trimmed.startsWith('print(')) {
+                diagnostics.push({
+                    from: text.indexOf(line),
+                    to: text.indexOf(line) + line.length,
+                    severity: 'error',
+                    message: 'Invalid syntax: Use print() function'
+                });
+            }
 
-                {/* Main content */}
-                <div className="flex-1 p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Left Column - Code Entry */}
-                        <div className="h-[calc(100vh-120px)]">
-                            <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
-                                <span>
-                                    {language === 'python' && 'main.py'}
-                                    {language === 'java' && 'Main.java'}
-                                    {language === 'cpp' && 'main.cpp'}
-                                    {language === 'c' && 'main.c'}
-                                    {language === 'js' && 'script.js'}
-                                </span>
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setActiveTab(activeTab === 2 ? 1 : 2)}
-                                        className={`px-3 py-1 text-sm rounded transition-colors ${
-                                            activeTab === 2 
-                                                ? 'bg-gray-300 text-gray-700' 
-                                                : 'px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                        }`}
-                                    >
-                                        Stdin
-                                    </button>
-                                    {user && (
+            // Check for invalid for loop syntax
+            if (trimmed.startsWith('for') && !trimmed.includes(' in ')) {
+                diagnostics.push({
+                    from: text.indexOf(line),
+                    to: text.indexOf(line) + line.length,
+                    severity: 'error',
+                    message: 'Invalid for loop syntax: Missing "in" keyword'
+                });
+            }
+
+            // Check for invalid import syntax
+            if (trimmed.includes('import') && trimmed.startsWith('print')) {
+                diagnostics.push({
+                    from: text.indexOf(line),
+                    to: text.indexOf(line) + line.length,
+                    severity: 'error',
+                    message: 'Invalid import statement'
+                });
+            }
+        });
+
+        // Keep existing indentation checks
+        let inBlock = false;
+        lines.forEach((line: string) => {
+            if (line.trim().endsWith(':')) {
+                inBlock = true;
+            } else if (inBlock && line.trim() && !line.startsWith(' ') && !line.startsWith('\t')) {
+                diagnostics.push({
+                    from: text.indexOf(line),
+                    to: text.indexOf(line) + line.length,
+                    severity: 'error',
+                    message: 'Expected indented block'
+                });
+            } else if (line.trim()) {
+                inBlock = false;
+            }
+        });
+
+        return diagnostics;
+    };
+
+    const javaChecker = (view: any) => {
+        const diagnostics: Diagnostic[] = [];
+        const text = view.state.doc.toString();
+        
+        // Check for missing semicolons
+        const lines = text.split('\n');
+        let position = 0;
+        lines.forEach((line: string) => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.endsWith('{') && !trimmed.endsWith('}') && 
+                !trimmed.endsWith(';') && !trimmed.startsWith('//')) {
+                diagnostics.push({
+                    from: position,
+                    to: position + line.length,
+                    severity: 'error',
+                    message: 'Missing semicolon'
+                });
+            }
+            position += line.length + 1;
+        });
+
+        // Check for class definition
+        if (text.length > 0 && !text.includes('class')) {
+            diagnostics.push({
+                from: 0,
+                to: text.length,
+                severity: 'error',
+                message: 'Java code must be inside a class'
+            });
+        }
+
+        return diagnostics;
+    };
+
+    const cppChecker = (view: any) => {
+        const diagnostics: Diagnostic[] = [];
+        const text = view.state.doc.toString();
+        
+        // Check for missing semicolons
+        const lines = text.split('\n');
+        let position = 0;
+        lines.forEach((line: string) => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.endsWith('{') && !trimmed.endsWith('}') && 
+                !trimmed.endsWith(';') && !trimmed.startsWith('//') && 
+                !trimmed.startsWith('#')) {
+                diagnostics.push({
+                    from: position,
+                    to: position + line.length,
+                    severity: 'error',
+                    message: 'Missing semicolon'
+                });
+            }
+            position += line.length + 1;
+        });
+
+        // Check for main function
+        if (text.length > 0 && !text.includes('main')) {
+            diagnostics.push({
+                from: 0,
+                to: text.length,
+                severity: 'warning',
+                message: 'No main() function found'
+            });
+        }
+
+        return diagnostics;
+    };
+
+    const jsChecker = (view: any) => {
+        const diagnostics: Diagnostic[] = [];
+        const text = view.state.doc.toString();
+        
+        try {
+            Function(`'use strict'; (async () => { ${text} })()`)
+        } catch (e: any) {
+            diagnostics.push({
+                from: 0,
+                to: text.length,
+                severity: 'error',
+                message: e.message
+            });
+        }
+
+        // Check for var usage
+        if (text.includes('var ')) {
+            diagnostics.push({
+                from: text.indexOf('var '),
+                to: text.indexOf('var ') + 4,
+                severity: 'warning',
+                message: 'Use let or const instead of var'
+            });
+        }
+
+        return diagnostics;
+    };
+
+    // Function to get the appropriate language extension
+    const getLanguageExtensions = () => {
+        switch (language) {
+            case 'python':
+                return [python(), lintGutter(), linter(pythonChecker)];
+            case 'java':
+                return [java(), lintGutter(), linter(javaChecker)];
+            case 'cpp':
+            case 'c':
+                return [cpp(), lintGutter(), linter(cppChecker)];
+            case 'js':
+                return [javascript(), lintGutter(), linter(jsChecker)];
+            default:
+                return [python(), lintGutter(), linter(pythonChecker)];
+        }
+    };
+
+    return (
+        <div className="min-h-screen">
+            <Navbar />
+            <div className={styles.codeBackground}>
+                <div className="flex-1 flex">
+                    {/* Language Icons Sidebar - added pt-4 for top padding */}
+                    <div className="w-15 bg-white/80 backdrop-blur-sm shadow-lg flex flex-col space-y-4 pt-4">
+                        <button 
+                            onClick={() => setLanguage('python')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'python' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="Python"
+                        >
+                            <Image 
+                                src="/icons/python.png" 
+                                alt="Python" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('java')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'java' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="Java"
+                        >
+                            <Image 
+                                src="/icons/java.png" 
+                                alt="Java" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('cpp')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'cpp' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="C++"
+                        >
+                            <Image 
+                                src="/icons/cpp.png" 
+                                alt="C++" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('c')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'c' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="C"
+                        >
+                            <Image 
+                                src="/icons/c.png" 
+                                alt="C" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('js')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'js' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="JavaScript"
+                        >
+                            <Image 
+                                src="/icons/javascript.png" 
+                                alt="JavaScript" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                    </div>
+
+                    {/* Main content - added px-4 for some horizontal padding */}
+                    <div className="flex-1 px-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+                            {/* Left Column - Code Editor */}
+                            <div className="h-[calc(100vh-96px)]">
+                                <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                                    <span>
+                                        {language === 'python' && 'main.py'}
+                                        {language === 'java' && 'Main.java'}
+                                        {language === 'cpp' && 'main.cpp'}
+                                        {language === 'c' && 'main.c'}
+                                        {language === 'js' && 'script.js'}
+                                    </span>
+                                    <div className="flex gap-2">
                                         <button
-                                            onClick={handleSaveClick}
-                                            disabled={!code.trim()}
+                                                onClick={handleRunCode}
+                                                className="px-3 py-1 text-sm rounded transition-colors bg-green-500 text-white hover:bg-green-600"
+                                            >
+                                            Run
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab(activeTab === 2 ? 1 : 2)}
                                             className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                code.trim() 
-                                                    ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                activeTab === 2 
+                                                    ? 'bg-gray-300 text-gray-700' 
+                                                    : 'px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                         >
-                                            Save
+                                            Stdin
                                         </button>
-                                    )}
+                                        
+                                        {user && (
+                                                <button
+                                                    onClick={handleSaveClick}
+                                                    disabled={!code.trim()}
+                                                    className={`px-3 py-1 text-sm rounded transition-colors ${
+                                                        code.trim() 
+                                                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    }`}
+                                                >
+                                                    Save
+                                                </button>
+                                            )}
+                                    </div>
+                                </div>
+                                <div className="h-[calc(100%-2.5rem)] rounded-b-lg overflow-hidden border border-gray-300">
+                                    <CodeMirror
+                                        value={code}
+                                        height="100%"
+                                        theme="light"
+                                        extensions={getLanguageExtensions()}
+                                        onChange={(value) => setCode(value)}
+                                        className="h-full"
+                                        basicSetup={{
+                                            lineNumbers: true,
+                                            highlightActiveLineGutter: true,
+                                            highlightSpecialChars: true,
+                                            foldGutter: true,
+                                            drawSelection: true,
+                                            dropCursor: true,
+                                            indentOnInput: true,
+                                            syntaxHighlighting: true,
+                                            bracketMatching: true,
+                                            closeBrackets: true,
+                                            autocompletion: true,
+                                            highlightActiveLine: true,
+                                            highlightSelectionMatches: true,
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Right Column - Output */}
+                            <div className="h-[calc(100vh-96px)]">
+                                <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                                    <span>Output</span>
                                     <button
-                                        onClick={handleRunCode}
-                                        className="px-3 py-1 text-sm rounded transition-colors bg-green-500 text-white hover:bg-green-600"
+                                        onClick={() => {
+                                            setOutput('');
+                                            setError('');
+                                        }}
+                                        className="px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
                                     >
-                                        Run
+                                        Clear
                                     </button>
                                 </div>
-                            </div>
-                            <div className="h-[calc(100%-40px)] relative">
-                                <div className="h-full border border-gray-300 rounded-b-lg overflow-hidden">
-                                    <div className="flex h-full">
-                                        <div className="py-2 w-12 flex-none overflow-hidden bg-gray-50 border-r border-gray-300">
-                                            <div className="font-mono text-sm text-gray-400 select-none" style={{ lineHeight: '20px' }}>
-                                                {Array.from({ length: code.split('\n').length + 1 }, (_, i) => (
-                                                    <div key={i} className="h-[20px] text-center">
-                                                        {i + 1}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <textarea
-                                            ref={textareaRef}
-                                            value={code}
-                                            onChange={(e) => setCode(e.target.value)}
-                                            onKeyDown={handleTab}
-                                            className="flex-1 py-2 px-4 font-mono text-sm focus:outline-none resize-none overflow-auto"
-                                            placeholder="Enter your code here..."
-                                            style={{ lineHeight: '20px' }}
-                                            onScroll={(e) => {
-                                                const lineNumbers = e.currentTarget.previousSibling as HTMLElement;
-                                                if (lineNumbers) {
-                                                    lineNumbers.scrollTop = e.currentTarget.scrollTop;
-                                                }
-                                            }}
-                                        />
-                                    </div>
+                                <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col overflow-hidden">
+                                    <textarea
+                                        readOnly
+                                        value={output || error}
+                                        className={`flex-1 p-4 font-mono text-sm resize-none focus:outline-none overflow-auto ${
+                                            error ? 'text-red-500' : 'text-gray-700'
+                                        }`}
+                                        placeholder="Output will appear here..."
+                                    />
                                 </div>
-                                {activeTab === 2 && (
-                                    <div className="absolute bottom-0 left-0 right-0 bg-gray-100 border border-gray-300 p-4 rounded-b-lg">
-                                        <input
-                                            type="text"
-                                            value={stdin}
-                                            onChange={handleStdinChange}
-                                            placeholder="Enter input..."
-                                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Right Column - Output */}
-                        <div className="h-[calc(100vh-120px)]">
-                            <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
-                                <span>Output</span>
-                                <button
-                                    onClick={() => {
-                                        setOutput('');
-                                        setError('');
-                                    }}
-                                    className="px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-                            <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col overflow-hidden">
-                                <textarea
-                                    readOnly
-                                    value={output || error}
-                                    className={`flex-1 p-4 font-mono text-sm resize-none focus:outline-none overflow-auto ${
-                                        error ? 'text-red-500' : 'text-gray-700'
-                                    }`}
-                                    placeholder="Output will appear here..."
-                                />
-                                {user && (
-                                    <div className="p-4 border-t border-gray-300">
-                                        <button 
-                                            onClick={handleSaveClick}
-                                            disabled={!code.trim()}
-                                            className={`w-full py-2 rounded-md transition-colors ${
-                                                code.trim() 
-                                                    ? 'bg-green-500 text-white hover:bg-green-600' 
-                                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                            }`}
-                                        >
-                                            Save Code
-                                        </button>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>

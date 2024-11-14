@@ -116,24 +116,29 @@
 .heroSection {
   position: relative;
   text-align: center;
-  padding: 3rem 2rem;
-  background-image: url('../images/homepageimage.png'); /* Ensure the path is correct */
+  min-height: 400px;
+  padding: 2rem;
+  background-image: url('../public/banners/index.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  margin: 0;
 }
 
 /* White Background Box for Text */
 .heroTextBackground {
-  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+  background-color: rgba(255, 255, 255, 0.9);
   padding: 2rem;
-  border-radius: 8px;
+  border-radius: 1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   text-align: center;
   max-width: 600px;
+  margin: 1.5rem auto;
+  backdrop-filter: blur(5px);
 }
 
 .heroTitle {
