@@ -434,7 +434,7 @@ export default function Code() {
                                     <div className="h-full rounded-b-lg overflow-hidden border border-gray-300">
                                         <CodeMirror
                                             value={code}
-                                            height={activeTab === 2 ? "calc(100% - 100px)" : "100%"}
+                                            height="100%"
                                             theme="light"
                                             extensions={getLanguageExtensions()}
                                             onChange={(value) => setCode(value)}
@@ -456,10 +456,7 @@ export default function Code() {
                                             }}
                                         />
                                         {activeTab === 2 && (
-                                            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-300 p-4 rounded-b-lg mx-[1px]">
-                                                {/* <label className="block text-sm font-medium text-gray-700 mb-2 px-1">
-                                                    Standard Input
-                                                </label> */}
+                                            <div className="absolute bottom-0 left-0 right-0 bg-white border border-gray-300 p-4 rounded-b-lg">
                                                 <input
                                                     type="text"
                                                     value={stdin}
