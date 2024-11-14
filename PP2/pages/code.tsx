@@ -409,7 +409,7 @@ export default function Code() {
                                             className={`px-3 py-1 text-sm rounded transition-colors ${
                                                 activeTab === 2 
                                                     ? 'bg-gray-300 text-gray-700' 
-                                                    : 'px-3 py-1 text-sm rounded transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                             }`}
                                         >
                                             Stdin
@@ -430,30 +430,46 @@ export default function Code() {
                                             )}
                                     </div>
                                 </div>
-                                <div className="h-[calc(100%-2.5rem)] rounded-b-lg overflow-hidden border border-gray-300">
-                                    <CodeMirror
-                                        value={code}
-                                        height="100%"
-                                        theme="light"
-                                        extensions={getLanguageExtensions()}
-                                        onChange={(value) => setCode(value)}
-                                        className="h-full"
-                                        basicSetup={{
-                                            lineNumbers: true,
-                                            highlightActiveLineGutter: true,
-                                            highlightSpecialChars: true,
-                                            foldGutter: true,
-                                            drawSelection: true,
-                                            dropCursor: true,
-                                            indentOnInput: true,
-                                            syntaxHighlighting: true,
-                                            bracketMatching: true,
-                                            closeBrackets: true,
-                                            autocompletion: true,
-                                            highlightActiveLine: true,
-                                            highlightSelectionMatches: true,
-                                        }}
-                                    />
+                                <div className="relative h-[calc(100%-2.5rem)]">
+                                    <div className="h-full rounded-b-lg overflow-hidden border border-gray-300">
+                                        <CodeMirror
+                                            value={code}
+                                            height={activeTab === 2 ? "calc(100% - 100px)" : "100%"}
+                                            theme="light"
+                                            extensions={getLanguageExtensions()}
+                                            onChange={(value) => setCode(value)}
+                                            className="h-full"
+                                            basicSetup={{
+                                                lineNumbers: true,
+                                                highlightActiveLineGutter: true,
+                                                highlightSpecialChars: true,
+                                                foldGutter: true,
+                                                drawSelection: true,
+                                                dropCursor: true,
+                                                indentOnInput: true,
+                                                syntaxHighlighting: true,
+                                                bracketMatching: true,
+                                                closeBrackets: true,
+                                                autocompletion: true,
+                                                highlightActiveLine: true,
+                                                highlightSelectionMatches: true,
+                                            }}
+                                        />
+                                        {activeTab === 2 && (
+                                            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-300 p-4 rounded-b-lg mx-[1px]">
+                                                {/* <label className="block text-sm font-medium text-gray-700 mb-2 px-1">
+                                                    Standard Input
+                                                </label> */}
+                                                <input
+                                                    type="text"
+                                                    value={stdin}
+                                                    onChange={handleStdinChange}
+                                                    placeholder="Enter input values..."
+                                                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 

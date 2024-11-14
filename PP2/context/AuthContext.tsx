@@ -9,14 +9,16 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (token: string, userData: User) => void;
+    login: (token: string, userData: User) => Promise<void>;
     logout: () => void;
+    isLoggedIn: boolean;
 }
 
 const defaultContextValue: AuthContextType = {
     user: null,
-    login: () => {},
-    logout: () => {}
+    login: async (token: string, userData: User) => {},
+    logout: () => {},
+    isLoggedIn: false
 };
 
 export const AuthContext = createContext<AuthContextType>(defaultContextValue);
@@ -53,8 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = async (token: string, userData: User) => {
-        localStorage.setItem('token', token);
-        setUser(userData);
+        try {
+            localStorage.setItem('token', token);
+            setUser(userData);
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
     };
 
     const logout = () => {
@@ -63,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, logout, isLoggedIn: !!user }}>
             {children}
         </AuthContext.Provider>
     );
