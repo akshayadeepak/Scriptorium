@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from './index.module.css';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentMessage, setCurrentMessage] = useState(0);
 
@@ -17,11 +18,6 @@ export default function Home() {
     "Explore, create, and inspire others."
   ];
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-  }, []);
-
   // Cycle messages in hero section every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,8 +27,7 @@ export default function Home() {
   }, [messages.length]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsLoggedIn(false);
+    logout();
   };
 
   // Handle search button click to navigate to the search results page

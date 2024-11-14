@@ -35,7 +35,10 @@ export default async function handler(
             return res.status(401).json({ message: "Invalid email or password" });
         }
 
-        const token = generateToken({ userId: user.id, permission: user.permission });
+        const token = generateToken({ 
+            userId: user.id,
+            permission: user.permission 
+        });
 
         res.json({ 
             message: "Login successful",
