@@ -438,7 +438,7 @@ export default function Code() {
                                             theme="light"
                                             extensions={getLanguageExtensions()}
                                             onChange={(value) => setCode(value)}
-                                            className="h-full"
+                                            className="h-full" 
                                             basicSetup={{
                                                 lineNumbers: true,
                                                 highlightActiveLineGutter: true,

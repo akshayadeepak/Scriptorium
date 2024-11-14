@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
+import Navbar from '../components/Navbar';
+import styles from './blog.module.css';
 
 interface Comment {
   id: number;
@@ -37,6 +38,7 @@ interface BlogPost {
   authorId: number;
   tags: Tag[];
   links: CodeTemplate[];
+  rating: number;
 }
 
 export default function Blog() {
@@ -51,18 +53,14 @@ export default function Blog() {
   const [editContent, setEditContent] = useState('');
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [codeTemplate, setCodeTemplate] = useState<string>('');
-  const [templateTitle, setTemplateTitle] = useState<string>('');
-  const [codeTemplateTitle, setCodeTemplateTitle] = useState('');
-  const [codeTemplateContent, setCodeTemplateContent] = useState('');
-  const [codeTemplateLanguage, setCodeTemplateLanguage] = useState('');
   const [availableTemplates, setAvailableTemplates] = useState<CodeTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
-  
+  const [searchQuery, setSearchQuery] = useState('');
+
   const fetchPosts = async () => {
     try {
       const response = await fetch('/api/blog');
@@ -249,480 +247,151 @@ export default function Blog() {
     }
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      width: '100%', 
-      backgroundColor: 'lightgrey',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: '20px'
-    }}>
-      {showNewPostPopup && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '500px',
-            position: 'relative'
-          }}>
-            <button 
-              onClick={() => setShowNewPostPopup(false)}
-              style={{
-                position: 'absolute',
-                right: '1rem',
-                top: '1rem',
-                border: 'none',
-                background: 'none',
-                fontSize: '1.5rem',
-                cursor: 'pointer'
-              }}
-            >
-              ×
-            </button>
-            <h3 style={{ 
-              marginBottom: '1.5rem',
-              fontSize: '1.2rem',
-              fontWeight: 'bold' 
-            }}>Create New Post</h3>
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Post title"
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  marginBottom: '1rem'
-                }}
-              />
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Post content"
-                rows={4}
-                style={{
-                  width: '100%',
-                  padding: '0.5rem',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  marginBottom: '1rem'
-                }}
-              />
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#4a5568', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                  Tags
-                </label>
-                <select
-                  multiple
-                  value={selectedTags}
-                  onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
-                  className="select-focus"
-                  style={{
-                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #d2d6dc',
-                    borderRadius: '0.5rem',
-                    width: '100%',
-                    padding: '0.5rem',
-                    color: '#4a5568',
-                    lineHeight: '1.25',
-                    outline: 'none'
-                  }}
-                >
-                  {availableTags.map(tag => (
-                    <option key={tag.id} value={tag.name} style={{ color: '#4a5568' }}>
-                      {tag.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#4a5568', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                  Add Code Template (Optional)
-                </label>
-                <select
-                  value={selectedTemplateId || ''}
-                  onChange={(e) => setSelectedTemplateId(e.target.value ? Number(e.target.value) : null)}
-                  style={{
-                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #d2d6dc',
-                    borderRadius: '0.5rem',
-                    width: '100%',
-                    padding: '0.5rem',
-                    color: '#4a5568',
-                    lineHeight: '1.25',
-                    outline: 'none',
-                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                  }}
-                >
-                  <option value="" style={{ color: '#4a5568' }}>Select a template</option>
-                  {availableTemplates.map(template => (
-                    <option key={template.id} value={template.id} style={{ color: '#4a5568' }}>
-                      {template.title} ({template.language})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button 
-                type="submit"
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'grey',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  width: '100%'
-                }}
-              >
-                Create Post
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <div style={{
-        width: '100%',
-        maxWidth: '800px',
-        backgroundColor: 'white',
-        padding: '2rem',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-      }}>
-        <h2 style={{ 
-          textAlign: 'center', 
-          marginBottom: '1.5rem',
-          fontSize: '1.5rem',
-          fontWeight: 'bold' 
-        }}>Blog Posts</h2>
-
-        {user && (
-          <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-            <button 
-              onClick={() => setShowNewPostPopup(true)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: 'grey',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              New Post
-            </button>
-          </div>
-        )}
-
-        <div>
-          {posts.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '2rem',
-              color: 'grey'
-            }}>
-              No posts available
-            </div>
-          ) : (
-            posts.map((post) => (
-              <div key={post.id} className="mb-8 p-6 bg-white rounded-lg shadow-md">
-                <h2 className="text-2xl font-bold mb-2">{post.title}</h2>
-                <p className="text-gray-600 mb-4">By {post.author.username}</p>
-                
-                <div className="mb-2">
-                  {post.tags.map(tag => (
-                    <span 
-                      key={tag.id}
-                      className="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2"
+    <div className="min-h-screen">
+      <Navbar />
+      <div className={styles.blogBackground}>
+        <div className="px-4">
+          <div className="grid grid-cols-6 gap-8">
+            {/* Left Column - Tags */}
+            <div className="col-span-1">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-4 mt-4 mb-4 overflow-y-auto max-h-[calc(100vh-6rem)]">
+                <h2 className="text-xl font-bold text-gray-700 mb-4">Tags</h2>
+                <div className="space-y-2">
+                  {[
+                    { name: "React", count: 24 },
+                    { name: "Python", count: 18 },
+                    { name: "JavaScript", count: 32 },
+                    { name: "TypeScript", count: 15 },
+                    { name: "CSS", count: 21 },
+                    { name: "HTML", count: 19 },
+                    { name: "Node.js", count: 14 },
+                    { name: "Git", count: 12 },
+                    { name: "Docker", count: 8 },
+                    { name: "AWS", count: 11 },
+                    { name: "Database", count: 16 },
+                    { name: "API", count: 22 },
+                    { name: "GraphQL", count: 9 },
+                    { name: "DevOps", count: 13 },
+                    { name: "Security", count: 7 },
+                    { name: "Testing", count: 19 },
+                    { name: "UI/UX", count: 15 },
+                    { name: "Mobile", count: 11 },
+                    { name: "Cloud", count: 14 },
+                    { name: "Algorithms", count: 8 }
+                  ].map((tag, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors group"
                     >
-                      #{tag.name}
-                    </span>
+                      <span className="text-gray-600 group-hover:text-[#1da1f2]">#{tag.name}</span>
+                      <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                        {tag.count}
+                      </span>
+                    </div>
                   ))}
                 </div>
-                
-                <p className="mb-4">{post.content}</p>
-                
-                {post.links?.map(template => (
-                  <div key={template.id} className="mb-4 bg-gray-100 p-4 rounded">
-                    <h3 className="font-bold mb-2">{template.title}</h3>
-                    <pre className="bg-gray-800 text-white p-4 rounded overflow-x-auto">
-                      <code>{template.content}</code>
-                    </pre>
+              </div>
+            </div>
+
+
+
+            {/* Right Column - Posts */}
+            <div className="col-span-5 pt-8">
+              {/* Search Bar */}
+              <div className="mb-8">
+                <div className="relative max-w-2xl mx-auto">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    placeholder="Search posts..."
+                    className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm 
+                             focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
+                             transition-all duration-300 pl-14"
+                  />
+                  <svg 
+                    className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                    fill="none" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth="2" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* New Post Button */}
+              <div className="text-center mb-8">
+                <button 
+                  onClick={() => setShowNewPostPopup(true)}
+                  className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
+                           font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
+                >
+                  New Post
+                </button>
+              </div>
+
+              {/* Posts List */}
+              <div className="space-y-6">
+                {[...posts].sort((a, b) => (b.rating || 0) - (a.rating || 0)).map((post) => (
+                  <div key={post.id} 
+                    className="bg-white p-6 rounded-lg shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full"
+                  >
+                    <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-gray-500 text-sm">By {post.author.username}</p>
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-4 h-4 ${i < Math.floor(post.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {post.tags.map(tag => (
+                        <span key={tag.id} 
+                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
+                        >
+                          #{tag.name}
+                        </span>
+                      ))}
+                    </div>
+
+                    <p className="text-gray-600 text-sm mb-4">{post.content}</p>
+
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
+                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                      >
+                        {post.comments.length} comments
+                      </button>
+                      <span className="text-sm text-gray-400">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
                 ))}
-                
-                <div style={{ marginTop: '1rem' }}>
-                  <button
-                    onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
-                    style={{
-                      padding: '0.25rem 0.5rem',
-                      backgroundColor: 'grey',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      marginRight: '0.5rem'
-                    }}
-                  >
-                    {selectedPost === post.id ? 'Hide Comments' : `Comments (${post.comments.length})`}
-                  </button>
-                  
-                  {selectedPost === post.id && (
-                    <div style={{ marginTop: '1rem' }}>
-                      {user && (
-                        <div style={{ marginBottom: '1rem' }}>
-                          <textarea
-                            value={commentContent}
-                            onChange={(e) => setCommentContent(e.target.value)}
-                            placeholder="Write a comment..."
-                            style={{
-                              width: '100%',
-                              padding: '0.5rem',
-                              border: '1px solid #ddd',
-                              borderRadius: '4px',
-                              marginBottom: '0.5rem'
-                            }}
-                            rows={2}
-                          />
-                          <button
-                            onClick={() => handleComment(post.id)}
-                            style={{
-                              padding: '0.25rem 0.5rem',
-                              backgroundColor: 'grey',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '4px',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            Post Comment
-                          </button>
-                        </div>
-                      )}
-                      
-                      {post.comments.length > 0 ? (
-                        post.comments.map((comment) => (
-                          <div
-                            key={comment.id}
-                            style={{
-                              padding: '0.5rem',
-                              borderLeft: '2px solid #ddd',
-                              marginBottom: '0.5rem'
-                            }}
-                          >
-                            <p style={{ marginBottom: '0.25rem' }}>{comment.content}</p>
-                            <small style={{ color: '#888' }}>
-                              {comment.author.username} - {new Date(comment.createdAt).toLocaleDateString()}
-                            </small>
-                          </div>
-                        ))
-                      ) : (
-                        <p style={{ color: '#888', fontStyle: 'italic' }}>No comments yet</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {user && (user.id === post.authorId || user.permission === 'ADMIN') && (
-                  <div style={{ marginTop: '0.5rem' }}>
-                    <button
-                      onClick={() => handleDeleteClick(post.id)}
-                      style={{
-                        padding: '0.25rem 0.5rem',
-                        backgroundColor: 'red',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        marginRight: '0.5rem'
-                      }}
-                    >
-                      Delete
-                    </button>
-                    {user.id === post.authorId && (
-                      <button
-                        onClick={() => {
-                          setEditingPost(post);
-                          setEditTitle(post.title);
-                          setEditContent(post.content);
-                        }}
-                        style={{
-                          padding: '0.25rem 0.5rem',
-                          backgroundColor: 'blue',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Edit
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
-            ))
-          )}
-        </div>
-
-        <div style={{ 
-          display: 'flex',
-          justifyContent: 'center',
-          marginTop: '2rem'
-        }}>
-          <button 
-            onClick={() => router.push('/')}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: 'grey',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Back to Home
-          </button>
-        </div>
-      </div>
-
-      {editingPost && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '8px',
-            width: '90%',
-            maxWidth: '500px'
-          }}>
-            <h2>Edit Post</h2>
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                marginBottom: '1rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px'
-              }}
-            />
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                marginBottom: '1rem',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                minHeight: '200px'
-              }}
-            />
-            <div style={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '1rem'
-            }}>
-              <button
-                onClick={() => {
-                  setEditingPost(null);
-                  setEditTitle('');
-                  setEditContent('');
-                }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'grey',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  await handleUpdatePost(editingPost.id, editingPost.authorId, {
-                    title: editTitle,
-                    content: editContent
-                  });
-                  setEditingPost(null);
-                  setEditTitle('');
-                  setEditContent('');
-                }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: 'blue',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Save
-              </button>
             </div>
           </div>
         </div>
-      )}
-
-      {showDeletePopup && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <p>Are you sure you want to delete this post?</p>
-            <button onClick={confirmDelete} style={{ marginRight: '10px' }}>Yes</button>
-            <button onClick={() => setShowDeletePopup(false)}>No</button>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 } 
