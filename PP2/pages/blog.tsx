@@ -251,6 +251,14 @@ export default function Blog() {
     setSearchQuery(e.target.value);
   };
 
+  const handleNewPostClick = () => {
+    if (!user) {
+      console.error('Please log in to create a post');
+      return;
+    }
+    setShowNewPostPopup(true);
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -298,8 +306,6 @@ export default function Blog() {
               </div>
             </div>
 
-
-
             {/* Right Column - Posts */}
             <div className="col-span-5 pt-8">
               {/* Search Bar */}
@@ -328,16 +334,18 @@ export default function Blog() {
                 </div>
               </div>
 
-              {/* New Post Button */}
-              <div className="text-center mb-8">
-                <button 
-                  onClick={() => setShowNewPostPopup(true)}
-                  className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
-                           font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
-                >
-                  New Post
-                </button>
-              </div>
+              {/* Only show New Post button if user is logged in */}
+              {user && (
+                  <div className="text-center mb-8">
+                      <button 
+                          onClick={handleNewPostClick}
+                          className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
+                                   font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
+                      >
+                          New Post
+                      </button>
+                  </div>
+              )}
 
               {/* Posts List */}
               <div className="space-y-6">
@@ -392,6 +400,80 @@ export default function Blog() {
           </div>
         </div>
       </div>
+
+      {/* New Post Popup Modal */}
+      {showNewPostPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+                  <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold text-gray-700">Create New Post</h3>
+                      <button 
+                          onClick={() => setShowNewPostPopup(false)}
+                          className="text-gray-500 hover:text-gray-700"
+                      >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                      </button>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                      <div>
+                          <input
+                              type="text"
+                              value={title}
+                              onChange={(e) => setTitle(e.target.value)}
+                              placeholder="Post title"
+                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
+                              required
+                          />
+                      </div>
+
+                      <div>
+                          <textarea
+                              value={content}
+                              onChange={(e) => setContent(e.target.value)}
+                              placeholder="Write your post..."
+                              className="w-full h-48 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
+                              required
+                          />
+                      </div>
+
+                      <div>
+                          <select
+                              multiple
+                              value={selectedTags}
+                              onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
+                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
+                          >
+                              {availableTags.map(tag => (
+                                  <option key={tag.id} value={tag.name}>
+                                      {tag.name}
+                                  </option>
+                              ))}
+                          </select>
+                          <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags</p>
+                      </div>
+
+                      <div className="flex justify-end space-x-3">
+                          <button
+                              type="button"
+                              onClick={() => setShowNewPostPopup(false)}
+                              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                          >
+                              Cancel
+                          </button>
+                          <button
+                              type="submit"
+                              className="px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#1a91da] transition-colors"
+                          >
+                              Create Post
+                          </button>
+                      </div>
+                  </form>
+              </div>
+          </div>
+      )}
     </div>
   );
 } 
