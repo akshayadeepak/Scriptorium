@@ -23,7 +23,6 @@ export function verifyToken(token: string): TokenPayload | null {
     try {
         // Simple decode first
         const decoded = jwt.decode(token);
-        console.log('Decoded token:', decoded);
 
         // Manual verification using the secret
         const parts = token.split('.');

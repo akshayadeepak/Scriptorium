@@ -274,6 +274,12 @@ export default function Blog() {
       const currentRating = votes[postId] || 0;
       const newRating = voteType === 'up' ? currentRating + 1 : currentRating - 1;
 
+      // Update local state immediately for responsive UI
+      setVotes(prev => ({
+        ...prev,
+        [postId]: newRating
+      }));
+
       const response = await fetch(`/api/blog/posts/${postId}`, {
         method: 'PUT',
         headers: {
@@ -286,14 +292,20 @@ export default function Blog() {
         })
       });
 
-      if (response.ok) {
+      if (!response.ok) {
+        // Revert the local state if the server request fails
         setVotes(prev => ({
           ...prev,
-          [postId]: newRating
+          [postId]: currentRating
         }));
       }
     } catch (error) {
       console.error('Error updating vote:', error);
+      // Revert the local state on error
+      setVotes(prev => ({
+        ...prev,
+        [postId]: votes[postId] || 0
+      }));
     }
   };
 
@@ -395,26 +407,32 @@ export default function Blog() {
                         {/* Voting Section */}
                         <div className="flex flex-col items-center gap-1">
                           <button 
-                            onClick={() => handleVote(post.id, 'up')}
-                            className={`${
-                              votes[post.id] === 1 
-                                ? 'text-[#1da1f2]' 
-                                : 'text-gray-400 hover:text-[#1da1f2]'
+                            onClick={() => user ? handleVote(post.id, 'up') : null}
+                            className={`p-1 rounded ${
+                              !user 
+                                ? 'text-gray-300 cursor-not-allowed' 
+                                : votes[post.id] > 0 
+                                  ? 'text-[#1da1f2] hover:bg-gray-100' 
+                                  : 'text-gray-400 hover:bg-gray-100'
                             } transition-colors`}
                           >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
                             </svg>
                           </button>
+                          
                           <span className="font-medium text-gray-700">
-                            {votes[post.id] || post.ratings || 0}
+                            {votes[post.id] || 0}
                           </span>
+                          
                           <button 
-                            onClick={() => handleVote(post.id, 'down')}
-                            className={`${
-                              votes[post.id] === -1 
-                                ? 'text-[#1da1f2]' 
-                                : 'text-gray-400 hover:text-[#1da1f2]'
+                            onClick={() => user ? handleVote(post.id, 'down') : null}
+                            className={`p-1 rounded ${
+                              !user 
+                                ? 'text-gray-300 cursor-not-allowed' 
+                                : votes[post.id] < 0 
+                                  ? 'text-[#1da1f2] hover:bg-gray-100' 
+                                  : 'text-gray-400 hover:bg-gray-100'
                             } transition-colors`}
                           >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
