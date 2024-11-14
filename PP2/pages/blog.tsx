@@ -38,7 +38,7 @@ interface BlogPost {
   authorId: number;
   tags: Tag[];
   links: CodeTemplate[];
-  rating: number;
+  ratings: number;
 }
 
 export default function Blog() {
@@ -60,21 +60,28 @@ export default function Blog() {
   const { user } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-
-  const fetchPosts = async () => {
-    try {
-      const response = await fetch('/api/blog');
-      if (response.ok) {
-        const data = await response.json();
-        setPosts(data);
-      }
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    }
-  };
+  const [votes, setVotes] = useState<Record<number, number>>({});
 
   useEffect(() => {
-    fetchPosts();
+    const initializePosts = async () => {
+      try {
+        const response = await fetch('/api/blog');
+        if (response.ok) {
+          const data = await response.json();
+          setPosts(data);
+          // Initialize votes state with current post ratings
+          const initialVotes = data.reduce((acc: Record<number, number>, post: BlogPost) => {
+            acc[post.id] = post.ratings || 0;
+            return acc;
+          }, {});
+          setVotes(initialVotes);
+        }
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      }
+    };
+
+    initializePosts();
   }, []);
 
   const fetchTags = async () => {
@@ -259,6 +266,50 @@ export default function Blog() {
     setShowNewPostPopup(true);
   };
 
+  const handleVote = async (postId: number, direction: 'up' | 'down') => {
+    if (!user) return;
+
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const newRating = direction === 'up' ? 1 : -1;
+
+      const response = await fetch(`/api/blog/posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          action: 'rate',
+          ratings: (post.ratings || 0) + newRating
+        })
+      });
+
+      if (response.ok) {
+        setPosts(prevPosts => 
+          prevPosts.map(p => 
+            p.id === postId 
+              ? { ...p, ratings: (p.ratings || 0) + newRating }
+              : p
+          )
+        );
+        
+        setVotes(prevVotes => ({
+          ...prevVotes,
+          [postId]: (prevVotes[postId] || 0) + newRating
+        }));
+      } else {
+        const data = await response.json();
+        console.error('Vote error:', data.error);
+      }
+    } catch (error) {
+      console.error('Error voting:', error);
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
@@ -349,50 +400,84 @@ export default function Blog() {
                 {/* Bottom Section - Posts List */}
                 <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-6">
-                    {[...posts].sort((a, b) => (b.rating || 0) - (a.rating || 0)).map((post, index) => (
+                    {[...posts].sort((a, b) => (b.ratings || 0) - (a.ratings || 0)).map((post, index) => (
                       <div key={post.id} 
                         className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
-                        border-b border-gray-100 last:border-b-0 pb-6 p-4 rounded-lg`}
+                        border-b border-gray-100 last:border-b-0 pb-6 p-4 rounded-lg flex gap-4`}
                       >
-                        <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-gray-500 text-sm">By {post.author.username}</p>
-                          <div className="flex items-center gap-1">
-                            {[...Array(5)].map((_, i) => (
-                              <svg
-                                key={i}
-                                className={`w-4 h-4 ${i < Math.floor(post.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
+                        {/* Voting Section */}
+                        <div className="flex flex-col items-center gap-1">
+                          <button 
+                            onClick={() => handleVote(post.id, 'up')}
+                            className={`${
+                              votes[post.id] === 1 
+                                ? 'text-[#1da1f2]' 
+                                : 'text-gray-400 hover:text-[#1da1f2]'
+                            } transition-colors`}
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                            </svg>
+                          </button>
+                          <span className="font-medium text-gray-700">
+                            {votes[post.id] || post.ratings || 0}
+                          </span>
+                          <button 
+                            onClick={() => handleVote(post.id, 'down')}
+                            className={`${
+                              votes[post.id] === -1 
+                                ? 'text-[#1da1f2]' 
+                                : 'text-gray-400 hover:text-[#1da1f2]'
+                            } transition-colors`}
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Post Content */}
+                        <div className="flex-1">
+                          <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-gray-500 text-sm">By {post.author.username}</p>
+                            <div className="flex items-center gap-1">
+                              {[...Array(5)].map((_, i) => (
+                                <svg
+                                  key={i}
+                                  className={`w-4 h-4 ${i < Math.floor(post.ratings || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {post.tags.map(tag => (
+                              <span key={tag.id} 
+                                className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
                               >
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
+                                #{tag.name}
+                              </span>
                             ))}
                           </div>
-                        </div>
-                        
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {post.tags.map(tag => (
-                            <span key={tag.id} 
-                              className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
+
+                          <p className="text-gray-600 text-sm mb-4">{post.content}</p>
+
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                            <button
+                              onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
+                              className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                             >
-                              #{tag.name}
+                              {post.comments.length} comments
+                            </button>
+                            <span className="text-sm text-gray-400">
+                              {new Date(post.createdAt).toLocaleDateString()}
                             </span>
-                          ))}
-                        </div>
-
-                        <p className="text-gray-600 text-sm mb-4">{post.content}</p>
-
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                          <button
-                            onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
-                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                          >
-                            {post.comments.length} comments
-                          </button>
-                          <span className="text-sm text-gray-400">
-                            {new Date(post.createdAt).toLocaleDateString()}
-                          </span>
+                          </div>
                         </div>
                       </div>
                     ))}
