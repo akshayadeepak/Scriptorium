@@ -260,14 +260,14 @@ export default function Blog() {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="h-screen overflow-hidden">
       <Navbar />
-      <div className={styles.blogBackground}>
-        <div className="px-4">
-          <div className="grid grid-cols-6 gap-8">
+      <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+        <div className="px-4 h-full">
+          <div className="grid grid-cols-6 gap-8 h-full">
             {/* Left Column - Tags */}
             <div className="col-span-1">
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-4 mt-4 mb-4 overflow-y-auto max-h-[calc(100vh-6rem)]">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-8 h-[calc(100vh-112.5px)] mt-8 overflow-y-auto">
                 <h2 className="text-xl font-bold text-gray-700 mb-4">Tags</h2>
                 <div className="space-y-2">
                   {[
@@ -307,94 +307,97 @@ export default function Blog() {
             </div>
 
             {/* Right Column - Posts */}
-            <div className="col-span-5 pt-8">
-              {/* Search Bar */}
-              <div className="mb-8">
-                <div className="relative max-w-2xl mx-auto">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    placeholder="Search posts..."
-                    className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm 
-                             focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
-                             transition-all duration-300 pl-14"
-                  />
-                  <svg 
-                    className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                    fill="none" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth="2" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+            <div className="col-span-5 py-8">
+              {/* White box container */}
+              <div className="bg-white rounded-lg shadow-lg flex flex-col max-h-[calc(100vh-112.5px)]">
+                {/* Top Section - Search & Button */}
+                <div className="p-6 border-b border-gray-200">
+                  <div className="relative max-w-2xl mx-auto mb-6">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      placeholder="Search posts..."
+                      className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm 
+                               focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
+                               transition-all duration-300 pl-14"
+                    />
+                    <svg 
+                      className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                      fill="none" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth="2" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+
+                  <div className="text-center">
+                    <button 
+                      onClick={handleNewPostClick}
+                      className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
+                               font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
+                    >
+                      New Post
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Only show New Post button if user is logged in */}
-              {user && (
-                  <div className="text-center mb-8">
-                      <button 
-                          onClick={handleNewPostClick}
-                          className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
-                                   font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
+                {/* Bottom Section - Posts List */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="space-y-6">
+                    {[...posts].sort((a, b) => (b.rating || 0) - (a.rating || 0)).map((post, index) => (
+                      <div key={post.id} 
+                        className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
+                        border-b border-gray-100 last:border-b-0 pb-6 p-4 rounded-lg`}
                       >
-                          New Post
-                      </button>
-                  </div>
-              )}
+                        <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-gray-500 text-sm">By {post.author.username}</p>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <svg
+                                key={i}
+                                className={`w-4 h-4 ${i < Math.floor(post.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {post.tags.map(tag => (
+                            <span key={tag.id} 
+                              className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
+                            >
+                              #{tag.name}
+                            </span>
+                          ))}
+                        </div>
 
-              {/* Posts List */}
-              <div className="space-y-6">
-                {[...posts].sort((a, b) => (b.rating || 0) - (a.rating || 0)).map((post) => (
-                  <div key={post.id} 
-                    className="bg-white p-6 rounded-lg shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg w-full"
-                  >
-                    <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-gray-500 text-sm">By {post.author.username}</p>
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-4 h-4 ${i < Math.floor(post.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
+                        <p className="text-gray-600 text-sm mb-4">{post.content}</p>
+
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                          <button
+                            onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
+                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                           >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
+                            {post.comments.length} comments
+                          </button>
+                          <span className="text-sm text-gray-400">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {post.tags.map(tag => (
-                        <span key={tag.id} 
-                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
-                        >
-                          #{tag.name}
-                        </span>
-                      ))}
-                    </div>
-
-                    <p className="text-gray-600 text-sm mb-4">{post.content}</p>
-
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                      <button
-                        onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        {post.comments.length} comments
-                      </button>
-                      <span className="text-sm text-gray-400">
-                        {new Date(post.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>
