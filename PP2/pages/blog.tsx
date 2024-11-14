@@ -266,15 +266,13 @@ export default function Blog() {
     setShowNewPostPopup(true);
   };
 
-  const handleVote = async (postId: number, direction: 'up' | 'down') => {
+  const handleVote = async (postId: number, voteType: 'up' | 'down') => {
     if (!user) return;
-
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
 
     try {
       const token = localStorage.getItem('token');
-      const newRating = direction === 'up' ? 1 : -1;
+      const currentRating = votes[postId] || 0;
+      const newRating = voteType === 'up' ? currentRating + 1 : currentRating - 1;
 
       const response = await fetch(`/api/blog/posts/${postId}`, {
         method: 'PUT',
@@ -282,31 +280,20 @@ export default function Blog() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: 'rate',
-          ratings: (post.ratings || 0) + newRating
+          rating: newRating
         })
       });
 
       if (response.ok) {
-        setPosts(prevPosts => 
-          prevPosts.map(p => 
-            p.id === postId 
-              ? { ...p, ratings: (p.ratings || 0) + newRating }
-              : p
-          )
-        );
-        
-        setVotes(prevVotes => ({
-          ...prevVotes,
-          [postId]: (prevVotes[postId] || 0) + newRating
+        setVotes(prev => ({
+          ...prev,
+          [postId]: newRating
         }));
-      } else {
-        const data = await response.json();
-        console.error('Vote error:', data.error);
       }
     } catch (error) {
-      console.error('Error voting:', error);
+      console.error('Error updating vote:', error);
     }
   };
 
