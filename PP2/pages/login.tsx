@@ -47,106 +47,61 @@ export default function Login() {
     };
 
     return (
-        <div style={{ 
-            minHeight: '100vh', 
-            width: '100%', 
-            backgroundColor: 'lightgrey',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '20px'
-        }}>
-            <div style={{
-                width: '100%',
-                maxWidth: '400px',
-                backgroundColor: 'white',
-                padding: '2rem',
-                borderRadius: '8px',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-            }}>
-                <h2>Login</h2>
-                
-                {success && (
-                    <div style={{ 
-                        color: 'green', 
-                        margin: '10px', 
-                        padding: '10px', 
-                        backgroundColor: '#e8f5e9',
-                        borderRadius: '4px'
-                    }}>
-                        {success}
-                    </div>
-                )}
-
-                {error && (
-                    <div style={{ 
-                        color: 'red', 
-                        margin: '10px', 
-                        padding: '10px', 
-                        backgroundColor: '#ffebee',
-                        borderRadius: '4px'
-                    }}>
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleLogin}>
-                    <div className="input-field" style={{margin: '30px'}}>
-                        <label style={{margin: '30px'}}>Email</label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="input-field">
-                        <label style={{margin: '30px'}}>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div style={{ 
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '20px',  // Space between buttons
-                        marginTop: '20px'
-                    }}>
-                       
-
-                        <button 
-                            type="button" 
-                            style={{
-                                padding: '10px 20px',
-                                backgroundColor: 'grey',
-                                border: 'none',
-                                borderRadius: '4px',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                            onClick={() => router.push('/')}
-                        >
-                            Back
-                        </button>
-                        <button 
-                            type="submit" 
-                            style={{
-                                padding: '10px 20px',
-                                backgroundColor: 'grey',
-                                border: 'none',
-                                borderRadius: '4px',
-                                color: 'white',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Login
-                        </button>
-                    </div>
-                </form>
-            </div>
+        <div className="min-h-screen w-full flex justify-center items-center p-5 bg-cover bg-center"
+        style={{ backgroundImage: "url('/banners/index.png')" }}>
+          <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+            <h1 className="text-center font-bold text-xl p-1">Login to Your Account</h1>
+      
+            {success && (
+              <div className="text-green-600 my-2 p-2 bg-green-100 rounded">
+                {success}
+              </div>
+            )}
+      
+            {error && (
+              <div className="text-red-600 my-2 p-2 bg-red-100 rounded">
+                {error}
+              </div>
+            )}
+      
+            <form onSubmit={handleLogin}>
+              <div className="mb-6">
+                <label className="block mb-2">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block mb-2">Password</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
+                />
+              </div>
+              <div className="flex justify-center gap-5 mt-5">
+                <button
+                  type="button"
+                  className="px-4 py-1 bg-white text-blue-400 rounded border border-blue-400 hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  onClick={() => router.push('/')}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1 bg-white text-blue-400 rounded border border-blue-400 hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  Login
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-    );
+      );
 } 
