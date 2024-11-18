@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
+import styles from './code-templates.module.css';
 
 export default function Login() {
     const router = useRouter();
@@ -47,8 +48,8 @@ export default function Login() {
     };
 
     return (
-        <div className="min-h-screen w-full flex justify-center items-center p-5 bg-cover bg-center"
-        style={{ backgroundImage: "url('/banners/index.png')" }}>
+      <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+        <div className="min-h-screen w-full flex justify-center items-center p-5">
           <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
             <h1 className="text-center font-bold text-xl p-1">Login to Your Account</h1>
       
@@ -114,5 +115,6 @@ export default function Login() {
             </form>
           </div>
         </div>
-      );
+      </div>
+    );
 } 

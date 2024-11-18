@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
+import styles from './code-templates.module.css';
 
 export default function Signup() {
     const router = useRouter();
@@ -75,8 +76,8 @@ export default function Signup() {
     };
 
     return (
-        <div className="min-h-screen w-full flex justify-center items-center p-5 bg-cover bg-center"
-        style={{ backgroundImage: "url('/banners/index.png')" }}>
+        <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+        <div className="min-h-screen w-full flex justify-center items-center p-5">
         <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
             <h2 className="text-center mb-6 text-xl font-bold">Create your account</h2>
 
@@ -169,6 +170,7 @@ export default function Signup() {
                 </button>
               </div>
             </form>
+        </div>
         </div>
         </div>
     );
