@@ -100,6 +100,17 @@ export default function Login() {
                   Login
                 </button>
               </div>
+              <div className="flex justify-center mt-4">
+                <p className="px-2 py-1 text-xs font-bold">
+                  Don't have an Account?
+                </p>
+                <button 
+                  type="button"
+                  className="px-2 py-1 bg-white rounded text-xs hover:bg-gray-200"
+                  onClick={() => router.push('/signup')}>
+                    Sign up
+                </button>
+              </div>
             </form>
           </div>
         </div>
