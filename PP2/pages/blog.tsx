@@ -155,7 +155,7 @@ export default function Blog() {
         setSelectedTags([]);
         setSelectedTemplateId(null);
         setShowNewPostPopup(false);
-        fetchPosts();
+        setPosts(prevPosts => [...prevPosts]); // Refresh the posts list
       } else {
         const errorData = await response.json();
         console.error('Error creating post:', errorData.error);
@@ -189,7 +189,7 @@ export default function Blog() {
 
         if (response.ok) {
             setCommentContent('');
-            fetchPosts(); // Refresh posts to show new comment
+            setPosts(prevPosts => [...prevPosts]); // Refresh posts to show new comment
         }
     } catch (error) {
         console.error('Error posting comment:', error);
@@ -215,7 +215,7 @@ export default function Blog() {
 
       if (response.ok) {
         console.log('Post deleted successfully');
-        fetchPosts(); // Refresh the posts list
+        setPosts(prevPosts => [...prevPosts]); // Refresh the posts list
       } else {
         const data = await response.json();
         console.error('Delete error:', data.error);
@@ -244,7 +244,7 @@ export default function Blog() {
 
       if (response.ok) {
         console.log('Post updated successfully');
-        fetchPosts(); // Refresh the posts list
+        setPosts(prevPosts => [...prevPosts]); // Refresh the posts list
       } else {
         const data = await response.json();
         console.error('Update error:', data.error);
@@ -470,7 +470,7 @@ export default function Blog() {
                             ))}
                           </div>
 
-                          <p className="text-gray-600 text-sm mb-4">{post.content}</p>
+                          <pre className="text-gray-600 text-sm mb-4 whitespace-pre-wrap font-sans">{post.content}</pre>
 
                           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
                             <button
