@@ -78,7 +78,7 @@ const Profile: React.FC = () => {
         fetchUserTemplates();
     }, [searchQuery]);
 
-    if (!profile) return <div></div>;
+    if (!profile) return <div>Loading...</div>;
 
     return (
         <AuthGuard>
@@ -98,7 +98,7 @@ const Profile: React.FC = () => {
                         <div className="bg-white bg-opacity-80 rounded-t-lg shadow p-6">
                             <h2 className="text-center text-2xl font-bold text-gray-800">Profile</h2>
                         </div>
-                        <div className="bg-white bg-opacity-80 rounded-b-lg shadow p-6 overflow-auto" style={{ maxHeight: '74vh' }}>
+                        <div className="bg-white bg-opacity-80 shadow p-6 overflow-auto" style={{ maxHeight: '63vh' }}>
                             {profile.avatar ? (
                                 <div className="flex justify-center mb-6">
                                     <img 
@@ -159,8 +159,9 @@ const Profile: React.FC = () => {
                                     ))}
                                 </ul>
                             )}
-
-                            <div className="flex justify-center gap-4 mt-8">
+                        </div>
+                        <div className="bg-white bg-opacity-80 rounded-b-lg shadow p-4">
+                            <div className="flex justify-center gap-4">
                                 <button 
                                     onClick={() => router.push('/edit-profile')}
                                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

@@ -80,10 +80,10 @@ const EditProfile: React.FC = () => {
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <Navbar />
                     <div className="w-full p-4">
-                        <div className="bg-white bg-opacity-80 rounded-t-lg shadow p-6">
+                        <div className="bg-white bg-opacity-80 rounded-t-lg p-6">
                             <h2 className="text-center text-2xl font-bold text-gray-800">Edit Profile</h2>
                         </div>
-                        <div className="bg-white bg-opacity-80 rounded-b-lg shadow p-6 overflow-auto" style={{ maxHeight: '74vh' }}>
+                        <div className="bg-white bg-opacity-80 p-6 shadow overflow-auto" style={{ maxHeight: '63vh' }}>
                             {error && (
                                 <div className="text-red-500 text-center mb-4">{error}</div>
                             )}
@@ -158,23 +158,25 @@ const EditProfile: React.FC = () => {
                                         className="w-full p-2 border border-gray-300 rounded"
                                     />
                                 </div>
-
-                                <div className="flex justify-center gap-4 mt-8">
-                                    <button
-                                        type="button"
-                                        onClick={() => router.push('/profile')}
-                                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                    >
-                                        Save Changes
-                                    </button>
-                                </div>
                             </form>
+                        </div>
+                        <div className="bg-white bg-opacity-80 rounded-b-lg shadow p-4">
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/profile')}
+                                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSubmit}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
