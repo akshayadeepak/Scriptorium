@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 export default function Navbar() {
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, avatar, logout } = useAuth();
     const isLoggedIn = !!user;
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -90,9 +90,11 @@ export default function Navbar() {
                             Log Out
                         </button>
                         <Image 
-                            src={placeholderPfp} 
+                            src={avatar || placeholderPfp} 
                             alt="User Avatar" 
-                            className="w-6 h-6 cursor-pointer border border-gray-200"
+                            width={24}
+                            height={24}
+                            className="cursor-pointer border border-gray-200"
                             onClick={() => router.push('/profile')} 
                         />
                     </div>

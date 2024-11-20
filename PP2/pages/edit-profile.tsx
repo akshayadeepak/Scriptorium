@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 
 const EditProfile: React.FC = () => {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, setAvatar } = useAuth();
     const [profile, setProfile] = useState({
         username: '',
         email: '',
@@ -41,6 +41,12 @@ const EditProfile: React.FC = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setProfile(prevState => ({ ...prevState, [name]: value }));
+    };
+
+    const handleAvatarSelect = (avatar: string) => {
+        console.log('Selected Avatar:', avatar);
+        setProfile(prevState => ({ ...prevState, avatar }));
+        setAvatar(avatar);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +107,7 @@ const EditProfile: React.FC = () => {
                                                         src={avatar} 
                                                         alt={`Avatar ${index + 1}`} 
                                                         className={`w-24 h-24 rounded-full border-2 cursor-pointer ${profile.avatar === avatar ? 'border-blue-500' : 'border-gray-300'}`} 
-                                                        onClick={() => setProfile(prevState => ({ ...prevState, avatar }))}
+                                                        onClick={() => handleAvatarSelect(avatar)}
                                                     />
                                                 </div>
                                             ))}

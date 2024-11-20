@@ -9,6 +9,8 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
+    avatar: string;
+    setAvatar: (avatar: string) => void;
     login: (token: string, userData: User) => Promise<void>;
     logout: () => void;
     isLoggedIn: boolean;
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [avatar, setAvatar] = useState<string>('');
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -85,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isLoggedIn, isLoading }}>
+        <AuthContext.Provider value={{ user, avatar, setAvatar, login, logout, isLoggedIn, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
