@@ -27,7 +27,6 @@ const Profile: React.FC = () => {
     const [templates, setTemplates] = useState<CodeTemplate[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
-    const { user } = useAuth();
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -98,7 +97,7 @@ const Profile: React.FC = () => {
                         <div className="bg-white bg-opacity-80 rounded-t-lg shadow p-6">
                             <h2 className="text-center text-2xl font-bold text-gray-800">Profile</h2>
                         </div>
-                        <div className="bg-white bg-opacity-80 shadow p-6 overflow-auto" style={{ maxHeight: '63vh' }}>
+                        <div className="bg-white bg-opacity-80 shadow p-6 overflow-auto" style={{ maxHeight: '70vh' }}>
                             {profile.avatar ? (
                                 <div className="flex justify-center mb-6">
                                     <img 

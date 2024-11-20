@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import { AuthGuard } from '../components/AuthGuard';
-import styles from './edit-profile.module.css';
 import Navbar from '@/components/Navbar';
 
 const EditProfile: React.FC = () => {
@@ -83,7 +82,7 @@ const EditProfile: React.FC = () => {
                         <div className="bg-white bg-opacity-80 rounded-t-lg p-6">
                             <h2 className="text-center text-2xl font-bold text-gray-800">Edit Profile</h2>
                         </div>
-                        <div className="bg-white bg-opacity-80 p-6 shadow" style={{ maxHeight: '63vh' }}>
+                        <div className="bg-white bg-opacity-80 p-6 shadow" style={{ height: '70vh' }}>
                             {error && (
                                 <div className="text-red-500 text-center mb-4">{error}</div>
                             )}
@@ -91,13 +90,12 @@ const EditProfile: React.FC = () => {
                             {success && (
                                 <div className="text-green-500 text-center mb-4">{success}</div>
                             )}
-
                             <form onSubmit={handleSubmit}>
                                 <div className="flex">
                                     <div className="w-1/3 p-4">
                                         <h3 className="text-center text-lg font-bold text-gray-800">Select Avatar</h3>
                                         <div className="grid grid-cols-3 gap-4 mt-4">
-                                            {['/avatar1.png', '/avatar2.png', '/avatar3.png', '/avatar4.png', '/avatar5.png', '/avatar4.png', '/avatar4.png', '/avatar4.png', '/avatar4.png'].map((avatar, index) => (
+                                            {['https://csc309pp2profilepictures.s3.us-east-2.amazonaws.com/test1.png'].map((avatar, index) => (
                                                 <div key={index} className="flex justify-center">
                                                     <img 
                                                         src={avatar} 
