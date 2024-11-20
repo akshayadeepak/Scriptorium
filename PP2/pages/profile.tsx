@@ -93,13 +93,13 @@ const Profile: React.FC = () => {
                 }} />
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <Navbar />
-                    <div className="w-full p-4">
-                        <div className="bg-white bg-opacity-80 rounded-t-lg shadow p-6">
-                            <h2 className="text-center text-2xl font-bold text-gray-800">Profile</h2>
-                        </div>
-                        <div className="bg-white bg-opacity-80 shadow p-6 overflow-auto" style={{ maxHeight: '70vh' }}>
+                    <div className="flex w-full p-4">
+                        <div className="w-1/3 p-4 bg-white bg-opacity-80 rounded-l-lg shadow h-[88.5vh]">
+                            <div className="flex justify-center">
+                                <h2 className="text-center text-2xl font-bold text-gray-800 m-6">Profile</h2>
+                            </div>
                             {profile.avatar ? (
-                                <div className="flex justify-center mb-6">
+                                <div className="flex justify-center mb-6 m-10">
                                     <img 
                                         src={profile.avatar} 
                                         alt="Profile" 
@@ -128,48 +128,62 @@ const Profile: React.FC = () => {
                                 <div className="p-4 border-b border-gray-300 transition hover:bg-gray-200">
                                     <strong>Last name:</strong> {profile.lastName || 'Not set'}
                                 </div>
+                                <div className="flex justify-center">
+                                    <button 
+                                            onClick={() => router.push('/edit-profile')}
+                                            className="px-6 py-3 m-7 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            Edit Profile
+                                    </button>
+                                </div>
                             </div>
-
-                            <h3 className="text-center text-xl font-bold my-8 text-gray-800">My Code Templates</h3>
-
-                            {templates.length === 0 ? (
-                                <p className="text-center text-gray-600 italic p-8">No templates available</p>
-                            ) : (
-                                <ul className="list-none p-0">
-                                    {templates.map(template => (
-                                        <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
-                                            <h4 className="text-lg font-bold mb-2 text-gray-800">
-                                                {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
-                                            </h4>
-                                            <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
-                                                <code>{template.content}</code>
-                                            </pre>
-                                            {template.explanation && (
-                                                <p className="mt-2 text-gray-600">{template.explanation}</p>
-                                            )}
-                                            <div className="flex flex-wrap gap-2 mt-2">
-                                                {template.tags.map(tag => (
-                                                    <span key={tag.name} className="text-blue-500 text-sm">
-                                                        #{tag.name}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
                         </div>
-                        <div className="bg-white bg-opacity-80 rounded-b-lg shadow p-4">
-                            <div className="flex justify-center gap-4">
-                                <button 
-                                    onClick={() => router.push('/edit-profile')}
-                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                >
-                                    Edit Profile
-                                </button>
+                        <div className="w-2/3 p-4 bg-white bg-opacity-80 rounded-r-lg shadow h-[88.5vh] flex flex-col">
+                            <div className="flex justify-center">
+                                <h2 className="text-center text-2xl font-bold text-gray-800 m-6">My Code Templates</h2>
+                            </div>
+                            <div className="overflow-hidden flex-grow">
+                                <div className="overflow-y-auto h-full">
+                                    {templates.length === 0 ? (
+                                        <p className="text-center text-gray-600 italic p-8">No templates available</p>
+                                    ) : (
+                                        <ul className="list-none p-0">
+                                            {templates.map(template => (
+                                                <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
+                                                    <h4 className="text-lg font-bold mb-2 text-gray-800">
+                                                        {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                                                    </h4>
+                                                    <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
+                                                        <code>{template.content}</code>
+                                                    </pre>
+                                                    {template.explanation && (
+                                                        <p className="mt-2 text-gray-600">{template.explanation}</p>
+                                                    )}
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        {template.tags.map(tag => (
+                                                            <span key={tag.name} className="text-blue-500 text-sm">
+                                                                #{tag.name}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+                    {/* <div className="bg-white bg-opacity-80 rounded-b-lg shadow p-4 mt-0">
+                        <div className="flex justify-center gap-4">
+                            <button 
+                                onClick={() => router.push('/edit-profile')}
+                                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            >
+                                Edit Profile
+                            </button>
+                        </div>
+                    </div> */}
                 </div>
             </div>
         </AuthGuard>
