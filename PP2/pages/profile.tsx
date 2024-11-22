@@ -27,6 +27,10 @@ const Profile: React.FC = () => {
     const [templates, setTemplates] = useState<CodeTemplate[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const router = useRouter();
+    const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
+    const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
+
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -78,6 +82,54 @@ const Profile: React.FC = () => {
     }, [searchQuery]);
 
     if (!profile) return <div>Loading...</div>;
+
+    const handleEditButtonClick = (template: CodeTemplate) => {
+        setEditModal(template); // Populate modal with selected template data
+      };
+      
+      const handleEditTemplate = async () => {
+        if (!editModal) return;
+        try {
+          const token = localStorage.getItem('token');
+      
+          if (!token) {
+            setError('Authorization token is missing. Please log in.');
+            return;
+          }
+      
+          const response = await fetch(`/api/code/template`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              id: editModal.id,
+              title: editModal.title,
+              explanation: editModal.explanation,
+              tags: editModal.tags.split(',').map((tagName) => tagName.trim()),
+              language: editModal.language,
+              content: editModal.content,
+            }),
+          });
+      
+          if (response.ok) {
+            const updatedTemplate = await response.json();
+            setTemplates((prev) =>
+              prev.map((template) =>
+                template.id === updatedTemplate.id ? updatedTemplate : template
+              )
+            );
+            setEditModal(null);
+            setSuccessMessage('Template updated successfully!');
+          } else {
+            setError('Failed to update template.');
+          }
+        } catch (error) {
+          console.error('Error updating template:', error);
+          setError('Failed to update template.');
+        }
+      };
 
     return (
         <AuthGuard>
@@ -166,6 +218,14 @@ const Profile: React.FC = () => {
                                                             </span>
                                                         ))}
                                                     </div>
+                                                    <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                                                        <button
+                                                            onClick={() => handleEditButtonClick(template)}
+                                                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </div>
                                                 </li>
                                             ))}
                                         </ul>
@@ -184,6 +244,71 @@ const Profile: React.FC = () => {
                             </button>
                         </div>
                     </div> */}
+                    {/* Editing a Template */}
+                    {editModal && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 max-w-lg">
+                        <h2 className="text-xl font-semibold mb-4">Edit Template</h2>
+                        <input
+                            type="text"
+                            placeholder="Title"
+                            value={editModal.title}
+                            onChange={(e) =>
+                            setEditModal({ ...editModal, title: e.target.value })
+                            }
+                            className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <textarea
+                            placeholder="Explanation"
+                            value={editModal.explanation}
+                            onChange={(e) =>
+                            setEditModal({ ...editModal, explanation: e.target.value })
+                            }
+                            className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Tags (comma-separated)"
+                            value={editModal.tags.map((tag) => tag.name).join(',')}
+                            onChange={(e) =>
+                            setEditModal({...editModal, tags: e.target.value})
+                            }
+                            className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Language"
+                            value={editModal.language}
+                            onChange={(e) =>
+                            setEditModal({ ...editModal, language: e.target.value })
+                            }
+                            className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <textarea
+                            placeholder="Code Content"
+                            value={editModal.content}
+                            onChange={(e) =>
+                            setEditModal({ ...editModal, content: e.target.value })
+                            }
+                            className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 h-24"
+                        />
+                        <div className="flex justify-end">
+                            <button
+                            onClick={() => setEditModal(null)}
+                            className="bg-gray-300 px-4 py-2 rounded mr-2"
+                            >
+                            Cancel
+                            </button>
+                            <button
+                            onClick={handleEditTemplate}
+                            className="bg-blue-500 text-white px-4 py-2 rounded"
+                            >
+                            Save Changes
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+                    )}
                 </div>
             </div>
         </AuthGuard>

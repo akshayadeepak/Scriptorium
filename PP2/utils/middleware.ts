@@ -5,7 +5,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export interface AuthenticatedHandler {
-  (req: NextApiRequest, res: NextApiResponse, userId: number): Promise<void | NextApiResponse>;
+  (req: NextApiRequest, res: NextApiResponse, userId: any): Promise<void | NextApiResponse>;
 }
 
 // Helper function to get user details if needed
@@ -63,6 +63,23 @@ export function withAdminAuth(handler: AuthenticatedHandler) {
     }
 
     return handler(req, res, payload.userId);
+  };
+}
+
+export function withOptionalAuth(handler: AuthenticatedHandler) {
+  return async (req: NextApiRequest, res: NextApiResponse) => {
+    const authHeader = req.headers.authorization;
+    let userId = null;
+
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      const payload = verifyToken(token);
+      if (payload) {
+        userId = payload.userId;
+      }
+    }
+
+    return handler(req, res, userId);
   };
 }
 

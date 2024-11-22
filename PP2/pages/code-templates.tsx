@@ -1,3 +1,6 @@
+// TODO:
+// Handle forking
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
@@ -5,7 +8,6 @@ import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
 import Navbar from '../components/Navbar';
 
-// Add this interface at the top of the file, after the imports
 interface CodeTemplate {
   id: number;
   title: string;
@@ -13,6 +15,7 @@ interface CodeTemplate {
   tags: string[];
   language: string;
   content: string;
+  fork: boolean;
 }
 
 const CodeTemplates = () => {
@@ -30,20 +33,26 @@ const CodeTemplates = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
+  const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
+
 
   // Fetch templates on load
   useEffect(() => {
     if (isLoggedIn) {
       fetchTemplates();
     }
+    else {
+      fetchTemplates();
+    }
   }, [isLoggedIn]);
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch(`/api/code/template`);
+      const response = await fetch('/api/code/template');
       const data = await response.json();
       if (response.ok) {
         setTemplates(data);
+        setFilteredTemplates(data);
       } else {
         setError(data.error || 'Failed to fetch templates');
       }
@@ -52,6 +61,7 @@ const CodeTemplates = () => {
       setError('Failed to fetch templates');
     }
   };
+  
 
   // Handle the creation of a new template
   const handleCreateTemplate = async () => {
@@ -91,6 +101,41 @@ const CodeTemplates = () => {
     }
   };
 
+  const handleForkTemplate = async (id: number) => {
+    setError('');
+    setSuccessMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch('/api/code/fork', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ templateId: id }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setTemplates((prevTemplates) => [...prevTemplates, data]);
+        setNewTemplate({ title: '', explanation: '', tags: '', language: '', content: '' });
+        setSuccessMessage('Template forked successfully!');
+        setCreateTemplate(false)
+      } else {
+        setError(data.error || 'Failed to fork template');
+      }
+    } catch (error) {
+      console.error('Error forking template:', error);
+      setError('Failed to fork template');
+    }
+  };
+
   const handleSearch = (query: string) => {
     setSearchQuery(query);
     if (!query) {
@@ -102,16 +147,57 @@ const CodeTemplates = () => {
       (template) =>
         template.title.toLowerCase().includes(lowerCaseQuery) ||
         template.explanation.toLowerCase().includes(lowerCaseQuery) ||
-        template.tags.some((tag) => tag.toLowerCase().includes(lowerCaseQuery)) ||
+        template.tags.some((tag) => tag.name.toLowerCase().includes(lowerCaseQuery)) ||
         template.language.toLowerCase().includes(lowerCaseQuery)
     );
     setFilteredTemplates(filtered);
   };
 
+  const handleSaveTemplate = async (id: number) => {
+    setError('');
+    setSuccessMessage('');
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch('/api/code/save', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ templateId: id }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setSuccessMessage('Template saved successfully!');
+      }
+
+    } catch (error) {
+      console.error('Error saving template:', error);
+      setError('Failed to save template');
+    }
+  }
+
   const handleDeleteTemplate = async (id: number) => {
     try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
       const response = await fetch(`/api/code/template?id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
       });
       if (response.ok) {
         setTemplates(templates.filter(template => template.id !== id));
@@ -129,9 +215,6 @@ const CodeTemplates = () => {
     <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
       {/* Top Navigation */}
       <Navbar />
-
-      {/*Side Bar With Common Tags*/}
-      {/*Search For Templates*/}
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl font-bold text-center mb-6">Code Templates</h1>
@@ -171,29 +254,59 @@ const CodeTemplates = () => {
         </div>
 
         {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 mb-2">
-          <h2 className="text-xl font-semibold mb-4">Templates</h2>
-          {filteredTemplates.length > 0 ? (
-            filteredTemplates.map((template) => (
-              <div
-                key={template.id}
-                className="border-b border-gray-200 pb-4 mb-4 last:border-b-0 last:pb-0 last:mb-0"
-              >
-                <h3 className="text-lg font-semibold">{template.title}</h3>
-                <p className="text-gray-600">{template.explanation}</p>
-                <p className="text-gray-500 text-sm">Language: {template.language}</p>
-                <button
-                  onClick={() => handleDeleteTemplate(template.id)}
-                  className="text-red-500 mt-2 hover:underline"
-                >
-                  Delete
-                </button>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-500">No templates found.</p>
-          )}
+        <div className="bg-white shadow rounded-lg p-6 mb-2 max-h-[calc(100vh-400px)] overflow-y-scroll">
+          <div className="overflow-y-auto h-full">
+            {(searchQuery ? filteredTemplates : templates).length === 0 ? (
+              <p className="text-center text-gray-600 italic p-8">No templates available</p>
+            ) : (
+              <ul className="list-none p-0">
+                {(searchQuery ? filteredTemplates : templates).map((template) => (
+                  <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
+                    <h4 className="text-lg font-bold mb-2 text-gray-800">
+                      {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                    </h4>
+                    <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
+                      <code>{template.content}</code>
+                    </pre>
+                    {template.explanation && (
+                      <p className="mt-2 text-gray-600">{template.explanation}</p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {(template.tags || []).map((tag) => (
+                        <span key={tag.id} className="text-blue-500 text-sm">
+                          #{tag.name}
+                        </span>
+                      ))}
+                    </div>
+                    {/* Footer with Fork, Save, and Delete Buttons */}
+                    <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => handleForkTemplate(template.id)}
+                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                      >
+                        Fork
+                      </button>
+                      <button
+                        onClick={() => handleSaveTemplate(template.id)}
+                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
+
+
 
         {/*Create a New Template */}
         {createTemplate && (

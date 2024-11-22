@@ -1,19 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-import { withAuth } from '../../../utils/middleware';
+import { withAuth, withOptionalAuth } from '../../../utils/middleware';
 
 const prisma = new PrismaClient();
 
-export default withAuth(async (req: NextApiRequest, res: NextApiResponse, userId: number) => {
-  if (req.method === 'GET') {
-    try {
-      const { search } = req.query;
-      const searchQuery = search ? String(search).toLowerCase() : '';
+const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResponse, userId: number | null) => {
+  try {
+    const { search } = req.query;
+    const searchQuery = search ? String(search).toLowerCase() : '';
       console.log('Search query:', searchQuery);
 
       const templates = await prisma.codeTemplate.findMany({
         where: {
-          authorId: userId,
+          ...(userId ? { authorId: Number(userId) } : {}),
           OR: [
             { title: { contains: searchQuery } },
             { explanation: { contains: searchQuery } },
@@ -29,12 +28,14 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse, userId
         }
       });
 
-      return res.status(200).json(templates);
-    } catch (error) {
-      console.error('Error fetching templates:', error);
-      return res.status(500).json({ error: 'Failed to fetch templates' });
-    }
-  } else if (req.method === 'POST') {
+    return res.status(200).json(templates);
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    return res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+});
+
+const postHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, userId: number) => {
     try {
       const { title, explanation, tags, language, content } = req.body;
 
@@ -75,51 +76,55 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse, userId
       console.error('Error creating template:', error);
       return res.status(500).json({ error: 'Failed to create template' });
     }
-  } else if (req.method === 'PUT') {
-    try {
-      const { id, title, explanation, tags, language, content } = req.body;
+  });
 
-      if (!id) {
-        return res.status(400).json({ error: 'Template ID is required' });
-      }
+const putHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, userId: number) => {
+  try {
+    const { id, title, explanation, tags, language, content } = req.body;
 
-      const existingTemplate = await prisma.codeTemplate.findUnique({
-        where: { id }
-      });
-
-      if (!existingTemplate) {
-        return res.status(404).json({ error: 'Template not found' });
-      }
-
-      if (existingTemplate.authorId !== userId) {
-        return res.status(403).json({ error: 'You do not have permission to update this template' });
-      }
-
-      const updatedTemplate = await prisma.codeTemplate.update({
-        where: { id },
-        data: {
-          ...(title && { title }),
-          ...(explanation && { explanation }),
-          ...(language && { language }),
-          ...(content && { content }),
-          ...(tags && {
-            tags: {
-              set: [],
-              connectOrCreate: tags.map((tag: string) => ({
-                where: { name: tag },
-                create: { name: tag }
-              }))
-            }
-          })
-        }
-      });
-
-      return res.status(200).json(updatedTemplate);
-    } catch (error) {
-      console.error('Error updating template:', error);
-      return res.status(500).json({ error: 'Failed to update template' });
+    if (!id) {
+      return res.status(400).json({ error: 'Template ID is required' });
     }
-  } else if (req.method === 'DELETE') {
+
+    const existingTemplate = await prisma.codeTemplate.findUnique({
+      where: { id }
+    });
+
+    if (!existingTemplate) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    if (existingTemplate.authorId !== userId) {
+      return res.status(403).json({ error: 'You do not have permission to update this template' });
+    }
+
+    const updatedTemplate = await prisma.codeTemplate.update({
+      where: { id },
+      data: {
+        ...(title && { title }),
+        ...(explanation && { explanation }),
+        ...(language && { language }),
+        ...(content && { content }),
+        ...(tags && {
+          tags: {
+            set: [],
+            connectOrCreate: tags.map((tag: string) => ({
+              where: { name: tag },
+              create: { name: tag }
+            }))
+          }
+        })
+      }
+    });
+
+    return res.status(200).json(updatedTemplate);
+  } catch (error) {
+    console.error('Error updating template:', error);
+    return res.status(500).json({ error: 'Failed to update template' });
+  }
+});
+
+const deleteHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, userId: number) => {
     const { id } = req.query;
 
     if (!id || isNaN(Number(id))) {
@@ -153,7 +158,22 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse, userId
       console.error('Error deleting template:', error);
       return res.status(500).json({ error: 'Failed to delete template' });
     }
-  } else {
-    return res.status(405).json({ error: 'Method not allowed' });
+  });
+
+  export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === "GET") {
+      return getHandler(req, res);
+    }
+    
+    if (req.method === "POST") {
+      return postHandler(req, res);
+    }
+  
+    if (req.method === "PUT") {
+      return putHandler(req, res);
+    }
+
+    if (req.method === "DELETE") {
+      return deleteHandler(req, res);
+    }
   }
-});

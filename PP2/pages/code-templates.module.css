@@ -154,7 +154,7 @@
   background-image: url('../public/banners/index.png');
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
+  background-repeat: repeat-y;
   background-attachment: fixed;
   min-height: 100vh;
   width: 100%;
@@ -175,4 +175,4 @@
 .blogBackground > * {
   position: relative;
   z-index: 1;
-} 
+}
