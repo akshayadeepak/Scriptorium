@@ -96,8 +96,8 @@ const Profile: React.FC = () => {
             setError('Authorization token is missing. Please log in.');
             return;
           }
-      
-          const response = await fetch(`/api/code/template`, {
+          console.log(editModal.tags)
+          const response = await fetch(`/api/code/template?id=${editModal.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ const Profile: React.FC = () => {
               id: editModal.id,
               title: editModal.title,
               explanation: editModal.explanation,
-              tags: editModal.tags.split(',').map((tagName) => tagName.trim()),
+            //   tags: editModal.tags.split(',').map((tagName) => tagName.trim()),
               language: editModal.language,
               content: editModal.content,
             }),
@@ -212,7 +212,7 @@ const Profile: React.FC = () => {
                                                         <p className="mt-2 text-gray-600">{template.explanation}</p>
                                                     )}
                                                     <div className="flex flex-wrap gap-2 mt-2">
-                                                        {template.tags.map(tag => (
+                                                        {(template.tags || []).map(tag => (
                                                             <span key={tag.name} className="text-blue-500 text-sm">
                                                                 #{tag.name}
                                                             </span>
