@@ -114,6 +114,9 @@ const putHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, us
             }))
           }
         })
+      },
+      include: {
+        tags: true, 
       }
     });
 

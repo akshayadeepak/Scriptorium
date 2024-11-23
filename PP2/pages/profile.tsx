@@ -30,6 +30,8 @@ const Profile: React.FC = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
+    const [tagInput, setTagInput] = useState('');
+
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -106,7 +108,7 @@ const Profile: React.FC = () => {
                     id: editModal.id,
                     title: editModal.title,
                     explanation: editModal.explanation,
-                    tags: editModal.tags, // Correctly include the tags array
+                    tags: editModal.tags.split(',').map(tag => tag.trim()),
                     language: editModal.language,
                     content: editModal.content,
                 }),
@@ -204,7 +206,7 @@ const Profile: React.FC = () => {
                                                         <p className="mt-2 text-gray-600">{template.explanation}</p>
                                                     )}
                                                     <div className="flex flex-wrap gap-2 mt-2">
-                                                        {template.tags.map(tag => (
+                                                        {(template.tags || []).map(tag => (
                                                             <span key={tag.name} className="text-blue-500 text-sm">#{tag.name}</span>
                                                         ))}
                                                     </div>
@@ -246,13 +248,17 @@ const Profile: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder="Tags (comma-separated)"
-                                    value={editModal.tags.map((tag) => tag.name).join(', ')}
-                                    onChange={(e) =>
+                                    value={
+                                        Array.isArray(editModal.tags) 
+                                            ? (editModal.tags || []).map((tag) => tag.name).join(',') 
+                                            : editModal.tags
+                                    }
+                                    onChange={(e) => {
                                         setEditModal({
                                             ...editModal,
-                                            tags: e.target.value.split(',').map((tagName) => ({ name: tagName.trim() })),
-                                        })
-                                    }
+                                            tags: e.target.value
+                                        });
+                                    }}
                                     className="w-full mb-4 p-2 border rounded"
                                 />
                                 <input
