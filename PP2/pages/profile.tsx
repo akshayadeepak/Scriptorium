@@ -20,6 +20,7 @@ interface CodeTemplate {
     content: string;
     explanation?: string;
     tags: { name: string }[];
+    fork: boolean;
 }
 
 const Profile: React.FC = () => {
@@ -196,9 +197,14 @@ const Profile: React.FC = () => {
                                         <ul className="list-none p-0">
                                             {templates.map(template => (
                                                 <li key={template.id} className="mb-6 p-4 border rounded-lg">
-                                                    <h4 className="text-lg font-bold text-gray-800 mb-2">
-                                                        {template.title} <span className="text-sm text-gray-600">{`(${template.language})`}</span>
-                                                    </h4>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h4 className="text-lg font-bold text-gray-800 flex-1">
+                                                            {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                                                        </h4>
+                                                        {template.fork && (
+                                                            <p className="text-xs text-gray-600 ml-4">Forked</p>
+                                                        )}
+                                                    </div>
                                                     <pre className="bg-gray-200 p-2 rounded">
                                                         <code>{template.content}</code>
                                                     </pre>

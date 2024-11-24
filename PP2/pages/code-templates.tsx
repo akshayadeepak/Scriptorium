@@ -16,6 +16,7 @@ interface CodeTemplate {
   language: string;
   content: string;
   fork: boolean;
+  // blogPost: blogPost[];
 }
 
 const CodeTemplates = () => {
@@ -216,8 +217,7 @@ const CodeTemplates = () => {
       {/* Top Navigation */}
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-center mb-6">Code Templates</h1>
+      <div className="container mx-auto px-4 py-8 bg-white mt-8 rounded-lg">
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
@@ -254,7 +254,7 @@ const CodeTemplates = () => {
         </div>
 
         {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 mb-2 max-h-[calc(100vh-400px)] overflow-y-scroll">
+        <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-325px)] overflow-y-scroll">
           <div className="overflow-y-auto h-full">
             {(searchQuery ? filteredTemplates : templates).length === 0 ? (
               <p className="text-center text-gray-600 italic p-8">No templates available</p>
@@ -262,9 +262,14 @@ const CodeTemplates = () => {
               <ul className="list-none p-0">
                 {(searchQuery ? filteredTemplates : templates).map((template) => (
                   <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
-                    <h4 className="text-lg font-bold mb-2 text-gray-800">
-                      {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
-                    </h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-lg font-bold text-gray-800 flex-1">
+                        {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                      </h4>
+                      {template.fork && (
+                        <p className="text-xs text-gray-600 ml-4">Forked</p>
+                      )}
+                    </div>
                     <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
                       <code>{template.content}</code>
                     </pre>
@@ -278,6 +283,9 @@ const CodeTemplates = () => {
                         </span>
                       ))}
                     </div>
+                    {/* {template.blogPost.length > 0 && (
+                      <p>Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
+                    )} */}
                     {/* Footer with Fork, Save, and Delete Buttons */}
                     <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
                       <button
