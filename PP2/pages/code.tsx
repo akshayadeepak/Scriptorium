@@ -96,6 +96,11 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 }
             }
 
+            let forked = false;
+            if (priorTemplateId) {
+                forked = true;
+            }
+
             // Then save the code template
             const response = await fetch('/api/code/template', {
                 method: 'POST',
@@ -109,6 +114,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                     content: code,
                     explanation,
                     tags: tagList,
+                    fork: forked,
                 }),
             });
 

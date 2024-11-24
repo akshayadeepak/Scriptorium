@@ -37,7 +37,7 @@ const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResp
 
 const postHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, userId: number) => {
     try {
-      const { title, explanation, tags, language, content } = req.body;
+      const { title, explanation, tags, language, content, fork } = req.body;
 
       if (!title || !explanation || !language || !content) {
         return res.status(400).json({ error: 'Title, explanation, language, and content are required' });
@@ -61,7 +61,7 @@ const postHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, u
           authorId: userId,
           language,
           content,
-
+          fork,
           tags: {
             connectOrCreate: tags.map((tag: string) => ({
               where: { name: tag },
