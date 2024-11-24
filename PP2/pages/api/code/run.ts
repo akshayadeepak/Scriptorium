@@ -47,35 +47,45 @@ export default async function handler(
         return res.status(400).json({ error: "Missing code" });
     }
 
-    let command: string;
     let file: string;
-    let comp_command: string = '';
-    
+    let dockerfile: string;
+    let command: string;
+    let compileCommand: string | undefined = undefined; // Initialize compileCommand to undefined
+    let className: string;
+
     // Create unique filename for concurrent requests
     const timestamp = Date.now();
-    
+
     switch (language) {
         case 'python':
-            file = path.join(tempDir, `main_${timestamp}.py`);
-            command = `python3 ${file}`;
+            file = path.join(tempDir, `main.py`);
+            dockerfile = 'dockerfiles/python.dockerfile';
+            command = `python3 /app/main.py`;
             break;
         case 'js':
-            file = path.join(tempDir, `script_${timestamp}.js`);
-            command = `node ${file}`;
+            file = path.join(tempDir, `script.js`);
+            dockerfile = 'dockerfiles/node.dockerfile';
+            command = `node /app/script.js`;
             break;
         case 'java':
-            file = path.join(tempDir, `Main_${timestamp}.java`);
-            command = `java ${file}`;
+            // Set the filename and class name dynamically
+            className = `Main`;  // Dynamically generate class name based on timestamp
+            file = path.join(tempDir, `${className}.java`); // Save the file as Main_<timestamp>.java
+            dockerfile = 'dockerfiles/java.dockerfile';
+
+            // Set the compile and run commands for Java
+            compileCommand = `javac /app/${className}.java`;  // Compile the dynamically generated Java code
+            command = `java -cp /app ${className}`;  // Run the compiled Java class, className without path
             break;
         case 'c':
-            file = path.join(tempDir, `main_${timestamp}.c`);
-            comp_command = `gcc ${file} -o ${path.join(tempDir, `main_${timestamp}`)}`;
-            command = path.join(tempDir, `main_${timestamp}`);
+            file = path.join(tempDir, `main.c`);
+            dockerfile = 'dockerfiles/c.dockerfile';
+            command = `./main`;
             break;
         case 'cpp':
-            file = path.join(tempDir, `main_${timestamp}.cpp`);
-            comp_command = `g++ ${file} -o ${path.join(tempDir, `main_${timestamp}`)}`;
-            command = path.join(tempDir, `main_${timestamp}`);
+            file = path.join(tempDir, `main.cpp`);
+            dockerfile = 'dockerfiles/cpp.dockerfile';
+            command = `./main`;
             break;
         default:
             return res.status(400).json({ error: 'Language not supported' });
@@ -86,7 +96,7 @@ export default async function handler(
         command = argsList.length > 0 
             ? `${command} ${argsList.map((arg: string) => `"${arg}"`).join(' ')}`
             : command;
-    } 
+    }
 
     try {
         fs.writeFileSync(file, code);
@@ -105,25 +115,20 @@ export default async function handler(
             });
         };
 
-        if (language === "c" || language === "cpp") {
-            try {
-                await execPromise(comp_command);
-                const output = await execPromise(command);
-                cleanupFiles(file);
-                clearTempDirectory();
-                return res.status(200).json({ output });
-            } catch (error: any) {
-                cleanupFiles(file);
-                clearTempDirectory();
-                return res.status(400).json({ 
-                    error: error.output || error.message || 'Compilation/Runtime error'
-                });
-            }
-        } else if (language === 'python') {
-            const dockerCommand = `docker build -f dockerfiles/python.dockerfile -t my-python-app . && docker run --rm -v ${tempDir}:/app my-python-app python3 /app/main_${timestamp}.py ${stdin.trim()} 2>&1`;
+        // Build and run the Docker container
+        const dockerBuildCommand = `docker build -f ${dockerfile} -t my-${language}-app .`;
+        const dockerRunCommand = `docker run --rm -v ${tempDir}:/app my-${language}-app ${command} ${stdin.trim()} 2>&1`;
 
+        if (language === 'java') {
+            // Only for Java: First compile the Java program with javac, then run it
             try {
-                const output = await execPromise(dockerCommand);
+                await execPromise(dockerBuildCommand);
+                // Ensure the compileCommand is defined only for Java
+                if (compileCommand) {
+                    await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);  // Compile the Java code
+                }
+                // Run the compiled Java code using the correct class name
+                const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app java -cp /app ${className} 2>&1`);
                 cleanupFiles(file);
                 clearTempDirectory();
                 return res.status(200).json({ output });
@@ -134,24 +139,27 @@ export default async function handler(
                 return res.status(400).json({ error: errorMessage });
             }
         } else {
+            // For non-Java languages, just build and run
             try {
-                const output = await execPromise(command);
+                await execPromise(dockerBuildCommand);
+                const output = await execPromise(dockerRunCommand);
                 cleanupFiles(file);
                 clearTempDirectory();
                 return res.status(200).json({ output });
             } catch (error: any) {
+                const errorMessage = error.output || error.message || 'An error occurred while executing the code';
                 cleanupFiles(file);
                 clearTempDirectory();
-                return res.status(400).json({ error: error.message });
+                return res.status(400).json({ error: errorMessage });
             }
         }
     } catch (error: any) {
         cleanupFiles(file);
         clearTempDirectory();
-        return res.status(500).json({ 
-            error: process.env.NODE_ENV === 'development' 
-                ? error.message 
-                : 'An error occurred while executing the code' 
+        return res.status(500).json({
+            error: process.env.NODE_ENV === 'development'
+                ? error.message
+                : 'An error occurred while executing the code'
         });
     }
 }
@@ -162,4 +170,4 @@ export const config = {
             sizeLimit: '1mb',
         },
     },
-} 
+};
