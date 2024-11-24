@@ -22,6 +22,13 @@ function cleanupFiles(file: string) {
     }
 }
 
+function clearTempDirectory() {
+    fs.readdirSync(tempDir).forEach(file => {
+        const filePath = path.join(tempDir, file);
+        fs.unlinkSync(filePath);
+    });
+}
+
 interface ExecExceptionWithOutput extends Error {
     output?: string;
 }
@@ -75,12 +82,10 @@ export default async function handler(
     }
 
     if (stdin) {
-        console.log("stdin");
         const argsList = stdin.trim().split(/\s+/).filter((arg: string) => arg.length > 0);
-        const finalCommand = argsList.length > 0 
+        command = argsList.length > 0 
             ? `${command} ${argsList.map((arg: string) => `"${arg}"`).join(' ')}`
             : command;
-        command = finalCommand;
     } 
 
     try {
@@ -105,50 +110,44 @@ export default async function handler(
                 await execPromise(comp_command);
                 const output = await execPromise(command);
                 cleanupFiles(file);
+                clearTempDirectory();
                 return res.status(200).json({ output });
             } catch (error: any) {
                 cleanupFiles(file);
+                clearTempDirectory();
                 return res.status(400).json({ 
                     error: error.output || error.message || 'Compilation/Runtime error'
                 });
             }
         } else if (language === 'python') {
-            // Create a unique filename for the temporary Python file
-            const timestamp = Date.now();
-            const tempFilePath = path.join(tempDir, `main_${timestamp}.py`);
-
-            // Write the code to the temporary file
-            fs.writeFileSync(tempFilePath, code);
-
-            // Use the stdin input as command-line arguments
-            const args = stdin.trim(); // Get the stdin input directly
-            const dockerCommand = `docker build -f dockerfiles/python.dockerfile -t my-python-app . && docker run --rm -v ${tempDir}:/app my-python-app python3 /app/main_${timestamp}.py ${args} 2>&1`; // Capture both stdout and stderr
+            const dockerCommand = `docker build -f dockerfiles/python.dockerfile -t my-python-app . && docker run --rm -v ${tempDir}:/app my-python-app python3 /app/main_${timestamp}.py ${stdin.trim()} 2>&1`;
 
             try {
-                // Execute the Docker command and capture both stdout and stderr
                 const output = await execPromise(dockerCommand);
-                console.log('Docker Output:', output); // Log the output
-                cleanupFiles(tempFilePath); // Clean up the temp file
+                cleanupFiles(file);
+                clearTempDirectory();
                 return res.status(200).json({ output });
             } catch (error: any) {
-                // Capture the error output from the Docker command
                 const errorMessage = error.output || error.message || 'An error occurred while executing the code';
-                console.error('Docker Error:', errorMessage); // Log the error
-                cleanupFiles(tempFilePath);
+                cleanupFiles(file);
+                clearTempDirectory();
                 return res.status(400).json({ error: errorMessage });
             }
         } else {
             try {
                 const output = await execPromise(command);
                 cleanupFiles(file);
+                clearTempDirectory();
                 return res.status(200).json({ output });
             } catch (error: any) {
                 cleanupFiles(file);
+                clearTempDirectory();
                 return res.status(400).json({ error: error.message });
             }
         }
     } catch (error: any) {
         cleanupFiles(file);
+        clearTempDirectory();
         return res.status(500).json({ 
             error: process.env.NODE_ENV === 'development' 
                 ? error.message 
