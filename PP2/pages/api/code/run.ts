@@ -51,10 +51,7 @@ export default async function handler(
     let dockerfile: string;
     let command: string;
     let compileCommand: string | undefined = undefined; // Initialize compileCommand to undefined
-    let className: string;
-
-    // Create unique filename for concurrent requests
-    const timestamp = Date.now();
+    let className = '';
 
     switch (language) {
         case 'python':
@@ -64,18 +61,16 @@ export default async function handler(
             break;
         case 'js':
             file = path.join(tempDir, `script.js`);
-            dockerfile = 'dockerfiles/node.dockerfile';
+            dockerfile = 'dockerfiles/js.dockerfile';
             command = `node /app/script.js`;
             break;
         case 'java':
-            // Set the filename and class name dynamically
-            className = `Main`;  // Dynamically generate class name based on timestamp
-            file = path.join(tempDir, `${className}.java`); // Save the file as Main_<timestamp>.java
+            className = `Main`; 
+            file = path.join(tempDir, `${className}.java`);
             dockerfile = 'dockerfiles/java.dockerfile';
 
-            // Set the compile and run commands for Java
-            compileCommand = `javac /app/${className}.java`;  // Compile the dynamically generated Java code
-            command = `java -cp /app ${className}`;  // Run the compiled Java class, className without path
+            compileCommand = `javac /app/${className}.java`;
+            command = `java -cp /app ${className}`;
             break;
         case 'c':
             file = path.join(tempDir, `main.c`);
@@ -122,10 +117,10 @@ export default async function handler(
         if (language === 'java') {
             // Only for Java: First compile the Java program with javac, then run it
             try {
-                await execPromise(dockerBuildCommand);
-                // Ensure the compileCommand is defined only for Java
+                await execPromise(dockerBuildCommand); // Build the Docker image
                 if (compileCommand) {
-                    await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);  // Compile the Java code
+                    // Compile the Java code (if compilation is needed)
+                    await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
                 }
                 // Run the compiled Java code using the correct class name
                 const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app java -cp /app ${className} 2>&1`);
@@ -138,8 +133,32 @@ export default async function handler(
                 clearTempDirectory();
                 return res.status(400).json({ error: errorMessage });
             }
+        } else if (language === 'c' || language === 'cpp') {
+            // For C and C++: Compile the code first, then run the compiled executable
+            try {
+                await execPromise(dockerBuildCommand); // Build the Docker image
+        
+                const compileCommand = language === 'c'
+                    ? `gcc /app/main.c -o /app/main`
+                    : `g++ /app/main.cpp -o /app/main`; // Use the appropriate compiler for C/C++
+        
+                // Compile the code
+                await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
+        
+                // Run the compiled executable
+                const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app /app/main 2>&1`);
+        
+                cleanupFiles(file);
+                clearTempDirectory();
+                return res.status(200).json({ output });
+            } catch (error: any) {
+                const errorMessage = error.output || error.message || 'An error occurred while compiling/running the C/C++ code';
+                cleanupFiles(file);
+                clearTempDirectory();
+                return res.status(400).json({ error: errorMessage });
+            }
         } else {
-            // For non-Java languages, just build and run
+            // Handle other languages (e.g., Python, JS)
             try {
                 await execPromise(dockerBuildCommand);
                 const output = await execPromise(dockerRunCommand);
@@ -153,6 +172,7 @@ export default async function handler(
                 return res.status(400).json({ error: errorMessage });
             }
         }
+        
     } catch (error: any) {
         cleanupFiles(file);
         clearTempDirectory();
