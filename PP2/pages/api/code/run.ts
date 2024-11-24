@@ -22,6 +22,10 @@ function cleanupFiles(file: string) {
     }
 }
 
+interface ExecExceptionWithOutput extends Error {
+    output?: string;
+}
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
@@ -86,8 +90,9 @@ export default async function handler(
             return new Promise((resolve, reject) => {
                 exec(cmd, (error, stdout, stderr) => {
                     if (error) {
-                        error.output = stdout || stderr;
-                        reject(error);
+                        const execError: ExecExceptionWithOutput = error as ExecExceptionWithOutput;
+                        execError.output = stdout || stderr;
+                        reject(execError);
                     } else {
                         resolve(stdout || stderr);
                     }
@@ -106,6 +111,28 @@ export default async function handler(
                 return res.status(400).json({ 
                     error: error.output || error.message || 'Compilation/Runtime error'
                 });
+            }
+        } else if (language === 'python') {
+            // Create a unique filename for the temporary Python file
+            const timestamp = Date.now();
+            const tempFilePath = path.join(tempDir, `main_${timestamp}.py`);
+
+            // Write the code to the temporary file
+            fs.writeFileSync(tempFilePath, code);
+
+            // Build and run the Docker container, passing the temporary file
+            const dockerCommand = `docker build -f dockerfiles/python.dockerfile -t my-python-app . && docker run --rm -v ${tempDir}:/app my-python-app python3 /app/main_${timestamp}.py`;
+
+            try {
+                // Execute the Docker command
+                const output = await execPromise(dockerCommand);
+                console.log('Docker Output:', output); // Log the output
+                cleanupFiles(tempFilePath); // Clean up the temp file
+                return res.status(200).json({ output });
+            } catch (error: any) {
+                console.error('Docker Error:', error); // Log the error
+                cleanupFiles(tempFilePath);
+                return res.status(400).json({ error: error.message });
             }
         } else {
             try {
