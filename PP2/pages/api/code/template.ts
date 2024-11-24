@@ -24,7 +24,8 @@ const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResp
           author: true,
           parentTemplate: true,
           childTemplates: true,
-          savedByUsers: true
+          savedByUsers: true,
+          blogPost: true,
         }
       });
 

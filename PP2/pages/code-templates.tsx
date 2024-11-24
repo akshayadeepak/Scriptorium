@@ -16,7 +16,28 @@ interface CodeTemplate {
   language: string;
   content: string;
   fork: boolean;
-  // blogPost: blogPost[];
+  blogPost: BlogPost[];
+}
+
+interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  author: {
+    id: number;
+    username: string;
+  };
+  createdAt: string;
+  comments: Comment[];
+  authorId: number;
+  tags: Tag[];
+  links: CodeTemplate[];
+  ratings: number;
+}
+
+interface Tag {
+  id: number;
+  name: string;
 }
 
 const CodeTemplates = () => {
@@ -278,12 +299,12 @@ const CodeTemplates = () => {
                         <p className="text-xs text-gray-600 ml-4">Forked</p>
                       )}
                     </div>
+                    {template.explanation && (
+                      <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
+                    )}
                     <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
                       <code>{template.content}</code>
                     </pre>
-                    {template.explanation && (
-                      <p className="mt-2 text-gray-600">{template.explanation}</p>
-                    )}
                     <div className="flex flex-wrap gap-2 mt-2">
                       {(template.tags || []).map((tag) => (
                         <span key={tag.id} className="text-blue-500 text-sm">
@@ -291,9 +312,9 @@ const CodeTemplates = () => {
                         </span>
                       ))}
                     </div>
-                    {/* {template.blogPost.length > 0 && (
-                      <p>Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
-                    )} */}
+                    {(template.blogPost || []).length > 0 && (
+                      <p className="text-sm text-gray-500 mt-1"> Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
+                    )}
                     {/* Footer with Fork, Save, and Delete Buttons */}
                     <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
                       <button
