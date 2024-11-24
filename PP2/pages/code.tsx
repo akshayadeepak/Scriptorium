@@ -1,4 +1,5 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Image from 'next/image';
@@ -10,7 +11,9 @@ import { cpp } from '@codemirror/lang-cpp';
 import { javascript } from '@codemirror/lang-javascript';
 import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
 
-export default function Code() {
+  export default function Code() {
+    const { query } = useRouter();
+    const [priorTemplateId, setPriorTemplateId] = useState<number | null>(null);
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
     const [output, setOutput] = useState('');
@@ -24,8 +27,50 @@ export default function Code() {
     const { user } = useAuth();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const handleSaveClick = () => {
-        setIsModalOpen(true);
+    useEffect(() => {
+        if (query.code) {
+            setCode(query.code as string);
+        }
+        if (query.language) {
+            setLanguage(query.language as string);
+        }
+        if (query.id) {
+            setPriorTemplateId(parseInt(query.id as string))
+        }
+    }, [query]);
+
+    const handleSaveClick = async () => {
+        if (priorTemplateId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/code/template?id=${priorTemplateId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        id: priorTemplateId,
+                        content: code,
+                    }),
+                });
+
+                if (response.ok) {
+                    setOutput('Code template edited successfully!');
+                    setTemplateName('');
+                    setTags('');
+                    setExplanation('');
+                } else if (response.status === 403) {
+                    setIsModalOpen(true);
+                } else {
+                    const errorData = await response.json();
+                    setError(errorData.error || response.statusText);
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                setError('Failed to save code template');
+            }
+        } else {setIsModalOpen(true)};
     };
 
     const handleSaveCode = async () => {
@@ -36,7 +81,6 @@ export default function Code() {
 
         try {
             const token = localStorage.getItem('token');
-            
             // First create any new tags
             const tagList = tags.split(',').map(tag => tag.trim().toLowerCase());
             for (const tagName of tagList) {
@@ -52,6 +96,11 @@ export default function Code() {
                 }
             }
 
+            let forked = false;
+            if (priorTemplateId) {
+                forked = true;
+            }
+
             // Then save the code template
             const response = await fetch('/api/code/template', {
                 method: 'POST',
@@ -65,10 +114,13 @@ export default function Code() {
                     content: code,
                     explanation,
                     tags: tagList,
+                    fork: forked,
                 }),
             });
 
             if (response.ok) {
+                const responseData = await response.json();
+                setPriorTemplateId(responseData.id);
                 setOutput('Code template saved successfully!');
                 setIsModalOpen(false);
                 setTemplateName('');

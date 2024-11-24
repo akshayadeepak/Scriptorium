@@ -1,5 +1,4 @@
-// TODO:
-// Handle forking
+// TODO: handle pagination
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -7,6 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
 import Navbar from '../components/Navbar';
+import { codeTemplate } from '@prisma/client';
 
 interface CodeTemplate {
   id: number;
@@ -16,6 +16,7 @@ interface CodeTemplate {
   language: string;
   content: string;
   fork: boolean;
+  // blogPost: blogPost[];
 }
 
 const CodeTemplates = () => {
@@ -33,8 +34,23 @@ const CodeTemplates = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
-  const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
+  const router = useRouter();
+
+  const handleRunCode = (template: codeTemplate) => {
+    router.push({
+      pathname: '/code',
+      query: { code: template.content, language: template.language, id: template.id },
+    });
+  };
+
+  const handleViewSaved = () => {
+    router.push({
+      pathname: '/saved-templates',
+    })
+  }
 
   // Fetch templates on load
   useEffect(() => {
@@ -44,7 +60,7 @@ const CodeTemplates = () => {
     else {
       fetchTemplates();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, currentPage]);
 
   const fetchTemplates = async () => {
     try {
@@ -99,6 +115,18 @@ const CodeTemplates = () => {
       console.error('Error creating template:', error);
       setError('Failed to create template');
     }
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const nextPage = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
+  const prevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
   const handleForkTemplate = async (id: number) => {
@@ -184,40 +212,12 @@ const CodeTemplates = () => {
     }
   }
 
-  const handleDeleteTemplate = async (id: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('Authorization token is missing. Please log in.');
-        return;
-      }
-
-      const response = await fetch(`/api/code/template?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      if (response.ok) {
-        setTemplates(templates.filter(template => template.id !== id));
-      } else {
-        const data = await response.json();
-        setError(data.error || 'Failed to delete template');
-      }
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      setError('Failed to delete template');
-    }
-  };
-
   return (
     <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
       {/* Top Navigation */}
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-center mb-6">Code Templates</h1>
+      <div className="container mx-auto px-4 py-8 bg-white mt-8 rounded-lg">
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
@@ -244,17 +244,25 @@ const CodeTemplates = () => {
             <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <div className="flex justify-center items-center">
+        <div className="flex justify-center items-center gap-6">
           <button
             onClick={() => setCreateTemplate(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
           >
             Create Template
           </button>
+          {user && (          
+            <button
+              onClick={() => handleViewSaved()}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
+              >
+              View Saved Templates
+            </button>
+          )}
         </div>
 
         {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 mb-2 max-h-[calc(100vh-400px)] overflow-y-scroll">
+        <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-325px)] overflow-y-scroll">
           <div className="overflow-y-auto h-full">
             {(searchQuery ? filteredTemplates : templates).length === 0 ? (
               <p className="text-center text-gray-600 italic p-8">No templates available</p>
@@ -262,9 +270,14 @@ const CodeTemplates = () => {
               <ul className="list-none p-0">
                 {(searchQuery ? filteredTemplates : templates).map((template) => (
                   <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
-                    <h4 className="text-lg font-bold mb-2 text-gray-800">
-                      {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
-                    </h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-lg font-bold text-gray-800 flex-1">
+                        {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                      </h4>
+                      {template.fork && (
+                        <p className="text-xs text-gray-600 ml-4">Forked</p>
+                      )}
+                    </div>
                     <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
                       <code>{template.content}</code>
                     </pre>
@@ -278,25 +291,31 @@ const CodeTemplates = () => {
                         </span>
                       ))}
                     </div>
+                    {/* {template.blogPost.length > 0 && (
+                      <p>Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
+                    )} */}
                     {/* Footer with Fork, Save, and Delete Buttons */}
                     <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => handleRunCode(template)}
+                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                      >
+                        Run Code
+                      </button>
+                    </div>
+                    <div className="flex gap-4">
                       <button
                         onClick={() => handleForkTemplate(template.id)}
                         className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                       >
                         Fork
                       </button>
+                      
                       <button
                         onClick={() => handleSaveTemplate(template.id)}
                         className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                       >
                         Save
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Delete
                       </button>
                     </div>
                   </li>

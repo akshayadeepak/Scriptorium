@@ -20,6 +20,7 @@ interface CodeTemplate {
     content: string;
     explanation?: string;
     tags: { name: string }[];
+    fork: boolean;
 }
 
 const Profile: React.FC = () => {
@@ -30,6 +31,8 @@ const Profile: React.FC = () => {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
     const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
+    const [tagInput, setTagInput] = useState('');
+
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -86,6 +89,33 @@ const Profile: React.FC = () => {
         setEditModal(template);
     };
 
+    const handleDeleteTemplate = async (id: number) => {
+        try {
+          const token = localStorage.getItem('token');
+          
+          if (!token) {
+            setError('Authorization token is missing. Please log in.');
+            return;
+          }
+    
+          const response = await fetch(`/api/code/template?id=${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+          });
+          if (response.ok) {
+            setTemplates(templates.filter(template => template.id !== id));
+          } else {
+            const data = await response.json();
+            setError(data.error || 'Failed to delete template');
+          }
+        } catch (error) {
+          console.error('Error deleting template:', error);
+          setError('Failed to delete template');
+        }
+      };
+
     const handleEditTemplate = async () => {
         if (!editModal) return;
         try {
@@ -106,7 +136,7 @@ const Profile: React.FC = () => {
                     id: editModal.id,
                     title: editModal.title,
                     explanation: editModal.explanation,
-                    tags: editModal.tags, // Correctly include the tags array
+                    tags: editModal.tags.split(',').map(tag => tag.trim()),
                     language: editModal.language,
                     content: editModal.content,
                 }),
@@ -194,9 +224,14 @@ const Profile: React.FC = () => {
                                         <ul className="list-none p-0">
                                             {templates.map(template => (
                                                 <li key={template.id} className="mb-6 p-4 border rounded-lg">
-                                                    <h4 className="text-lg font-bold text-gray-800 mb-2">
-                                                        {template.title} <span className="text-sm text-gray-600">{`(${template.language})`}</span>
-                                                    </h4>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h4 className="text-lg font-bold text-gray-800 flex-1">
+                                                            {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                                                        </h4>
+                                                        {template.fork && (
+                                                            <p className="text-xs text-gray-600 ml-4">Forked</p>
+                                                        )}
+                                                    </div>
                                                     <pre className="bg-gray-200 p-2 rounded">
                                                         <code>{template.content}</code>
                                                     </pre>
@@ -204,16 +239,24 @@ const Profile: React.FC = () => {
                                                         <p className="mt-2 text-gray-600">{template.explanation}</p>
                                                     )}
                                                     <div className="flex flex-wrap gap-2 mt-2">
-                                                        {template.tags.map(tag => (
+                                                        {(template.tags || []).map(tag => (
                                                             <span key={tag.name} className="text-blue-500 text-sm">#{tag.name}</span>
                                                         ))}
                                                     </div>
-                                                    <button
-                                                        onClick={() => handleEditButtonClick(template)}
-                                                        className="text-sm text-gray-500 mt-4"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                    <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                                                        <button
+                                                            onClick={() => handleEditButtonClick(template)}
+                                                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteTemplate(template.id)}
+                                                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </li>
                                             ))}
                                         </ul>
@@ -246,13 +289,17 @@ const Profile: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder="Tags (comma-separated)"
-                                    value={editModal.tags.map((tag) => tag.name).join(', ')}
-                                    onChange={(e) =>
+                                    value={
+                                        Array.isArray(editModal.tags) 
+                                            ? (editModal.tags || []).map((tag) => tag.name).join(',') 
+                                            : editModal.tags
+                                    }
+                                    onChange={(e) => {
                                         setEditModal({
                                             ...editModal,
-                                            tags: e.target.value.split(',').map((tagName) => ({ name: tagName.trim() })),
-                                        })
-                                    }
+                                            tags: e.target.value
+                                        });
+                                    }}
                                     className="w-full mb-4 p-2 border rounded"
                                 />
                                 <input
