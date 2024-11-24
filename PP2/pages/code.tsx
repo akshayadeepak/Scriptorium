@@ -1,4 +1,5 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Image from 'next/image';
@@ -10,7 +11,8 @@ import { cpp } from '@codemirror/lang-cpp';
 import { javascript } from '@codemirror/lang-javascript';
 import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
 
-export default function Code() {
+  export default function Code() {
+    const { query } = useRouter();
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
     const [output, setOutput] = useState('');
@@ -23,6 +25,15 @@ export default function Code() {
     const [explanation, setExplanation] = useState('');
     const { user } = useAuth();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        if (query.code) {
+            setCode(query.code as string);
+        }
+        if (query.language) {
+            setLanguage(query.language as string);
+        }
+    }, [query]);
 
     const handleSaveClick = () => {
         setIsModalOpen(true);

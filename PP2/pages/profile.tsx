@@ -89,6 +89,33 @@ const Profile: React.FC = () => {
         setEditModal(template);
     };
 
+    const handleDeleteTemplate = async (id: number) => {
+        try {
+          const token = localStorage.getItem('token');
+          
+          if (!token) {
+            setError('Authorization token is missing. Please log in.');
+            return;
+          }
+    
+          const response = await fetch(`/api/code/template?id=${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+          });
+          if (response.ok) {
+            setTemplates(templates.filter(template => template.id !== id));
+          } else {
+            const data = await response.json();
+            setError(data.error || 'Failed to delete template');
+          }
+        } catch (error) {
+          console.error('Error deleting template:', error);
+          setError('Failed to delete template');
+        }
+      };
+
     const handleEditTemplate = async () => {
         if (!editModal) return;
         try {
@@ -216,12 +243,20 @@ const Profile: React.FC = () => {
                                                             <span key={tag.name} className="text-blue-500 text-sm">#{tag.name}</span>
                                                         ))}
                                                     </div>
-                                                    <button
-                                                        onClick={() => handleEditButtonClick(template)}
-                                                        className="text-sm text-gray-500 mt-4"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                    <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                                                        <button
+                                                            onClick={() => handleEditButtonClick(template)}
+                                                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteTemplate(template.id)}
+                                                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </li>
                                             ))}
                                         </ul>

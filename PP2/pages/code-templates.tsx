@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
 import Navbar from '../components/Navbar';
+import { codeTemplate } from '@prisma/client';
 
 interface CodeTemplate {
   id: number;
@@ -34,8 +35,15 @@ const CodeTemplates = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
-  const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
 
+  const router = useRouter();
+
+  const handleRunCode = (template: codeTemplate) => {
+    router.push({
+      pathname: '/code',
+      query: { code: template.content, language: template.language },
+    });
+  };
 
   // Fetch templates on load
   useEffect(() => {
@@ -185,33 +193,6 @@ const CodeTemplates = () => {
     }
   }
 
-  const handleDeleteTemplate = async (id: number) => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('Authorization token is missing. Please log in.');
-        return;
-      }
-
-      const response = await fetch(`/api/code/template?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-      });
-      if (response.ok) {
-        setTemplates(templates.filter(template => template.id !== id));
-      } else {
-        const data = await response.json();
-        setError(data.error || 'Failed to delete template');
-      }
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      setError('Failed to delete template');
-    }
-  };
-
   return (
     <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
       {/* Top Navigation */}
@@ -289,22 +270,25 @@ const CodeTemplates = () => {
                     {/* Footer with Fork, Save, and Delete Buttons */}
                     <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
                       <button
+                        onClick={() => handleRunCode(template)}
+                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                      >
+                        Run Code
+                      </button>
+                    </div>
+                    <div className="flex gap-4">
+                      <button
                         onClick={() => handleForkTemplate(template.id)}
                         className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                       >
                         Fork
                       </button>
+                      
                       <button
                         onClick={() => handleSaveTemplate(template.id)}
                         className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                       >
                         Save
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTemplate(template.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Delete
                       </button>
                     </div>
                   </li>
