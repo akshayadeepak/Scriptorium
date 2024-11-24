@@ -46,6 +46,12 @@ const CodeTemplates = () => {
     });
   };
 
+  const handleViewSaved = () => {
+    router.push({
+      pathname: '/saved-templates',
+    })
+  }
+
   // Fetch templates on load
   useEffect(() => {
     if (isLoggedIn) {
@@ -238,13 +244,21 @@ const CodeTemplates = () => {
             <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <div className="flex justify-center items-center">
+        <div className="flex justify-center items-center gap-6">
           <button
             onClick={() => setCreateTemplate(true)}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
           >
             Create Template
           </button>
+          {user && (          
+            <button
+              onClick={() => handleViewSaved()}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
+              >
+              View Saved Templates
+            </button>
+          )}
         </div>
 
         {/* Templates */}
