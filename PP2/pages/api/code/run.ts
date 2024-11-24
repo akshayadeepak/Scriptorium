@@ -34,7 +34,7 @@ export default async function handler(
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { code, language, stdin } = req.body;
+    const { code, language, stdin = '' } = req.body;
 
     if (!code) {
         return res.status(400).json({ error: "Missing code" });
@@ -120,19 +120,22 @@ export default async function handler(
             // Write the code to the temporary file
             fs.writeFileSync(tempFilePath, code);
 
-            // Build and run the Docker container, passing the temporary file
-            const dockerCommand = `docker build -f dockerfiles/python.dockerfile -t my-python-app . && docker run --rm -v ${tempDir}:/app my-python-app python3 /app/main_${timestamp}.py`;
+            // Use the stdin input as command-line arguments
+            const args = stdin.trim(); // Get the stdin input directly
+            const dockerCommand = `docker build -f dockerfiles/python.dockerfile -t my-python-app . && docker run --rm -v ${tempDir}:/app my-python-app python3 /app/main_${timestamp}.py ${args} 2>&1`; // Capture both stdout and stderr
 
             try {
-                // Execute the Docker command
+                // Execute the Docker command and capture both stdout and stderr
                 const output = await execPromise(dockerCommand);
                 console.log('Docker Output:', output); // Log the output
                 cleanupFiles(tempFilePath); // Clean up the temp file
                 return res.status(200).json({ output });
             } catch (error: any) {
-                console.error('Docker Error:', error); // Log the error
+                // Capture the error output from the Docker command
+                const errorMessage = error.output || error.message || 'An error occurred while executing the code';
+                console.error('Docker Error:', errorMessage); // Log the error
                 cleanupFiles(tempFilePath);
-                return res.status(400).json({ error: error.message });
+                return res.status(400).json({ error: errorMessage });
             }
         } else {
             try {
