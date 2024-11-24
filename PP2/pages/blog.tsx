@@ -59,7 +59,6 @@ export default function Blog() {
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const { user } = useAuth();
-  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [votes, setVotes] = useState<Record<number, number>>({});
   const [activeTags, setActiveTags] = useState<string[]>([]);

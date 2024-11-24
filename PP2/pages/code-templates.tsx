@@ -238,7 +238,7 @@ const CodeTemplates = () => {
       {/* Top Navigation */}
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8 bg-white mt-8 rounded-lg">
+      <div className="container mx-auto px-4 py-8 bg-white shadow mt-8 rounded-lg">
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
