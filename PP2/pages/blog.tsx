@@ -16,6 +16,7 @@ interface Comment {
 interface Tag {
   id: number;
   name: string;
+  blogPosts: BlogPost[];
 }
 
 interface CodeTemplate {
@@ -61,6 +62,8 @@ export default function Blog() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [votes, setVotes] = useState<Record<number, number>>({});
+  const [activeTags, setActiveTags] = useState<string[]>([]);
+
 
   useEffect(() => {
     const initializePosts = async () => {
@@ -100,6 +103,20 @@ export default function Blog() {
     fetchTags();
   }, []);
 
+  const handleTagClick = (tagName: string) => {
+    setActiveTags((prevActiveTags) => {
+      if (prevActiveTags.includes(tagName)) {
+        // Remove tag if it is already active
+        return prevActiveTags.filter((tag) => tag !== tagName);
+      } else {
+        // Add tag to active list if not active
+        return [...prevActiveTags, tagName];
+      }
+    });
+  };
+  
+
+  
   const fetchTemplates = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -127,7 +144,6 @@ export default function Blog() {
     e.preventDefault();
     if (!user) return;
 
-    // Validation: Ensure title and content are not empty
     if (!title.trim() || !content.trim()) {
       console.error('Title and content are required');
       return;
@@ -309,6 +325,14 @@ export default function Blog() {
     }
   };
 
+  const filteredPosts = posts.filter((post) => {
+    // If no active tags, show all posts
+    if (activeTags.length === 0) return true;
+  
+    // Check if the post contains any of the active tags
+    return post.tags.some((tag) => activeTags.includes(tag.name));
+  });
+
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
@@ -320,39 +344,21 @@ export default function Blog() {
               <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-8 h-[calc(100vh-112.5px)] mt-8 overflow-y-auto">
                 <h2 className="text-xl font-bold text-gray-700 mb-4">Tags</h2>
                 <div className="space-y-2">
-                  {[
-                    { name: "React", count: 24 },
-                    { name: "Python", count: 18 },
-                    { name: "JavaScript", count: 32 },
-                    { name: "TypeScript", count: 15 },
-                    { name: "CSS", count: 21 },
-                    { name: "HTML", count: 19 },
-                    { name: "Node.js", count: 14 },
-                    { name: "Git", count: 12 },
-                    { name: "Docker", count: 8 },
-                    { name: "AWS", count: 11 },
-                    { name: "Database", count: 16 },
-                    { name: "API", count: 22 },
-                    { name: "GraphQL", count: 9 },
-                    { name: "DevOps", count: 13 },
-                    { name: "Security", count: 7 },
-                    { name: "Testing", count: 19 },
-                    { name: "UI/UX", count: 15 },
-                    { name: "Mobile", count: 11 },
-                    { name: "Cloud", count: 14 },
-                    { name: "Algorithms", count: 8 }
-                  ].map((tag, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors group"
-                    >
-                      <span className="text-gray-600 group-hover:text-[#1da1f2]">#{tag.name}</span>
-                      <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                        {tag.count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    {availableTags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors group"
+                        onClick={() => handleTagClick(tag.name)}  // Handle tag click to toggle filter
+                      >
+                        <span className={`text-gray-600 group-hover:text-[#1da1f2] ${activeTags.includes(tag.name) ? 'font-semibold' : ''}`}>
+                          #{tag.name}
+                        </span>
+                        <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                          {tag.blogPosts && Array.isArray(tag.blogPosts) ? tag.blogPosts.length : 0}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
               </div>
             </div>
 
@@ -399,7 +405,7 @@ export default function Blog() {
                 {/* Bottom Section - Posts List */}
                 <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-6">
-                    {[...posts].sort((a, b) => (b.ratings || 0) - (a.ratings || 0)).map((post, index) => (
+                    {[...filteredPosts].sort((a, b) => (b.ratings || 0) - (a.ratings || 0)).map((post, index) => (
                       <div key={post.id} 
                         className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
                         border-b border-gray-100 last:border-b-0 pb-6 p-4 rounded-lg flex gap-4`}
@@ -446,18 +452,6 @@ export default function Blog() {
                           <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
                           <div className="flex items-center justify-between mb-3">
                             <p className="text-gray-500 text-sm">By {post.author.username}</p>
-                            <div className="flex items-center gap-1">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className={`w-4 h-4 ${i < Math.floor(post.ratings || 0) ? 'text-yellow-400' : 'text-gray-300'}`}
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                            </div>
                           </div>
                           
                           <div className="flex flex-wrap gap-2 mb-3">
@@ -547,6 +541,22 @@ export default function Blog() {
                           </select>
                           <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags</p>
                       </div>
+
+                      {/* Code template */}
+                      <div>
+                          <select
+                              value={selectedTags}
+                              onChange={(e) => setSelectedTemplateId(Number(e.target.id))}
+                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
+                          >
+                              {availableTemplates.map(template => (
+                                  <option key={template.id} value={template.title}>
+                                      {template.title}
+                                  </option>
+                              ))}
+                          </select>
+                      </div> 
+                      
 
                       <div className="flex justify-end space-x-3">
                           <button
