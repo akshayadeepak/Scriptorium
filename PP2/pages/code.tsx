@@ -60,6 +60,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                     setTemplateName('');
                     setTags('');
                     setExplanation('');
+                } else if (response.status === 403) {
+                    setIsModalOpen(true);
                 } else {
                     const errorData = await response.json();
                     setError(errorData.error || response.statusText);

@@ -1,5 +1,4 @@
-// TODO:
-// Handle forking
+// TODO: handle pagination
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
@@ -35,6 +34,8 @@ const CodeTemplates = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const router = useRouter();
 
@@ -53,7 +54,7 @@ const CodeTemplates = () => {
     else {
       fetchTemplates();
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, currentPage]);
 
   const fetchTemplates = async () => {
     try {
@@ -108,6 +109,18 @@ const CodeTemplates = () => {
       console.error('Error creating template:', error);
       setError('Failed to create template');
     }
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const nextPage = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
+  const prevPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
   const handleForkTemplate = async (id: number) => {
