@@ -13,6 +13,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
 
   export default function Code() {
     const { query } = useRouter();
+    const [priorTemplateId, setPriorTemplateId] = useState<number | null>(null);
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('python');
     const [output, setOutput] = useState('');
@@ -33,10 +34,41 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
         if (query.language) {
             setLanguage(query.language as string);
         }
+        if (query.id) {
+            setPriorTemplateId(parseInt(query.id as string))
+        }
     }, [query]);
 
-    const handleSaveClick = () => {
-        setIsModalOpen(true);
+    const handleSaveClick = async () => {
+        if (priorTemplateId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/code/template?id=${priorTemplateId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        id: priorTemplateId,
+                        content: code,
+                    }),
+                });
+
+                if (response.ok) {
+                    setOutput('Code template edited successfully!');
+                    setTemplateName('');
+                    setTags('');
+                    setExplanation('');
+                } else {
+                    const errorData = await response.json();
+                    setError(errorData.error || response.statusText);
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                setError('Failed to save code template');
+            }
+        } else {setIsModalOpen(true)};
     };
 
     const handleSaveCode = async () => {
@@ -47,7 +79,6 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
 
         try {
             const token = localStorage.getItem('token');
-            
             // First create any new tags
             const tagList = tags.split(',').map(tag => tag.trim().toLowerCase());
             for (const tagName of tagList) {
@@ -80,6 +111,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
             });
 
             if (response.ok) {
+                const responseData = await response.json();
+                setPriorTemplateId(responseData.id);
                 setOutput('Code template saved successfully!');
                 setIsModalOpen(false);
                 setTemplateName('');

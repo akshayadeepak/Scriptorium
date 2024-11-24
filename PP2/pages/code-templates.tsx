@@ -41,7 +41,7 @@ const CodeTemplates = () => {
   const handleRunCode = (template: codeTemplate) => {
     router.push({
       pathname: '/code',
-      query: { code: template.content, language: template.language },
+      query: { code: template.content, language: template.language, id: template.id },
     });
   };
 
