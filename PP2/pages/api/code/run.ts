@@ -76,11 +76,13 @@ export default async function handler(
             file = path.join(tempDir, `main.c`);
             dockerfile = 'dockerfiles/c.dockerfile';
             command = `./main`;
+            compileCommand = `gcc /app/main.c -o /app/main`;
             break;
         case 'cpp':
             file = path.join(tempDir, `main.cpp`);
             dockerfile = 'dockerfiles/cpp.dockerfile';
             command = `./main`;
+            compileCommand = `g++ /app/main.cpp -o /app/main`;
             break;
         default:
             return res.status(400).json({ error: 'Language not supported' });
@@ -114,14 +116,16 @@ export default async function handler(
         const dockerBuildCommand = `docker build -f ${dockerfile} -t my-${language}-app .`;
         const dockerRunCommand = `docker run --rm -v ${tempDir}:/app my-${language}-app ${command} ${stdin.trim()} 2>&1`;
 
+        // Java: Handle compilation and execution in separate steps
         if (language === 'java') {
-            // Only for Java: First compile the Java program with javac, then run it
             try {
                 await execPromise(dockerBuildCommand); // Build the Docker image
+                
                 if (compileCommand) {
                     // Compile the Java code (if compilation is needed)
                     await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
                 }
+                
                 // Run the compiled Java code using the correct class name
                 const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app java -cp /app ${className} 2>&1`);
                 cleanupFiles(file);
@@ -138,11 +142,7 @@ export default async function handler(
             try {
                 await execPromise(dockerBuildCommand); // Build the Docker image
         
-                const compileCommand = language === 'c'
-                    ? `gcc /app/main.c -o /app/main`
-                    : `g++ /app/main.cpp -o /app/main`; // Use the appropriate compiler for C/C++
-        
-                // Compile the code
+                // Compile the code using the correct command
                 await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
         
                 // Run the compiled executable
