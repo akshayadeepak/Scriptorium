@@ -143,6 +143,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     };
 
     const handleRunCode = async () => {
+        console.log("Running code...");
         setOutput('');
         setError('');
 
@@ -154,6 +155,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 ...(activeTab === 2 && { stdin })
             };
 
+            console.log("Payload to send:", payload);
+
             const response = await fetch('/api/code/run', {
                 method: 'POST',
                 headers: {
@@ -162,11 +165,15 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 body: JSON.stringify(payload),
             });
 
+            console.log("Response status:", response.status);
+
             if (response.ok) {
                 const data = await response.json();
+                console.log("Response data:", data);
                 setOutput(data.output);
             } else {
                 const errorData = await response.json();
+                console.error("Error data:", errorData);
                 setError(errorData.error || 'Failed to execute command');
             }
         } catch (error) {

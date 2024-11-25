@@ -3,23 +3,9 @@ import { exec } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-// Create temp directory in the project root
 const tempDir = path.join(process.cwd(), 'temp');
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir);
-}
-
-function cleanupFiles(file: string) {
-    try {
-        fs.unlinkSync(file);
-        // Cleanup compiled files for C/C++
-        const compiledFile = file.replace(/\.(c|cpp)$/, '');
-        if (fs.existsSync(compiledFile)) {
-            fs.unlinkSync(compiledFile);
-        }
-    } catch (error) {
-        console.error('Error cleaning up files:', error);
-    }
 }
 
 function clearTempDirectory() {
@@ -60,15 +46,21 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
+    console.log("Received request:", req.method, req.body);
+
     if (req.method !== 'POST') {
+        console.log("Method not allowed:", req.method);
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     const { code, language, stdin = '', timeout = 30000 } = req.body;
 
     if (!code) {
+        console.log("Code input is required.");
         return res.status(400).json({ error: "Code input is required for execution." });
     }
+
+    console.log("Executing code for language:", language);
 
     let file: string;
     let dockerfile: string;
@@ -91,7 +83,6 @@ export default async function handler(
             className = `Main`; 
             file = path.join(tempDir, `${className}.java`);
             dockerfile = 'dockerfiles/java.dockerfile';
-
             compileCommand = `javac /app/${className}.java`;
             command = `java -cp /app ${className}`;
             break;
@@ -128,6 +119,7 @@ export default async function handler(
             command = `dotnet run`;
             break;
         default:
+            console.log("Language not supported:", language);
             return res.status(400).json({ error: 'Language not supported' });
     }
 
@@ -140,29 +132,35 @@ export default async function handler(
 
     try {
         fs.writeFileSync(file, code);
+        console.log("Code written to file:", file);
 
         // Build and run the Docker container
         const dockerBuildCommand = `docker build -f ${dockerfile} -t my-${language}-app .`;
+        console.log("Docker build command:", dockerBuildCommand);
+
         const dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ${command} ${stdin.trim()} 2>&1`;
+        console.log("Docker run command:", dockerRunCommand);
 
         // Java: Handle compilation and execution in separate steps
         if (language === 'java') {
             try {
                 await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
-                
+                console.log("Docker image built successfully.");
+
                 if (compileCommand) {
                     // Compile the Java code (if compilation is needed)
                     await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
+                    console.log("Java code compiled successfully.");
                 }
                 
                 // Run the compiled Java code using the correct class name
                 const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app java -cp /app ${className} 2>&1`);
-                cleanupFiles(file);
                 clearTempDirectory();
+                console.log("Java code executed successfully. Output:", output);
                 return res.status(200).json({ output });
             } catch (error: any) {
                 const errorMessage = error.output || error.message || 'An error occurred while executing the code';
-                cleanupFiles(file);
+                console.error("Error during Java execution:", errorMessage);
                 clearTempDirectory();
                 return res.status(400).json({ error: errorMessage });
             }
@@ -170,19 +168,20 @@ export default async function handler(
             // For C and C++: Compile the code first, then run the compiled executable
             try {
                 await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
-        
+                console.log("Docker image built successfully for C/C++.");
+
                 // Compile the code using the correct command
                 await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
-        
+                console.log("C/C++ code compiled successfully.");
+
                 // Run the compiled executable
                 const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app /app/main 2>&1`);
-        
-                cleanupFiles(file);
                 clearTempDirectory();
+                console.log("C/C++ code executed successfully. Output:", output);
                 return res.status(200).json({ output });
             } catch (error: any) {
                 const errorMessage = error.output || error.message || 'An error occurred while compiling/running the C/C++ code';
-                cleanupFiles(file);
+                console.error("Error during C/C++ execution:", errorMessage);
                 clearTempDirectory();
                 return res.status(400).json({ error: errorMessage });
             }
@@ -190,20 +189,21 @@ export default async function handler(
             // Handle other languages (e.g., Python, JS)
             try {
                 await execWithTimeout(dockerBuildCommand, timeout);
+                console.log("Docker image built successfully for other languages.");
                 const output = await execWithTimeout(dockerRunCommand, timeout);
-                cleanupFiles(file);
                 clearTempDirectory();
+                console.log("Code executed successfully. Output:", output);
                 return res.status(200).json({ output });
             } catch (error: any) {
                 const errorMessage = error.output || error.message || 'An error occurred while executing the code';
-                cleanupFiles(file);
+                console.error("Error during execution:", errorMessage);
                 clearTempDirectory();
                 return res.status(400).json({ error: errorMessage });
             }
         }
         
     } catch (error: any) {
-        cleanupFiles(file);
+        console.error("Error writing code to file or executing:", error);
         clearTempDirectory();
         return res.status(500).json({
             error: process.env.NODE_ENV === 'development'
