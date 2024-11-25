@@ -407,6 +407,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 return [];
             case 'go':
                 return [];
+            case 'r':
+                return [];
             default:
                 return [python(), lintGutter(), linter(pythonChecker)];
         }
@@ -515,6 +517,18 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                 height={32} 
                             />
                         </button>
+                        <button 
+                            onClick={() => setLanguage('r')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'r' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="R"
+                        >
+                            <Image 
+                                src="/icons/r.png" 
+                                alt="R" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
                         <div className="flex-grow"></div>
                         <button 
                             onClick={() => setIsSettingsOpen(true)}
@@ -540,6 +554,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         {language === 'ruby' && 'script.rb'}
                                         {language === 'rust' && 'main.rs'}  
                                         {language === 'swift' && 'main.swift'}  
+                                        {language === 'go' && 'main.go'}
+                                        {language === 'r' && 'script.R'}
                                     </span>
                                     <div className="flex gap-2 relative">
                                         <div className="relative inline-flex items-center group">

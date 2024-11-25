@@ -119,6 +119,11 @@ export default async function handler(
             dockerfile = 'dockerfiles/go.dockerfile';
             command = `go run /app/main.go`;
             break;
+        case 'r':
+            file = path.join(tempDir, `script.R`);
+            dockerfile = 'dockerfiles/r.dockerfile';
+            command = `Rscript /app/script.R`;
+            break;
         default:
             console.log("Language not supported:", language);
             return res.status(400).json({ error: 'Language not supported' });
@@ -139,8 +144,42 @@ export default async function handler(
         const dockerBuildCommand = `docker build -f ${dockerfile} -t my-${language}-app .`;
         console.log("Docker build command:", dockerBuildCommand);
 
-        const dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app /app/main 2>&1`;
-        console.log("Docker run command:", dockerRunCommand);
+        var dockerRunCommand;
+        switch (language) {
+            case 'r':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app`;
+                break;
+            case 'go':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app`;
+                break;
+            case 'python':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app`;
+                break;
+            case 'java':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app java -cp /app Main`;
+                break;
+            case 'c':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ./main`;
+                break;
+            case 'cpp':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ./main`;
+                break;
+            case 'ruby':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ruby /app/main.rb`;
+                break;
+            case 'rust':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ./target/release/my_app`;
+                break;
+            case 'swift':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ./main`;
+                break;
+            case 'js':
+                dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app node /app/script.js`;
+                break;
+            default:
+                console.log("Language not supported:", language);
+                return res.status(400).json({ error: 'Language not supported' });
+        }
 
         // Java: Handle compilation and execution in separate steps
         if (language === 'java') {
