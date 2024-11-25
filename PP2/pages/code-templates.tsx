@@ -265,22 +265,22 @@ const CodeTemplates = () => {
             <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <div className="flex justify-center items-center gap-6">
-          <button
-            onClick={() => setCreateTemplate(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
-          >
-            Create Template
-          </button>
-          {user && (          
-            <button
-              onClick={() => handleViewSaved()}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
+          {user && (
+            <div className="flex justify-center items-center gap-6">  
+              <button
+                onClick={() => setCreateTemplate(true)}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
               >
-              View Saved Templates
-            </button>
+                Create Template
+              </button>        
+              <button
+                onClick={() => handleViewSaved()}
+                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
+                >
+                View Saved Templates
+              </button>
+            </div>
           )}
-        </div>
 
         {/* Templates */}
         <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-325px)] overflow-y-scroll">
@@ -324,21 +324,23 @@ const CodeTemplates = () => {
                         Run Code
                       </button>
                     </div>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => handleForkTemplate(template.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Fork
-                      </button>
-                      
-                      <button
-                        onClick={() => handleSaveTemplate(template.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Save
-                      </button>
-                    </div>
+                    {user && (
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleForkTemplate(template.id)}
+                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                        >
+                          Fork
+                        </button>
+                        
+                        <button
+                          onClick={() => handleSaveTemplate(template.id)}
+                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
