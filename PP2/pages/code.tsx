@@ -541,6 +541,10 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         {language === 'cpp' && 'main.cpp'}
                                         {language === 'c' && 'main.c'}
                                         {language === 'js' && 'script.js'}
+                                        {language === 'ruby' && 'script.rb'}
+                                        {language === 'rust' && 'main.rs'}  
+                                        {language === 'swift' && 'main.swift'}  
+                                        {language === 'csharp' && 'Program.cs'}
                                     </span>
                                     <div className="flex gap-2 relative">
                                         <div className="relative inline-flex items-center group">
