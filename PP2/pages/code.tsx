@@ -10,6 +10,10 @@ import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { javascript } from '@codemirror/lang-javascript';
 import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
+// import { ruby } from '@codemirror/lang-ruby';
+// import { rust } from '@codemirror/lang-rust';
+// import { swift } from '@codemirror/lang-swift';
+// import { csharp } from '@codemirror/lang-csharp';
 
   export default function Code() {
     const { query } = useRouter();
@@ -353,6 +357,33 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
         return diagnostics;
     };
 
+    // Add the rubyChecker function definition
+    const rubyChecker = (view: any) => {
+        const diagnostics: Diagnostic[] = [];
+        const text = view.state.doc.toString();
+        
+        // Check for missing 'end' keyword in Ruby
+        const lines = text.split('\n');
+        let inBlock = false;
+        lines.forEach((line: string) => {
+            const trimmed = line.trim();
+            if (trimmed.endsWith('do') || trimmed.endsWith('if') || trimmed.endsWith('def')) {
+                inBlock = true;
+            } else if (inBlock && trimmed === 'end') {
+                inBlock = false;
+            } else if (inBlock && trimmed) {
+                diagnostics.push({
+                    from: text.indexOf(line),
+                    to: text.indexOf(line) + line.length,
+                    severity: 'error',
+                    message: 'Expected "end" keyword'
+                });
+            }
+        });
+
+        return diagnostics;
+    };
+
     // Function to get the appropriate language extension
     const getLanguageExtensions = () => {
         switch (language) {
@@ -365,6 +396,14 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 return [cpp(), lintGutter(), linter(cppChecker)];
             case 'js':
                 return [javascript(), lintGutter(), linter(jsChecker)];
+            case 'ruby':
+                return [];
+            case 'rust':
+                return [];
+            case 'swift':
+                return [];
+            case 'csharp':
+                return [];
             default:
                 return [python(), lintGutter(), linter(pythonChecker)];
         }
@@ -414,18 +453,6 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                             />
                         </button>
                         <button 
-                            onClick={() => setLanguage('c')}
-                            className={`p-2 rounded-lg transition-colors ${language === 'c' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                            title="C"
-                        >
-                            <Image 
-                                src="/icons/c.png" 
-                                alt="C" 
-                                width={32} 
-                                height={32} 
-                            />
-                        </button>
-                        <button 
                             onClick={() => setLanguage('js')}
                             className={`p-2 rounded-lg transition-colors ${language === 'js' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
                             title="JavaScript"
@@ -433,6 +460,54 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                             <Image 
                                 src="/icons/javascript.png" 
                                 alt="JavaScript" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('ruby')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'ruby' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="Ruby"
+                        >
+                            <Image 
+                                src="/icons/ruby.png" 
+                                alt="Ruby" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('rust')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'rust' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="Rust"
+                        >
+                            <Image 
+                                src="/icons/rust.png" 
+                                alt="Rust" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('swift')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'swift' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="Swift"
+                        >
+                            <Image 
+                                src="/icons/swift.png" 
+                                alt="Swift" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('csharp')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'csharp' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="C#"
+                        >
+                            <Image 
+                                src="/icons/csharp.png" 
+                                alt="C#" 
                                 width={32} 
                                 height={32} 
                             />
@@ -460,11 +535,21 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         {language === 'c' && 'main.c'}
                                         {language === 'js' && 'script.js'}
                                     </span>
-                                    <div className="flex gap-2">
-                                        <button
-                                                onClick={handleRunCode}
-                                                className="px-3 py-1 text-sm rounded transition-colors bg-green-500 text-white hover:bg-green-600"
+                                    <div className="flex gap-2 relative">
+                                        <div className="relative inline-flex items-center group">
+                                            <span 
+                                                className="cursor-pointer bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
                                             >
+                                                ?
+                                            </span>
+                                            <div className="absolute hidden group-hover:block bg-gray-700 text-white w-[1000%] text-xs rounded p-2 top-full left-1/2 transform -translate-x-1/2 mt-1 z-50">
+                                                Note: you cannot run code that requires a graphical interface or user input.
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleRunCode}
+                                            className="px-3 py-1 text-sm rounded transition-colors bg-green-500 text-white hover:bg-green-600"
+                                        >
                                             Run
                                         </button>
                                         <button

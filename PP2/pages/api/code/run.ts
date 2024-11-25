@@ -107,6 +107,26 @@ export default async function handler(
             command = `./main`;
             compileCommand = `g++ /app/main.cpp -o /app/main`;
             break;
+        case 'ruby':
+            file = path.join(tempDir, `main.rb`);
+            dockerfile = 'dockerfiles/ruby.dockerfile';
+            command = `ruby /app/main.rb`;
+            break;
+        case 'rust':
+            file = path.join(tempDir, `main.rs`);
+            dockerfile = 'dockerfiles/rust.dockerfile';
+            command = `cargo run`;
+            break;
+        case 'swift':
+            file = path.join(tempDir, `main.swift`);
+            dockerfile = 'dockerfiles/swift.dockerfile';
+            command = `swift /app/main.swift`;
+            break;
+        case 'csharp':
+            file = path.join(tempDir, `main.cs`);
+            dockerfile = 'dockerfiles/csharp.dockerfile';
+            command = `dotnet run`;
+            break;
         default:
             return res.status(400).json({ error: 'Language not supported' });
     }
