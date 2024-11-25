@@ -114,11 +114,6 @@ export default async function handler(
             dockerfile = 'dockerfiles/swift.dockerfile';
             command = `swift /app/main.swift`;
             break;
-        case 'csharp':
-            file = path.join(tempDir, `main.cs`);
-            dockerfile = 'dockerfiles/csharp.dockerfile';
-            command = `dotnet run`;
-            break;
         default:
             console.log("Language not supported:", language);
             return res.status(400).json({ error: 'Language not supported' });

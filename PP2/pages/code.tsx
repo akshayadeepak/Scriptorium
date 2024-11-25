@@ -10,10 +10,6 @@ import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { javascript } from '@codemirror/lang-javascript';
 import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
-// import { ruby } from '@codemirror/lang-ruby';
-// import { rust } from '@codemirror/lang-rust';
-// import { swift } from '@codemirror/lang-swift';
-// import { csharp } from '@codemirror/lang-csharp';
 
   export default function Code() {
     const { query } = useRouter();
@@ -409,8 +405,6 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 return [];
             case 'swift':
                 return [];
-            case 'csharp':
-                return [];
             default:
                 return [python(), lintGutter(), linter(pythonChecker)];
         }
@@ -507,18 +501,6 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                 height={32} 
                             />
                         </button>
-                        <button 
-                            onClick={() => setLanguage('csharp')}
-                            className={`p-2 rounded-lg transition-colors ${language === 'csharp' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
-                            title="C#"
-                        >
-                            <Image 
-                                src="/icons/csharp.png" 
-                                alt="C#" 
-                                width={32} 
-                                height={32} 
-                            />
-                        </button>
                         <div className="flex-grow"></div>
                         <button 
                             onClick={() => setIsSettingsOpen(true)}
@@ -544,7 +526,6 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         {language === 'ruby' && 'script.rb'}
                                         {language === 'rust' && 'main.rs'}  
                                         {language === 'swift' && 'main.swift'}  
-                                        {language === 'csharp' && 'Program.cs'}
                                     </span>
                                     <div className="flex gap-2 relative">
                                         <div className="relative inline-flex items-center group">
