@@ -33,8 +33,6 @@ interface ExecExceptionWithOutput extends Error {
     output?: string;
 }
 
-const TIMEOUT_DURATION = 30000; // 30 seconds
-
 const execPromise = (cmd: string): Promise<string> => {
     return new Promise((resolve, reject) => {
         exec(cmd, (error, stdout, stderr) => {
@@ -49,11 +47,11 @@ const execPromise = (cmd: string): Promise<string> => {
     });
 };
 
-const execWithTimeout = (cmd: string): Promise<string> => {
+const execWithTimeout = (cmd: string, timeoutDuration: number): Promise<string> => {
     return Promise.race([
         execPromise(cmd),
         new Promise<string>((_, reject) => 
-            setTimeout(() => reject(new Error('Execution timed out')), TIMEOUT_DURATION)
+            setTimeout(() => reject(new Error('Execution timed out')), timeoutDuration)
         )
     ]);
 };
@@ -66,7 +64,7 @@ export default async function handler(
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { code, language, stdin = '' } = req.body;
+    const { code, language, stdin = '', timeout = 30000 } = req.body;
 
     if (!code) {
         return res.status(400).json({ error: "Code input is required for execution." });
@@ -130,7 +128,7 @@ export default async function handler(
         // Java: Handle compilation and execution in separate steps
         if (language === 'java') {
             try {
-                await execWithTimeout(dockerBuildCommand); // Build the Docker image
+                await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
                 
                 if (compileCommand) {
                     // Compile the Java code (if compilation is needed)
@@ -151,7 +149,7 @@ export default async function handler(
         } else if (language === 'c' || language === 'cpp') {
             // For C and C++: Compile the code first, then run the compiled executable
             try {
-                await execWithTimeout(dockerBuildCommand); // Build the Docker image
+                await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
         
                 // Compile the code using the correct command
                 await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
@@ -171,8 +169,8 @@ export default async function handler(
         } else {
             // Handle other languages (e.g., Python, JS)
             try {
-                await execWithTimeout(dockerBuildCommand);
-                const output = await execWithTimeout(dockerRunCommand);
+                await execWithTimeout(dockerBuildCommand, timeout);
+                const output = await execWithTimeout(dockerRunCommand, timeout);
                 cleanupFiles(file);
                 clearTempDirectory();
                 return res.status(200).json({ output });

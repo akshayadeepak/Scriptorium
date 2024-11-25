@@ -26,7 +26,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     const [explanation, setExplanation] = useState('');
     const { user } = useAuth();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const [timeoutDuration, setTimeoutDuration] = useState(30);
+    const [timeoutDuration, setTimeoutDuration] = useState<number | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
@@ -146,7 +146,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
             const payload = {
                 code,
                 language,
-                timeout: timeoutDuration * 1000,
+                timeout: timeoutDuration ? timeoutDuration * 1000 : undefined,
                 ...(activeTab === 2 && { stdin })
             };
 
@@ -627,8 +627,11 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                 Timeout (seconds):
                                 <input
                                     type="number"
-                                    value={timeoutDuration}
-                                    onChange={(e) => setTimeoutDuration(Number(e.target.value))}
+                                    value={timeoutDuration || ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setTimeoutDuration(value ? Number(value) : null);
+                                    }}
                                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </label>
