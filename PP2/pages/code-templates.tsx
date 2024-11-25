@@ -52,6 +52,7 @@ const CodeTemplates = () => {
     content: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchBy, setSearchBy] = useState('title')
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
@@ -192,14 +193,25 @@ const CodeTemplates = () => {
       return;
     }
     const lowerCaseQuery = query.toLowerCase();
-    const filtered = templates.filter(
-      (template) =>
-        template.title.toLowerCase().includes(lowerCaseQuery) ||
-        template.explanation.toLowerCase().includes(lowerCaseQuery) ||
-        template.tags.some((tag) => tag.name.toLowerCase().includes(lowerCaseQuery)) ||
-        template.language.toLowerCase().includes(lowerCaseQuery)
-    );
-    setFilteredTemplates(filtered);
+    if (searchBy === 'title') {
+      const filtered = templates.filter(
+        (template) =>
+          template.title.toLowerCase().includes(lowerCaseQuery)
+      );
+      setFilteredTemplates(filtered);
+    } else if (searchBy === 'tags') {
+      const filtered = templates.filter(
+        (template) =>
+          template.tags.some((tag) => tag.name.toLowerCase().includes(lowerCaseQuery))
+      );
+      setFilteredTemplates(filtered);
+    } else if (searchBy === 'content') {
+      const filtered = templates.filter(
+        (template) =>
+          template.explanation.toLowerCase().includes(lowerCaseQuery)
+      );
+      setFilteredTemplates(filtered);
+    }
   };
 
   const handleSaveTemplate = async (id: number) => {
@@ -242,28 +254,43 @@ const CodeTemplates = () => {
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
+        <div className="relative mb-6 flex items-center space-x-4">
         {/* Search Bar */}
-        <div className="relative mb-6">
-          <input
-            type="text"
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm 
+          <div className="relative w-full">
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm 
+                        focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
+                        transition-all duration-300 pl-14"
+            />
+            <svg 
+              className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+              fill="none" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth="2" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+
+          {/* Dropdown Menu */}
+          <select
+            value={searchBy}
+            onChange={(e) => setSearchBy(e.target.value)}
+            className="px-4 py-3 text-m border border-gray-200 rounded-lg shadow-sm 
                       focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
-                      transition-all duration-300 pl-14"
-          />
-          <svg 
-            className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-            fill="none" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth="2" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
+                      transition-all duration-300"
           >
-            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+            <option value="title">Title</option>
+            <option value="tags">Tags</option>
+            <option value="content">Content</option>
+          </select>
         </div>
           {user && (
             <div className="flex justify-center items-center gap-6">  
