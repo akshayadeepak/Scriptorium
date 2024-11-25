@@ -114,6 +114,11 @@ export default async function handler(
             dockerfile = 'dockerfiles/swift.dockerfile';
             command = `swift /app/main.swift`;
             break;
+        case 'go':
+            file = path.join(tempDir, `main.go`);
+            dockerfile = 'dockerfiles/go.dockerfile';
+            command = `go run /app/main.go`;
+            break;
         default:
             console.log("Language not supported:", language);
             return res.status(400).json({ error: 'Language not supported' });

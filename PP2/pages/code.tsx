@@ -405,6 +405,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 return [];
             case 'swift':
                 return [];
+            case 'go':
+                return [];
             default:
                 return [python(), lintGutter(), linter(pythonChecker)];
         }
@@ -497,6 +499,18 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                             <Image 
                                 src="/icons/swift.png" 
                                 alt="Swift" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
+                            onClick={() => setLanguage('go')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'go' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="Go"
+                        >
+                            <Image 
+                                src="/icons/go.png" 
+                                alt="Go" 
                                 width={32} 
                                 height={32} 
                             />
