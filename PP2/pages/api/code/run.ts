@@ -203,6 +203,22 @@ export default async function handler(
                 console.error("Error during Rust execution:", error);
                 return res.status(500).json({ error: "Execution failed." });
             }
+        } else if (language === 'go') {
+            try {
+                await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
+                console.log("Docker image built successfully for Go.");
+        
+                // Run the Go code using the Docker image
+                const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app 2>&1`);
+                clearTempDirectory();
+                console.log("Go code executed successfully. Output:", output);
+                return res.status(200).json({ output });
+            } catch (error: any) {
+                const errorMessage = error.output || error.message || 'An error occurred while executing the Go code';
+                console.error("Error during Go execution:", errorMessage);
+                clearTempDirectory();
+                return res.status(400).json({ error: errorMessage });
+            }
         } else if (language === 'swift') {
             try {
                 await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
