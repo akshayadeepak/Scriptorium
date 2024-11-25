@@ -446,6 +446,18 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                             />
                         </button>
                         <button 
+                            onClick={() => setLanguage('c')}
+                            className={`p-2 rounded-lg transition-colors ${language === 'c' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
+                            title="C"
+                        >
+                            <Image 
+                                src="/icons/c.png" 
+                                alt="C" 
+                                width={32} 
+                                height={32} 
+                            />
+                        </button>
+                        <button 
                             onClick={() => setLanguage('cpp')}
                             className={`p-2 rounded-lg transition-colors ${language === 'cpp' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
                             title="C++"
