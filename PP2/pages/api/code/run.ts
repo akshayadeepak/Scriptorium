@@ -139,7 +139,7 @@ export default async function handler(
         const dockerBuildCommand = `docker build -f ${dockerfile} -t my-${language}-app .`;
         console.log("Docker build command:", dockerBuildCommand);
 
-        const dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ${command} ${stdin.trim()} 2>&1`;
+        const dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app /app/main 2>&1`;
         console.log("Docker run command:", dockerRunCommand);
 
         // Java: Handle compilation and execution in separate steps
@@ -207,13 +207,13 @@ export default async function handler(
             try {
                 await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
                 console.log("Docker image built successfully for Swift.");
-        
+
                 // Compile the Swift code
-                await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app swiftc -o main main.swift 2>&1`);
+                await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app swiftc -o /app/main /app/main.swift 2>&1`);
                 console.log("Swift code compiled successfully.");
-        
-                // Run the compiled Swift executable
-                const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app /app/main 2>&1`);
+
+                // Run the compiled executable
+                const output = await execPromise(dockerRunCommand);
                 clearTempDirectory();
                 console.log("Swift code executed successfully. Output:", output);
                 return res.status(200).json({ output });
