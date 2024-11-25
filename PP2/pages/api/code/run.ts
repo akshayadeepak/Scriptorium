@@ -106,7 +106,8 @@ export default async function handler(
         case 'rust':
             file = path.join(tempDir, `main.rs`);
             dockerfile = 'dockerfiles/rust.dockerfile';
-            command = `cargo run`;
+            compileCommand = `rustc /app/main.rs -o /app/main`;
+            command = `./main`;
             break;
         case 'swift':
             file = path.join(tempDir, `main.swift`);
@@ -146,7 +147,7 @@ export default async function handler(
             try {
                 await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
                 console.log("Docker image built successfully.");
-
+        
                 if (compileCommand) {
                     // Compile the Java code (if compilation is needed)
                     await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
@@ -165,15 +166,14 @@ export default async function handler(
                 return res.status(400).json({ error: errorMessage });
             }
         } else if (language === 'c' || language === 'cpp') {
-            // For C and C++: Compile the code first, then run the compiled executable
             try {
                 await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
                 console.log("Docker image built successfully for C/C++.");
-
+        
                 // Compile the code using the correct command
                 await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
                 console.log("C/C++ code compiled successfully.");
-
+        
                 // Run the compiled executable
                 const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app /app/main 2>&1`);
                 clearTempDirectory();
@@ -182,6 +182,44 @@ export default async function handler(
             } catch (error: any) {
                 const errorMessage = error.output || error.message || 'An error occurred while compiling/running the C/C++ code';
                 console.error("Error during C/C++ execution:", errorMessage);
+                clearTempDirectory();
+                return res.status(400).json({ error: errorMessage });
+            }
+        } else if (language === 'rust') {
+            try {
+                await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
+                console.log("Docker image built successfully for Rust.");
+        
+                // Compile the Rust code using rustc
+                await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app rustc /app/main.rs -o /app/main 2>&1`);
+                console.log("Rust code compiled successfully.");
+        
+                // Run the compiled Rust executable
+                const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app /app/main 2>&1`);
+                clearTempDirectory();
+                console.log("Rust code executed successfully. Output:", output);
+                return res.status(200).json({ output });
+            } catch (error) {
+                console.error("Error during Rust execution:", error);
+                return res.status(500).json({ error: "Execution failed." });
+            }
+        } else if (language === 'swift') {
+            try {
+                await execWithTimeout(dockerBuildCommand, timeout); // Build the Docker image
+                console.log("Docker image built successfully for Swift.");
+        
+                // Compile the Swift code
+                await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app swiftc -o main main.swift 2>&1`);
+                console.log("Swift code compiled successfully.");
+        
+                // Run the compiled Swift executable
+                const output = await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app /app/main 2>&1`);
+                clearTempDirectory();
+                console.log("Swift code executed successfully. Output:", output);
+                return res.status(200).json({ output });
+            } catch (error: any) {
+                const errorMessage = error.output || error.message || 'An error occurred while compiling/running the Swift code';
+                console.error("Error during Swift execution:", errorMessage);
                 clearTempDirectory();
                 return res.status(400).json({ error: errorMessage });
             }
@@ -201,6 +239,7 @@ export default async function handler(
                 return res.status(400).json({ error: errorMessage });
             }
         }
+        
         
     } catch (error: any) {
         console.error("Error writing code to file or executing:", error);
