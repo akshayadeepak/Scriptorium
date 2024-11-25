@@ -26,6 +26,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     const [explanation, setExplanation] = useState('');
     const { user } = useAuth();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [timeoutDuration, setTimeoutDuration] = useState(30);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
         if (query.code) {
@@ -144,6 +146,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
             const payload = {
                 code,
                 language,
+                timeout: timeoutDuration * 1000,
                 ...(activeTab === 2 && { stdin })
             };
 
@@ -434,6 +437,14 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                 height={32} 
                             />
                         </button>
+                        <div className="flex-grow"></div>
+                        <button 
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="p-2 rounded-lg hover:bg-gray-100 pb-5"
+                            title="Settings"
+                        >
+                            ⚙️
+                        </button>
                     </div>
 
                     {/* Main content - added px-4 for some horizontal padding */}
@@ -599,6 +610,34 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                     className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
                                 >
                                     Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Settings Modal */}
+            {isSettingsOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold mb-4">Settings</h3>
+                        <div className="space-y-4">
+                            <label className="block">
+                                Timeout (seconds):
+                                <input
+                                    type="number"
+                                    value={timeoutDuration}
+                                    onChange={(e) => setTimeoutDuration(Number(e.target.value))}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </label>
+                            <div className="flex justify-end space-x-2">
+                                <button
+                                    onClick={() => setIsSettingsOpen(false)}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                >
+                                    Close
                                 </button>
                             </div>
                         </div>

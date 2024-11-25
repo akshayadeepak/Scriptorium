@@ -33,6 +33,31 @@ interface ExecExceptionWithOutput extends Error {
     output?: string;
 }
 
+const TIMEOUT_DURATION = 30000; // 30 seconds
+
+const execPromise = (cmd: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        exec(cmd, (error, stdout, stderr) => {
+            if (error) {
+                const execError: ExecExceptionWithOutput = error as ExecExceptionWithOutput;
+                execError.output = stdout || stderr;
+                reject(execError);
+            } else {
+                resolve(stdout || stderr);
+            }
+        });
+    });
+};
+
+const execWithTimeout = (cmd: string): Promise<string> => {
+    return Promise.race([
+        execPromise(cmd),
+        new Promise<string>((_, reject) => 
+            setTimeout(() => reject(new Error('Execution timed out')), TIMEOUT_DURATION)
+        )
+    ]);
+};
+
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
@@ -44,7 +69,7 @@ export default async function handler(
     const { code, language, stdin = '' } = req.body;
 
     if (!code) {
-        return res.status(400).json({ error: "Missing code" });
+        return res.status(400).json({ error: "Code input is required for execution." });
     }
 
     let file: string;
@@ -98,28 +123,14 @@ export default async function handler(
     try {
         fs.writeFileSync(file, code);
 
-        const execPromise = (cmd: string): Promise<string> => {
-            return new Promise((resolve, reject) => {
-                exec(cmd, (error, stdout, stderr) => {
-                    if (error) {
-                        const execError: ExecExceptionWithOutput = error as ExecExceptionWithOutput;
-                        execError.output = stdout || stderr;
-                        reject(execError);
-                    } else {
-                        resolve(stdout || stderr);
-                    }
-                });
-            });
-        };
-
         // Build and run the Docker container
         const dockerBuildCommand = `docker build -f ${dockerfile} -t my-${language}-app .`;
-        const dockerRunCommand = `docker run --rm -v ${tempDir}:/app my-${language}-app ${command} ${stdin.trim()} 2>&1`;
+        const dockerRunCommand = `docker run --rm -v ${tempDir}:/app --memory="256m" --cpus="1.0" my-${language}-app ${command} ${stdin.trim()} 2>&1`;
 
         // Java: Handle compilation and execution in separate steps
         if (language === 'java') {
             try {
-                await execPromise(dockerBuildCommand); // Build the Docker image
+                await execWithTimeout(dockerBuildCommand); // Build the Docker image
                 
                 if (compileCommand) {
                     // Compile the Java code (if compilation is needed)
@@ -140,7 +151,7 @@ export default async function handler(
         } else if (language === 'c' || language === 'cpp') {
             // For C and C++: Compile the code first, then run the compiled executable
             try {
-                await execPromise(dockerBuildCommand); // Build the Docker image
+                await execWithTimeout(dockerBuildCommand); // Build the Docker image
         
                 // Compile the code using the correct command
                 await execPromise(`docker run --rm -v ${tempDir}:/app my-${language}-app ${compileCommand} 2>&1`);
@@ -160,8 +171,8 @@ export default async function handler(
         } else {
             // Handle other languages (e.g., Python, JS)
             try {
-                await execPromise(dockerBuildCommand);
-                const output = await execPromise(dockerRunCommand);
+                await execWithTimeout(dockerBuildCommand);
+                const output = await execWithTimeout(dockerRunCommand);
                 cleanupFiles(file);
                 clearTempDirectory();
                 return res.status(200).json({ output });
