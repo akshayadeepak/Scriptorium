@@ -62,6 +62,11 @@ const CodeTemplates = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isForkModalOpen, setIsForkModalOpen] = useState(false);
+  const [forkedTemplateName, setForkedTemplateName] = useState('');
+  const [forkedExplanation, setForkedExplanation] = useState('');
+  const [forkedTags, setForkedTags] = useState('');
+  const [templateToFork, setTemplateToFork] = useState<CodeTemplate | null>(null);
 
   const router = useRouter();
 
@@ -155,38 +160,41 @@ const CodeTemplates = () => {
     setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
   };
 
-  const handleForkTemplate = async (id: number) => {
-    setError('');
-    setSuccessMessage('');
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('Authorization token is missing. Please log in.');
-        return;
-      }
+  const handleForkTemplate = (template: CodeTemplate) => {
+    setTemplateToFork(template);
+    setIsForkModalOpen(true);
+  };
 
-      const response = await fetch('/api/code/fork', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ templateId: id }),
-      });
+  const handleSaveForkedTemplate = async () => {
+    if (!templateToFork) return;
 
-      const data = await response.json();
-      if (response.ok) {
-        setTemplates((prevTemplates) => [...prevTemplates, data]);
-        setNewTemplate({ title: '', explanation: '', tags: '', language: '', content: '' });
-        alert('Template forked successfully!');
-        setCreateTemplate(false);
-      } else {
-        setError(data.error || 'Failed to fork template');
-      }
-    } catch (error) {
-      console.error('Error forking template:', error);
-      setError('Failed to fork template');
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/code/template', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: forkedTemplateName,
+        explanation: forkedExplanation,
+        tags: forkedTags.split(','),
+        language: templateToFork.language,
+        content: templateToFork.content,
+      }),
+    });
+
+    if (response.ok) {
+      const newTemplate = await response.json();
+      setTemplates((prevTemplates) => [...prevTemplates, newTemplate]);
+      setIsForkModalOpen(false);
+      setForkedTemplateName('');
+      setForkedExplanation('');
+      setForkedTags('');
+      setTemplateToFork(null);
+    } else {
+      const errorData = await response.json();
+      setError(errorData.error || 'Failed to fork template');
     }
   };
 
@@ -325,16 +333,7 @@ const CodeTemplates = () => {
             <option value="content">Content</option>
           </select>
           </div>
-
-          {/* <div className="flex justify-center mb-6">
-            <button
-              onClick={handleViewSaved}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto"
-            >
-              Saved Templates
-            </button>
-          </div> */}
-
+          
           {/* Templates */}
           <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
             <div className="overflow-y-auto h-96">
@@ -381,7 +380,7 @@ const CodeTemplates = () => {
                       {user && (
                         <div className="flex gap-4">
                           <button
-                            onClick={() => handleForkTemplate(template.id)}
+                            onClick={() => handleForkTemplate(template)}
                             className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
                           >
                             Fork
@@ -471,6 +470,57 @@ const CodeTemplates = () => {
                   >
                     Create
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fork Template Modal */}
+          {isForkModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <h3 className="text-lg font-semibold mb-4">Fork Template</h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={forkedTemplateName}
+                    onChange={(e) => setForkedTemplateName(e.target.value)}
+                    placeholder="Template name"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <textarea
+                    value={forkedExplanation}
+                    onChange={(e) => setForkedExplanation(e.target.value)}
+                    placeholder="Explanation (optional)"
+                    className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                  <input
+                    type="text"
+                    value={forkedTags}
+                    onChange={(e) => setForkedTags(e.target.value)}
+                    placeholder="Tags (comma-separated)"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <button
+                      onClick={handleSaveForkedTemplate}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                    >
+                      Fork
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsForkModalOpen(false);
+                        setForkedTemplateName('');
+                        setForkedExplanation('');
+                        setForkedTags('');
+                        setTemplateToFork(null);
+                      }}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

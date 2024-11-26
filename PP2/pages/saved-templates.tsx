@@ -54,6 +54,11 @@ const SavedCodeTemplates = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTemplates, setFilteredTemplates] = useState<CodeTemplate[]>([]);
   const [createTemplate, setCreateTemplate] = useState(false);
+  const [isForkModalOpen, setIsForkModalOpen] = useState(false);
+  const [forkedTemplateName, setForkedTemplateName] = useState('');
+  const [forkedExplanation, setForkedExplanation] = useState('');
+  const [forkedTags, setForkedTags] = useState('');
+  const [templateToFork, setTemplateToFork] = useState<CodeTemplate | null>(null);
 
   const router = useRouter();
 
@@ -64,37 +69,42 @@ const SavedCodeTemplates = () => {
     });
   };
 
-  const handleForkTemplate = async (id: number) => {
-    setError('');
-    setSuccessMessage('');
-    try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('Authorization token is missing. Please log in.');
-        return;
-      }
+  const handleForkTemplate = (template: CodeTemplate) => {
+    setTemplateToFork(template);
+    setIsForkModalOpen(true);
+  };
 
-      const response = await fetch('/api/code/fork', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ templateId: id }),
-      });
+  const handleSaveForkedTemplate = async () => {
+    if (!templateToFork) return;
 
-      const data = await response.json();
-      if (response.ok) {
-        setTemplates((prevTemplates) => [...prevTemplates, data]);
-        alert('Template forked successfully!');
-        setCreateTemplate(false);
-      } else {
-        setError(data.error || 'Failed to fork template');
-      }
-    } catch (error) {
-      console.error('Error forking template:', error);
-      setError('Failed to fork template');
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/code/template', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: forkedTemplateName,
+        explanation: forkedExplanation,
+        tags: forkedTags.split(','),
+        language: templateToFork.language,
+        content: templateToFork.content,
+        fork: true,
+      }),
+    });
+
+    if (response.ok) {
+      const newTemplate = await response.json();
+      setTemplates((prevTemplates) => [...prevTemplates, newTemplate]);
+      setIsForkModalOpen(false);
+      setForkedTemplateName('');
+      setForkedExplanation('');
+      setForkedTags('');
+      setTemplateToFork(null);
+    } else {
+      const errorData = await response.json();
+      setError(errorData.error || 'Failed to fork template');
     }
   };
 
@@ -195,108 +205,159 @@ const SavedCodeTemplates = () => {
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
-    <div className={`${styles.blogBackground} overflow-hidden`}>
-      
-      <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg mb-5" style={{ maxWidth: '97.5%' }}>
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
+      <div className={`${styles.blogBackground} overflow-hidden`}>
 
-        <div className="flex items-center mb-4 justify-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Saved Templates</h1>
-        </div>
+        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', marginBottom: '20px', paddingBottom: '20px' }}>
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+          {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
-        {/* Search Bar */}
-        <div className="relative mb-6 flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
-          />
-        </div>
+          <div className="flex items-center mb-4 justify-center">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Saved Templates</h1>
+          </div>
 
-        {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
-          <div className="overflow-y-auto h-96">
-            {(searchQuery ? filteredTemplates : templates).length === 0 ? (
-              <p className="text-center text-gray-600 italic p-8">No templates available</p>
-            ) : (
-              <ul className="list-none p-0">
-                {(searchQuery ? filteredTemplates : templates).map((template) => (
-                  <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-lg font-bold text-gray-800 flex-1">
-                        {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
-                      </h4>
-                      {template.fork && (
-                        <p className="text-xs text-gray-600 ml-4">Forked</p>
+          {/* Search Bar */}
+          <div className="relative mb-6 flex items-center space-x-4">
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
+            />
+          </div>
+
+          {/* Templates */}
+          <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
+            <div className="overflow-y-auto h-96">
+              {(searchQuery ? filteredTemplates : templates).length === 0 ? (
+                <p className="text-center text-gray-600 italic p-8">No templates available</p>
+              ) : (
+                <ul className="list-none p-0">
+                  {(searchQuery ? filteredTemplates : templates).map((template) => (
+                    <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-lg font-bold text-gray-800 flex-1">
+                          {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                        </h4>
+                        {template.fork && (
+                          <p className="text-xs text-gray-600 ml-4">Forked</p>
+                        )}
+                      
+                      </div>
+                      <p className="text-sm text-gray-500">Author: {template.author ? template.author.username : 'Unknown'}</p>
+                      {template.explanation && (
+                        <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
                       )}
-                    
-                    </div>
-                    <p className="text-sm text-gray-500">Author: {template.author ? template.author.username : 'Unknown'}</p>
-                    {template.explanation && (
-                      <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
-                    )}
-                    <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
-                      <code>{template.content}</code>
-                    </pre>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {(template.tags || []).map((tag) => (
-                        <span key={tag.id} className="text-blue-500 text-sm">
-                          #{tag.name}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
-                      <button
-                        onClick={() => handleRunCode(template)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Run Code
-                      </button>
-                    </div>
-                    <div className="flex gap-4">
-                      <button
-                        onClick={() => handleForkTemplate(template.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Fork
-                      </button>
-                      <button
-                        onClick={() => handleUnSaveTemplate(template.id)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Unsave
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
+                        <code>{template.content}</code>
+                      </pre>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {(template.tags || []).map((tag) => (
+                          <span key={tag.id} className="text-blue-500 text-sm">
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => handleRunCode(template)}
+                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                        >
+                          Run Code
+                        </button>
+                      </div>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleForkTemplate(template)}
+                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                        >
+                          Fork
+                        </button>
+                        <button
+                          onClick={() => handleUnSaveTemplate(template.id)}
+                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                        >
+                          Unsave
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4 p-4">
+            <button
+              onClick={prevPage}
+              className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>Page {currentPage}</span>
+            <button
+              onClick={nextPage}
+              className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={filteredTemplates.length < 10}
+            >
+              Next
+            </button>
+
+            {/* Fork Template Modal */}
+        {isForkModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Fork Template</h3>
+              <div className="space-y-4">
+                <input
+                  type="text"
+                  value={forkedTemplateName}
+                  onChange={(e) => setForkedTemplateName(e.target.value)}
+                  placeholder="Template name"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <textarea
+                  value={forkedExplanation}
+                  onChange={(e) => setForkedExplanation(e.target.value)}
+                  placeholder="Explanation (optional)"
+                  className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                />
+                <input
+                  type="text"
+                  value={forkedTags}
+                  onChange={(e) => setForkedTags(e.target.value)}
+                  placeholder="Tags (comma-separated)"
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={handleSaveForkedTemplate}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                  >
+                    Fork
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsForkModalOpen(false);
+                      setForkedTemplateName('');
+                      setForkedExplanation('');
+                      setForkedTags('');
+                      setTemplateToFork(null);
+                    }}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
           </div>
         </div>
-
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4 p-4">
-          <button
-            onClick={prevPage}
-            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span>Page {currentPage}</span>
-          <button
-            onClick={nextPage}
-            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={filteredTemplates.length < 10}
-          >
-            Next
-          </button>
-        </div>
       </div>
-    </div>
     </div>
   );
 };
