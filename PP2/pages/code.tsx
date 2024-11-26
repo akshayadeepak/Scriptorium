@@ -27,6 +27,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     const { user } = useAuth();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [timeoutDuration, setTimeoutDuration] = useState<number | null>(null);
+    const [memoryLimit, setMemoryLimit] = useState<number | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     useEffect(() => {
@@ -148,6 +149,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                 code,
                 language,
                 timeout: timeoutDuration ? timeoutDuration * 1000 : undefined,
+                memory: memoryLimit ? memoryLimit * 1024 : undefined,
                 ...(activeTab === 2 && { stdin })
             };
 
@@ -750,6 +752,18 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                     onChange={(e) => {
                                         const value = e.target.value;
                                         setTimeoutDuration(value ? Number(value) : null);
+                                    }}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </label>
+                            <label className="block">
+                                Memory Limit (MB):
+                                <input
+                                    type="number"
+                                    value={memoryLimit || ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setMemoryLimit(value ? Number(value) : null);
                                     }}
                                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
