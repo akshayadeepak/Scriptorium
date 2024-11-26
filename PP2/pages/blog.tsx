@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import styles from './blog.module.css';
+import { useRouter } from 'next/router';
 
 interface Comment {
   id: number;
@@ -71,6 +72,14 @@ export default function Blog() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<BlogPost[]>([]);
   const [showComments, setShowComments] = useState<Record<number, boolean>>({});
+  const [templateToFork, setTemplateToFork] = useState<CodeTemplate | null>(null);
+  const [isForkModalOpen, setIsForkModalOpen] = useState(false);
+  const [forkedTemplateName, setForkedTemplateName] = useState('');
+  const [forkedExplanation, setForkedExplanation] = useState('');
+  const [forkedTags, setForkedTags] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter();
 
 
   useEffect(() => {
@@ -335,6 +344,50 @@ export default function Blog() {
     }
   };
 
+  const handleRunCode = (template: CodeTemplate) => {
+    router.push({
+      pathname: '/code',
+      query: { code: template.content, language: template.language, id: template.id },
+    });
+  };
+
+  const handleForkTemplate = (template: CodeTemplate) => {
+    setTemplateToFork(template);
+    setIsForkModalOpen(true);
+  };
+
+  const handleSaveForkedTemplate = async () => {
+    if (!templateToFork) return;
+
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/code/template', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: forkedTemplateName,
+        explanation: forkedExplanation,
+        tags: forkedTags.split(','),
+        language: templateToFork.language,
+        content: templateToFork.content,
+      }),
+    });
+
+    if (response.ok) {
+      const newTemplate = await response.json();
+      setIsForkModalOpen(false);
+      setForkedTemplateName('');
+      setForkedExplanation('');
+      setForkedTags('');
+      setTemplateToFork(null);
+    } else {
+      const errorData = await response.json();
+      setError(errorData.error || 'Failed to fork template');
+    }
+  };
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
@@ -462,6 +515,38 @@ export default function Blog() {
         console.error('Error editing comment:', error);
     }
   };
+
+  const handleSaveTemplate = async (id: number) => {
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch('/api/code/save', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ templateId: id }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Template saved successfully!');
+      } else {
+        setError(data.error || 'Failed to save template');
+      }
+
+    } catch (error) {
+      console.error('Error saving template:', error);
+      setError('Failed to save template');
+    }
+  }
 
   const handleDeleteComment = async (postId: number, commentId: number) => {
     if (!user) return;
@@ -648,13 +733,33 @@ export default function Blog() {
                                     <pre className="bg-gray-100 p-2 rounded my-2">
                                       <code>{post.links[0].content}</code>
                                     </pre>
+                                    <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
+                                    <button
+                                    onClick={() => handleRunCode(post.links[0])}
+                                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                                  >
+                                    Run Code
+                                  </button>
+                                  <button
+                                    onClick={() => handleForkTemplate(post.links[0])}
+                                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                                  >
+                                    Fork
+                                  </button>
+                                  <button
+                                    onClick={() => handleSaveTemplate(post.links[0].id)}
+                                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                                  >
+                                    Save
+                                  </button>
+                                  </div>
                                   </div>
                                 )}
 
                                 {/* Toggle Comments Button */}
                                 <button 
                                     onClick={() => toggleComments(post.id)} 
-                                    className="text-[#1da1f2] hover:underline mb-2"
+                                    className="text-[#1da1f2] mt-4 hover:underline mb-2"
                                 >
                                     {post.comments.length > 0 
                                         ? `Comments (${post.comments.length})` 
