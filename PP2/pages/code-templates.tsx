@@ -342,19 +342,19 @@ const CodeTemplates = () => {
                       <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
                         <button
                           onClick={() => handleRunCode(template)}
-                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                          className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
                         >
                           Run Code
                         </button>
                         <button
                           onClick={() => handleForkTemplate(template)}
-                          className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                         >
                           Fork
                         </button>
                         <button
                           onClick={() => handleSaveTemplate(template.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm"
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                         >
                           Save
                         </button>
