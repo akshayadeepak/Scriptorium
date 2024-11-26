@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import styles from './blog.module.css';
@@ -57,7 +56,7 @@ export default function Blog() {
   const [availableTemplates, setAvailableTemplates] = useState<CodeTemplate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [postToDelete, setPostToDelete] = useState<number | null>(null);
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [showConfirmDeletePopup, setShowConfirmDeletePopup] = useState(false);
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [votes, setVotes] = useState<Record<number, number>>({});
@@ -140,6 +139,24 @@ export default function Blog() {
     fetchTemplates();
   }, []);
 
+  const fetchPosts = async () => {
+    try {
+      const response = await fetch('/api/blog');
+      if (response.ok) {
+        const data = await response.json();
+        setPosts(data);
+        // Initialize votes state with current post ratings
+        const initialVotes = data.reduce((acc: Record<number, number>, post: BlogPost) => {
+          acc[post.id] = post.ratings || 0;
+          return acc;
+        }, {});
+        setVotes(initialVotes);
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -171,7 +188,7 @@ export default function Blog() {
         setSelectedTags([]);
         setSelectedTemplateId(null);
         setShowNewPostPopup(false);
-        setPosts(prevPosts => [...prevPosts]); // Refresh the posts list
+        await fetchPosts(); // Refresh the posts list after creating a new post
       } else {
         const errorData = await response.json();
         console.error('Error creating post:', errorData.error);
@@ -214,7 +231,7 @@ export default function Blog() {
 
   const handleDeleteClick = (postId: number) => {
     setPostToDelete(postId);
-    setShowDeletePopup(true);
+    setShowConfirmDeletePopup(true);
   };
 
   const confirmDelete = async () => {
@@ -231,7 +248,7 @@ export default function Blog() {
 
       if (response.ok) {
         console.log('Post deleted successfully');
-        setPosts(prevPosts => [...prevPosts]); // Refresh the posts list
+        await fetchPosts(); // Refresh the posts list after deleting a post
       } else {
         const data = await response.json();
         console.error('Delete error:', data.error);
@@ -239,7 +256,7 @@ export default function Blog() {
     } catch (error) {
       console.error('Error deleting post:', error);
     } finally {
-      setShowDeletePopup(false);
+      setShowConfirmDeletePopup(false); // Close confirmation popup
       setPostToDelete(null);
     }
   };
@@ -462,6 +479,27 @@ export default function Blog() {
                           <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
                           <div className="flex items-center justify-between mb-3">
                             <p className="text-gray-500 text-sm">By {post.author.username}</p>
+                            {user && user.id === post.author.id && (
+                              <div className="flex space-x-2">
+                                <button 
+                                  onClick={() => {
+                                    setEditingPost(post);
+                                    setEditTitle(post.title);
+                                    setEditContent(post.content);
+                                    setShowNewPostPopup(true);
+                                  }}
+                                  className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                >
+                                  Edit
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteClick(post.id)}
+                                  className="text-sm text-red-500 hover:text-red-700 transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            )}
                           </div>
                           
                           <div className="flex flex-wrap gap-2 mb-3">
@@ -584,6 +622,30 @@ export default function Blog() {
                           </button>
                       </div>
                   </form>
+              </div>
+          </div>
+      )}
+
+      {/* Confirmation Delete Popup Modal */}
+      {showConfirmDeletePopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                  <h3 className="text-lg font-semibold text-gray-700">Confirm Delete</h3>
+                  <p className="text-gray-600">Are you sure you want to delete this post?</p>
+                  <div className="flex justify-end space-x-3 mt-4">
+                      <button
+                          onClick={() => setShowConfirmDeletePopup(false)} // Close popup without deleting
+                          className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                          Cancel
+                      </button>
+                      <button
+                          onClick={confirmDelete} // Confirm delete action
+                          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                      >
+                          Delete
+                      </button>
+                  </div>
               </div>
           </div>
       )}
