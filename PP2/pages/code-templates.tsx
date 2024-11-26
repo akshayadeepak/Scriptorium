@@ -57,7 +57,7 @@ const CodeTemplates = () => {
     content: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchBy, setSearchBy] = useState('');
+  const [searchBy, setSearchBy] = useState('title');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
@@ -208,28 +208,30 @@ const CodeTemplates = () => {
     const response = await fetch('/api/code/template');
     const data: CodeTemplate[] = await response.json();
     const lowerCaseQuery = query.toLowerCase();
+    let filtered: CodeTemplate[] = [];
+
     if (searchBy === 'title') {
-      const filtered = data.filter(
-        (template) =>
-          template.title.toLowerCase().includes(lowerCaseQuery)
+      filtered = data.filter(template =>
+        template.title.toLowerCase().includes(lowerCaseQuery)
       );
-      setFilteredTemplates(filtered);
-      setCurrentPage(1);
     } else if (searchBy === 'tags') {
-      const filtered = data.filter(
-        (template) =>
-          template.tags.some((tag) => tag.name.toLowerCase().includes(lowerCaseQuery))
+      filtered = data.filter(template =>
+        template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery))
       );
-      setFilteredTemplates(filtered);
-      setCurrentPage(1);
     } else if (searchBy === 'content') {
-      const filtered = data.filter(
-        (template) =>
-          template.explanation.toLowerCase().includes(lowerCaseQuery)
+      filtered = data.filter(template =>
+        template.content.toLowerCase().includes(lowerCaseQuery)
       );
-      setFilteredTemplates(filtered);
-      setCurrentPage(1);
+    } else if (searchBy === 'all') {
+      filtered = data.filter(template =>
+        template.title.toLowerCase().includes(lowerCaseQuery) ||
+        template.content.toLowerCase().includes(lowerCaseQuery) ||
+        template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery))
+      );
     }
+
+    setFilteredTemplates(filtered);
+    setCurrentPage(1); // Reset to the first page on new search
   };
 
   const handleSaveTemplate = async (id: number) => {
@@ -278,14 +280,32 @@ const CodeTemplates = () => {
           </div>
 
           {/* Search Bar */}
+          <div className="flex items-center mb-4 justify-center"></div>
           <div className="relative mb-6 flex items-center space-x-4">
             <input
               type="text"
               placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value, searchBy)}
-              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
+                className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
             />
+          </div>
+
+          <div className="flex items-center mb-4 justify-center">
+            <p className="mr-2">Search by:</p>
+            <select
+              value={searchBy}
+              onChange={(e) => {
+                setSearchBy(e.target.value);
+                handleSearch(searchQuery, e.target.value);
+              }}
+              className="border border-gray-200 rounded-md p-2"
+            >
+              <option value="all">All</option>
+              <option value="title">Title</option>
+              <option value="tags">Tags</option>
+              <option value="content">Content</option>
+            </select>
           </div>
 
           {/* Templates */}
@@ -322,13 +342,13 @@ const CodeTemplates = () => {
                       <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
                         <button
                           onClick={() => handleRunCode(template)}
-                          className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                         >
                           Run Code
                         </button>
                         <button
                           onClick={() => handleForkTemplate(template)}
-                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                          className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
                         >
                           Fork
                         </button>
