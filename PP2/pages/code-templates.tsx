@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
 import Navbar from '../components/Navbar';
@@ -187,7 +186,7 @@ const CodeTemplates = () => {
     }
   };
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, searchBy: string) => {
     setSearchQuery(query);
     if (!query) {
       setFilteredTemplates(templates);
@@ -253,25 +252,24 @@ const CodeTemplates = () => {
   }
 
   return (
-    <div className={`${styles.blogBackground}`}>
-      {/* Top Navigation */}
+    <div className="h-screen overflow-hidden">
       <Navbar />
+    <div className={`${styles.blogBackground} overflow-hidden`}>
+   
 
-      <div className="container mx-auto px-4 py-8 bg-white shadow mt-8 rounded-lg mb-5">
+      <div className="container mx-auto px-4 py-8 bg-white shadow mt-8 rounded-lg mb-5" style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'hidden' }}>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
         <div className="relative mb-6 flex items-center space-x-4">
-        {/* Search Bar */}
+          {/* Search Bar */}
           <div className="relative w-full">
             <input
               type="text"
               placeholder="Search templates..."
               value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm 
-                        focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
-                        transition-all duration-300 pl-14"
+              onChange={(e) => handleSearch(e.target.value, searchBy)}
+              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
             />
             <svg 
               className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
@@ -285,40 +283,34 @@ const CodeTemplates = () => {
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-
+          
           {/* Dropdown Menu */}
           <select
             value={searchBy}
-            onChange={(e) => setSearchBy(e.target.value)}
-            className="px-4 py-3 text-m border border-gray-200 rounded-lg shadow-sm 
-                      focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent
-                      transition-all duration-300"
+            onChange={(e) => {
+              const selectedSearchBy = e.target.value;
+              setSearchBy(selectedSearchBy);
+              handleSearch(searchQuery, selectedSearchBy);
+            }}
+            className="px-4 py-3 text-m border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 bg-white"
           >
             <option value="title">Title</option>
             <option value="tags">Tags</option>
             <option value="content">Content</option>
           </select>
         </div>
-          {user && (
-            <div className="flex justify-center items-center gap-6">  
-              <button
-                onClick={() => setCreateTemplate(true)}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
-              >
-                Create Template
-              </button>        
-              <button
-                onClick={() => handleViewSaved()}
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
-                >
-                View Saved Templates
-              </button>
-            </div>
-          )}
+        <div className="flex justify-center mb-6">
+          <button
+            onClick={handleViewSaved}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto"
+          >
+            Saved Templates
+          </button>
+        </div>
 
         {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="overflow-y-auto h-full">
+        <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="overflow-y-auto h-96">
             {(searchQuery ? filteredTemplates : templates).length === 0 ? (
               <p className="text-center text-gray-600 italic p-8">No templates available</p>
             ) : (
@@ -379,29 +371,28 @@ const CodeTemplates = () => {
                 ))}
               </ul>
             )}
-            <div className="flex justify-between items-center mt-4">
-              <button
-                onClick={prevPage}
-                className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <span>Page {currentPage}</span>
-              <button
-                onClick={nextPage}
-                className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={filteredTemplates.length < 10}
-              >
-                Next
-              </button>
-            </div>
           </div>
         </div>
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={prevPage}
+            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span>Page {currentPage}</span>
+          <button
+            onClick={nextPage}
+            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={filteredTemplates.length < 10}
+          >
+            Next
+          </button>
+        </div>
 
-
-
-        {/*Create a New Template */}
+        {/* Create a New Template */}
         {createTemplate && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 max-w-lg">
@@ -457,6 +448,7 @@ const CodeTemplates = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
