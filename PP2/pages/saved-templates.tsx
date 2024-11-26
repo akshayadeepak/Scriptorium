@@ -8,13 +8,36 @@ import { codeTemplate } from '@prisma/client';
 
 interface CodeTemplate {
   id: number;
+  authorId: number,
   title: string;
   explanation: string;
-  tags: string[];
+  tags: Tag[];
   language: string;
   content: string;
   fork: boolean;
-  // blogPost: blogPost[];
+  blogPost: BlogPost[];
+  parentTemplateId: number,
+}
+
+interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  author: {
+    id: number;
+    username: string;
+  };
+  createdAt: string;
+  comments: Comment[];
+  authorId: number;
+  tags: Tag[];
+  links: CodeTemplate[];
+  ratings: number;
+}
+
+interface Tag {
+  id: number,
+  name: string,
 }
 
 const SavedCodeTemplates = () => {
