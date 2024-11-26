@@ -5,6 +5,48 @@ import Image from 'next/image';
 import avatarPlaceholder from '../images/placeholderpfp.webp';
 import styles from './search.module.css';
 
+interface User {
+  id: number,
+  username: string,
+  email: string,
+  firstName: string,
+  lastName: string,
+}
+
+interface CodeTemplate {
+  id: number;
+  authorId: number,
+  title: string;
+  explanation: string;
+  tags: Tag[];
+  language: string;
+  content: string;
+  fork: boolean;
+  blogPost: BlogPost[];
+  parentTemplateId: number,
+}
+
+interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  author: {
+    id: number;
+    username: string;
+  };
+  createdAt: string;
+  comments: Comment[];
+  authorId: number;
+  tags: Tag[];
+  links: CodeTemplate[];
+  ratings: number;
+}
+
+interface Tag {
+  id: number,
+  name: string,
+}
+
 const SearchResults = () => {
   const router = useRouter();
   const { query } = router.query;
@@ -12,9 +54,9 @@ const SearchResults = () => {
 
   const [searchTerm, setSearchTerm] = useState(query || '');
   const [results, setResults] = useState({
-    users: [],
-    blogs: [],
-    codeTemplates: [],
+    users: [] as User[],
+    blogs: [] as BlogPost[],
+    codeTemplates: [] as CodeTemplate[],
   });
 
   useEffect(() => {
@@ -38,6 +80,7 @@ const SearchResults = () => {
   }, [query]);
 
   const handleSearch = () => {
+    const searchTerm = typeof query === 'string' ? query : '';
     if (searchTerm.trim()) {
       router.push(`/search?query=${searchTerm}`);
     }
