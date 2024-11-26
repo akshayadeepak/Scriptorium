@@ -1,5 +1,5 @@
 FROM ruby:latest
 
-WORKDIR /
+WORKDIR /app
 
 CMD ["ruby", "main.rb"]
