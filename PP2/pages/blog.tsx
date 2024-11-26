@@ -402,7 +402,7 @@ export default function Blog() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/blog/posts/${postId}/comments/${commentId}`, {
+        const response = await fetch(`/api/blog/posts/${postId}/comments?commentId=${commentId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -438,7 +438,7 @@ export default function Blog() {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`/api/blog/posts/${postId}/comments/${commentId}`, {
+        const response = await fetch(`/api/blog/posts/${postId}/comments?commentId=${commentId}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
