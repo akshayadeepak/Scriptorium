@@ -16,6 +16,9 @@ interface Tag {
   id: number;
   name: string;
   blogPosts: BlogPost[];
+  _count: {
+    blogPosts: number;
+  };
 }
 
 interface CodeTemplate {
@@ -98,6 +101,7 @@ export default function Blog() {
       if (response.ok) {
         const data = await response.json();
         setAvailableTags(data);
+        console.log(data); // Log the fetched tags data
       }
     } catch (error) {
       console.error('Error fetching tags:', error);
@@ -172,6 +176,9 @@ export default function Blog() {
         return;
     }
 
+    // Prepare tags: split by comma, trim spaces, and filter out empty values
+    const tagsToSubmit = selectedTags.map(tag => tag.trim()).filter(tag => tag);
+
     try {
         const token = localStorage.getItem('token');
         const method = editingPost ? 'PUT' : 'POST';
@@ -186,17 +193,40 @@ export default function Blog() {
             body: JSON.stringify({
                 title: editTitle,
                 content: editContent,
-                tags: selectedTags,
+                tags: tagsToSubmit, // Use the prepared tags
                 templateId: selectedTemplateId
             })
         });
 
         if (response.ok) {
+            const postData = await response.json(); // Get the created/updated post data
+
+            // Update tags with the new post ID
+            await Promise.all(tagsToSubmit.map(async (tag) => {
+                const tagResponse = await fetch(`/api/tag`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: tag,
+                        blogPosts: [postData.id] // Add the new post ID to the blogPosts array
+                    })
+                });
+
+                if (!tagResponse.ok) {
+                    const errorData = await tagResponse.json();
+                    console.error('Error adding tag to blogPosts:', errorData.error);
+                }
+            }));
+
+            // Clear inputs and close modal
             setTitle('');
             setContent('');
             setEditTitle('');
             setEditContent('');
-            setSelectedTags([]);
+            setSelectedTags([]); // Clear tags after submission
             setSelectedTemplateId(null);
             setShowNewPostPopup(false);
             await fetchPosts();
@@ -483,7 +513,7 @@ export default function Blog() {
                           #{tag.name}
                         </span>
                         <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                          {tag.blogPosts && Array.isArray(tag.blogPosts) ? tag.blogPosts.length : 0}
+                          {tag._count ? tag._count.blogPosts : 0}
                         </span>
                       </div>
                     ))}
@@ -579,6 +609,18 @@ export default function Blog() {
                                 <div className="flex justify-between mb-2 text-gray-500 text-sm">
                                     <span>By {post.author.username}, {formatTimestamp(post.createdAt)}</span>
                                 </div>
+                                
+                                {/* Display Tags */}
+                                {post.tags && post.tags.length > 0 && (
+                                    <div className="my-2">
+                                        {post.tags.map(tag => (
+                                            <span key={tag.id} className="text-[#1da1f2] hover:underline cursor-pointer ml-2">
+                                                #{tag.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
                                 {/* Edit and Delete Buttons - Only show if the current user is the author */}
                                 {user && user.id === post.author.id && (
                                     <div className="flex mb-5 space-x-2">
@@ -599,6 +641,16 @@ export default function Blog() {
 
                                 <p className="text-gray-700 mb-4">{post.content}</p>
 
+                                  {/* Render Code Template */}
+                                  {post.links && post.links.length > 0 && (
+                                  <div className="code-template mt-4">
+                                    <h4 className="font-bold mb-2">{post.links[0].title} ({post.links[0].language})</h4>
+                                    <pre className="bg-gray-100 p-2 rounded my-2">
+                                      <code>{post.links[0].content}</code>
+                                    </pre>
+                                  </div>
+                                )}
+
                                 {/* Toggle Comments Button */}
                                 <button 
                                     onClick={() => toggleComments(post.id)} 
@@ -608,6 +660,9 @@ export default function Blog() {
                                         ? `Comments (${post.comments.length})` 
                                         : 'No Comments'}
                                 </button>
+
+                              
+
                                  {/* Comments Section */}
                             {showComments[post.id] && (
                                 <div className="comments-section mt-4 border-t border-gray-200 pt-4">
@@ -647,6 +702,8 @@ export default function Blog() {
                                         <p className="text-gray-600">{comment.content}</p>
                                     </div>
                                 ))}
+
+                                
                             </div>
                         </div>
                     ))}
@@ -669,7 +726,12 @@ export default function Blog() {
                           {editingPost ? 'Edit Post' : 'Create New Post'}
                       </h3>
                       <button 
-                          onClick={() => setShowNewPostPopup(false)}
+                          onClick={() => {
+                              setShowNewPostPopup(false);
+                              setSelectedTags([]); // Clear tags when closing the modal
+                              setEditTitle(''); // Clear title when closing the modal
+                              setEditContent(''); // Clear content when closing the modal
+                          }}
                           className="text-gray-500 hover:text-gray-700"
                       >
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,37 +762,35 @@ export default function Blog() {
                           />
                       </div>
 
+                      {/* Tags Input */}
                       <div>
-                          <select
-                              multiple
-                              value={selectedTags}
-                              onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Enter Tags (comma separated)</label>
+                          <input
+                              type="text"
+                              value={selectedTags.join(', ')} // Join selected tags for display
+                              onChange={(e) => setSelectedTags(e.target.value.split(',').map(tag => tag.trim()))} // Split input into tags
+                              placeholder="Enter tags..."
                               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
-                          >
-                              {availableTags.map(tag => (
-                                  <option key={tag.id} value={tag.name}>
-                                      {tag.name}
-                                  </option>
-                              ))}
-                          </select>
-                          <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags</p>
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Separate tags with commas</p>
                       </div>
 
-                      {/* Code template */}
+                      {/* Code Template Selection */}
                       <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Select Code Template</label>
                           <select
-                              value={selectedTags}
-                              onChange={(e) => setSelectedTemplateId(Number(e.target.id))}
-                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
+                              value={selectedTemplateId || ''}
+                              onChange={(e) => setSelectedTemplateId(Number(e.target.value))}
+                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition duration-200"
                           >
+                              <option value="" disabled>Select a template</option>
                               {availableTemplates.map(template => (
-                                  <option key={template.id} value={template.title}>
-                                      {template.title}
+                                  <option key={template.id} value={template.id}>
+                                      {template.title} ({template.language})
                                   </option>
                               ))}
                           </select>
-                      </div> 
-                      
+                      </div>
 
                       <div className="flex justify-end space-x-3">
                           <button
