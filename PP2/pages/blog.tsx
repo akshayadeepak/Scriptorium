@@ -940,6 +940,57 @@ export default function Blog() {
               </div>
           </div>
       )}
+
+      {/* Fork Template Modal */}
+      {isForkModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Fork Template</h3>
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={forkedTemplateName}
+                onChange={(e) => setForkedTemplateName(e.target.value)}
+                placeholder="Template name"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <textarea
+                value={forkedExplanation}
+                onChange={(e) => setForkedExplanation(e.target.value)}
+                placeholder="Explanation (optional)"
+                className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+              <input
+                type="text"
+                value={forkedTags}
+                onChange={(e) => setForkedTags(e.target.value)}
+                placeholder="Tags (comma-separated)"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={handleSaveForkedTemplate}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Fork
+                </button>
+                <button
+                  onClick={() => {
+                    setIsForkModalOpen(false);
+                    setForkedTemplateName('');
+                    setForkedExplanation('');
+                    setForkedTags('');
+                    setTemplateToFork(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
