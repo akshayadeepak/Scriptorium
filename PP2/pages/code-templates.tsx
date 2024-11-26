@@ -53,7 +53,7 @@ const CodeTemplates = () => {
     content: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchBy, setSearchBy] = useState('title')
+  const [searchBy, setSearchBy] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
@@ -255,9 +255,7 @@ const CodeTemplates = () => {
     <div className="h-screen overflow-hidden">
       <Navbar />
     <div className={`${styles.blogBackground} overflow-hidden`}>
-   
-
-      <div className="container mx-auto px-4 py-8 bg-white shadow mt-8 rounded-lg mb-5" style={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'hidden' }}>
+      <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg mb-5" style={{ maxWidth: '97.5%' }}>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
@@ -283,33 +281,51 @@ const CodeTemplates = () => {
               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          
-          {/* Dropdown Menu */}
-          <select
-            value={searchBy}
-            onChange={(e) => {
-              const selectedSearchBy = e.target.value;
-              setSearchBy(selectedSearchBy);
-              handleSearch(searchQuery, selectedSearchBy);
-            }}
-            className="px-4 py-3 text-m border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 bg-white"
-          >
-            <option value="title">Title</option>
-            <option value="tags">Tags</option>
-            <option value="content">Content</option>
-          </select>
         </div>
-        <div className="flex justify-center mb-6">
+
+        {/* Dropdown Menu */}
+        <div className="flex justify-center">
+          <p className="text-gray-600 mr-2">Search by:</p>
+        <select
+          value={searchBy}
+          onChange={async (e) => {
+            const selectedSearchBy = e.target.value;
+            setSearchBy(selectedSearchBy);
+            if (selectedSearchBy === "") {
+              // Fetch all templates and filter based on the current search query
+              const response = await fetch('/api/code/template');
+              const data: CodeTemplate[] = await response.json();
+              const lowerCaseQuery = searchQuery.toLowerCase();
+              const filtered = data.filter(template => 
+                template.title.toLowerCase().includes(lowerCaseQuery) ||
+                template.explanation.toLowerCase().includes(lowerCaseQuery) ||
+                template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery))
+              );
+              setFilteredTemplates(filtered);
+            } else {
+              handleSearch(searchQuery, selectedSearchBy); // Update search with the selected criteria
+            }
+          }}
+          className="px-4 py-3 text-m border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 bg-white mb-6"
+        >
+          <option value="">Any</option>
+          <option value="title">Title</option>
+          <option value="tags">Tags</option>
+          <option value="content">Content</option>
+        </select>
+        </div>
+
+        {/* <div className="flex justify-center mb-6">
           <button
             onClick={handleViewSaved}
             className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto"
           >
             Saved Templates
           </button>
-        </div>
+        </div> */}
 
         {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+        <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
           <div className="overflow-y-auto h-96">
             {(searchQuery ? filteredTemplates : templates).length === 0 ? (
               <p className="text-center text-gray-600 italic p-8">No templates available</p>
@@ -374,7 +390,7 @@ const CodeTemplates = () => {
           </div>
         </div>
         {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4">
+        <div className="flex justify-between items-center mt-4 p-4">
           <button
             onClick={prevPage}
             className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
