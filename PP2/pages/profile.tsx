@@ -296,9 +296,9 @@ const Profile: React.FC = () => {
                                     type="text"
                                     placeholder="Tags (comma-separated)"
                                     value={
-                                        Array.isArray(editModal.tags) 
-                                            ? (editModal.tags || []).map((tag) => tag.name).join(',') 
-                                            : editModal.tags
+                                        Array.isArray(tags) 
+                                            ? (tags || []).map((tag) => tag.name).join(',') 
+                                            : tags
                                     }
                                     onChange={(e) => {
                                         setTags(e.target.value),
