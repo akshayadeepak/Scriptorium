@@ -41,6 +41,11 @@ interface BlogPost {
   ratings: number;
 }
 
+const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString(); // Adjust format as needed
+};
+
 export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [title, setTitle] = useState('');
@@ -62,6 +67,7 @@ export default function Blog() {
   const [votes, setVotes] = useState<Record<number, number>>({});
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<BlogPost[]>([]);
+  const [showComments, setShowComments] = useState<Record<number, boolean>>({});
 
 
   useEffect(() => {
@@ -161,40 +167,45 @@ export default function Blog() {
     e.preventDefault();
     if (!user) return;
 
-    if (!title.trim() || !content.trim()) {
-      console.error('Title and content are required');
-      return;
+    if (!editTitle.trim() || !editContent.trim()) {
+        console.error('Title and content are required');
+        return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/blog', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          title,
-          content,
-          tags: selectedTags,
-          templateId: selectedTemplateId
-        })
-      });
+        const token = localStorage.getItem('token');
+        const method = editingPost ? 'PUT' : 'POST';
+        const url = editingPost ? `/api/blog/posts/${editingPost.id}` : '/api/blog';
 
-      if (response.ok) {
-        setTitle('');
-        setContent('');
-        setSelectedTags([]);
-        setSelectedTemplateId(null);
-        setShowNewPostPopup(false);
-        await fetchPosts(); // Refresh the posts list after creating a new post
-      } else {
-        const errorData = await response.json();
-        console.error('Error creating post:', errorData.error);
-      }
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                title: editTitle,
+                content: editContent,
+                tags: selectedTags,
+                templateId: selectedTemplateId
+            })
+        });
+
+        if (response.ok) {
+            setTitle('');
+            setContent('');
+            setEditTitle('');
+            setEditContent('');
+            setSelectedTags([]);
+            setSelectedTemplateId(null);
+            setShowNewPostPopup(false);
+            await fetchPosts();
+        } else {
+            const errorData = await response.json();
+            console.error('Error creating/updating post:', errorData.error);
+        }
     } catch (error) {
-      console.error('Error creating post:', error);
+        console.error('Error creating/updating post:', error);
     }
   };
 
@@ -222,7 +233,14 @@ export default function Blog() {
 
         if (response.ok) {
             setCommentContent('');
-            setPosts(prevPosts => [...prevPosts]); // Refresh posts to show new comment
+            // Update the posts state to include the new comment
+            setPosts(prevPosts => 
+                prevPosts.map(post => 
+                    post.id === postId 
+                        ? { ...post, comments: [...post.comments, { id: data.id, content: commentContent, author: { username: user.username }, createdAt: new Date().toISOString() }] } 
+                        : post
+                )
+            );
         }
     } catch (error) {
         console.error('Error posting comment:', error);
@@ -360,6 +378,90 @@ export default function Blog() {
     return post.tags.some((tag) => activeTags.includes(tag.name));
   });
 
+  const handleEditPost = (post: BlogPost) => {
+    setEditingPost(post);
+    setEditTitle(post.title);
+    setEditContent(post.content);
+    setShowNewPostPopup(true);
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    setPostToDelete(postId);
+    setShowConfirmDeletePopup(true);
+  };
+
+  const toggleComments = (postId: number) => {
+    setShowComments(prev => ({
+        ...prev,
+        [postId]: !prev[postId] // Toggle the visibility of comments for the specific post
+    }));
+  };
+
+  const handleEditComment = async (postId: number, commentId: number, newContent: string) => {
+    if (!user) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/blog/posts/${postId}/comments/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content: newContent })
+        });
+
+        if (response.ok) {
+            setPosts(prevPosts => 
+                prevPosts.map(post => 
+                    post.id === postId 
+                        ? {
+                            ...post,
+                            comments: post.comments.map(comment => 
+                                comment.id === commentId ? { ...comment, content: newContent } : comment
+                            )
+                        } 
+                        : post
+                )
+            );
+        } else {
+            const data = await response.json();
+            console.error('Edit comment error:', data.error);
+        }
+    } catch (error) {
+        console.error('Error editing comment:', error);
+    }
+  };
+
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    if (!user) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/blog/posts/${postId}/comments/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            setPosts(prevPosts => 
+                prevPosts.map(post => 
+                    post.id === postId 
+                        ? { ...post, comments: post.comments.filter(comment => comment.id !== commentId) } 
+                        : post
+                )
+            );
+        } else {
+            const data = await response.json();
+            console.error('Delete comment error:', data.error);
+        }
+    } catch (error) {
+        console.error('Error deleting comment:', error);
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
@@ -432,116 +534,140 @@ export default function Blog() {
                 {/* Bottom Section - Posts List */}
                 <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-6">
-                    {[...filteredPosts].sort((a, b) => (b.ratings || 0) - (a.ratings || 0)).map((post, index) => (
-                      <div key={post.id} 
-                        className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} 
-                        border-b border-gray-100 last:border-b-0 pb-6 p-4 rounded-lg flex gap-4`}
-                      >
-                        {/* Voting Section */}
-                        <div className="flex flex-col items-center gap-1">
-                          <button 
-                            onClick={() => user ? handleVote(post.id, 'up') : null}
-                            className={`p-1 rounded ${
-                              !user 
-                                ? 'text-gray-300 cursor-not-allowed' 
-                                : votes[post.id] > 0 
-                                  ? 'text-[#1da1f2] hover:bg-gray-100' 
-                                  : 'text-gray-400 hover:bg-gray-100'
-                            } transition-colors`}
-                          >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-                            </svg>
-                          </button>
-                          
-                          <span className="font-medium text-gray-700">
-                            {votes[post.id] || 0}
-                          </span>
-                          
-                          <button 
-                            onClick={() => user ? handleVote(post.id, 'down') : null}
-                            className={`p-1 rounded ${
-                              !user 
-                                ? 'text-gray-300 cursor-not-allowed' 
-                                : votes[post.id] < 0 
-                                  ? 'text-[#1da1f2] hover:bg-gray-100' 
-                                  : 'text-gray-400 hover:bg-gray-100'
-                            } transition-colors`}
-                          >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </button>
-                        </div>
+                    {[...filteredPosts].sort((a, b) => (b.ratings || 0) - (a.ratings || 0)).map((post) => (
+                        <div key={post.id} className="post-container bg-white rounded-lg shadow-md p-4 flex">
+                            {/* Voting Section */}
+                            <div className="flex flex-col items-center gap-1 mr-4">
+                                <button 
+                                    onClick={() => user ? handleVote(post.id, 'up') : null}
+                                    className={`p-1 rounded ${
+                                        !user 
+                                            ? 'text-gray-300 cursor-not-allowed' 
+                                            : votes[post.id] > 0 
+                                                ? 'text-[#1da1f2] hover:bg-gray-100' 
+                                                : 'text-gray-400 hover:bg-gray-100'
+                                    } transition-colors`}
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+                                    </svg>
+                                </button>
+                                
+                                <span className="font-medium text-gray-700">
+                                    {votes[post.id] || 0}
+                                </span>
+                                
+                                <button 
+                                    onClick={() => user ? handleVote(post.id, 'down') : null}
+                                    className={`p-1 rounded ${
+                                        !user 
+                                            ? 'text-gray-300 cursor-not-allowed' 
+                                            : votes[post.id] < 0 
+                                                ? 'text-[#1da1f2] hover:bg-gray-100' 
+                                                : 'text-gray-400 hover:bg-gray-100'
+                                    } transition-colors`}
+                                >
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            </div>
 
-                        {/* Post Content */}
-                        <div className="flex-1">
-                          <h2 className="text-xl text-gray-700 mb-2 font-bold">{post.title}</h2>
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-gray-500 text-sm">By {post.author.username}</p>
-                            {user && user.id === post.author.id && (
-                              <div className="flex space-x-2">
+                            {/* Post Content */}
+                            <div className="flex-1">
+                                <h2 className="text-xl text-gray-800 font-bold">{post.title}</h2>
+                                <div className="flex justify-between mb-2 text-gray-500 text-sm">
+                                    <span>By {post.author.username}, {formatTimestamp(post.createdAt)}</span>
+                                </div>
+                                {/* Edit and Delete Buttons - Only show if the current user is the author */}
+                                {user && user.id === post.author.id && (
+                                    <div className="flex mb-5 space-x-2">
+                                        <button 
+                                            onClick={() => handleEditPost(post)} 
+                                            className="text-blue-500 hover:underline"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeletePost(post.id)} 
+                                            className="text-red-500 hover:underline"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                )}
+
+                                <p className="text-gray-700 mb-4">{post.content}</p>
+
+                                {/* Toggle Comments Button */}
                                 <button 
-                                  onClick={() => {
-                                    setEditingPost(post);
-                                    setEditTitle(post.title);
-                                    setEditContent(post.content);
-                                    setShowNewPostPopup(true);
-                                  }}
-                                  className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                                    onClick={() => toggleComments(post.id)} 
+                                    className="text-[#1da1f2] hover:underline mb-2"
                                 >
-                                  Edit
+                                    {post.comments.length > 0 
+                                        ? `Comments (${post.comments.length})` 
+                                        : 'No Comments'}
                                 </button>
-                                <button 
-                                  onClick={() => handleDeleteClick(post.id)}
-                                  className="text-sm text-red-500 hover:text-red-700 transition-colors"
-                                >
-                                  Delete
-                                </button>
-                              </div>
+                                 {/* Comments Section */}
+                            {showComments[post.id] && (
+                                <div className="comments-section mt-4 border-t border-gray-200 pt-4">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Comments</h3>
+                                    {post.comments.length > 0 ? (
+                                        post.comments.map(comment => (
+                                            <div key={comment.id} className="comment mb-3 p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200 flex justify-between">
+                                                <div className="flex-1">
+                                                    <p className="text-gray-800"><strong>{comment.author.username}</strong>: {comment.content}</p>
+                                                </div>
+                                                <p className="text-gray-500 text-sm ml-4 self-center">{formatTimestamp(comment.createdAt)}</p>
+                                                <button onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="text-blue-500 hover:underline ml-2">Edit</button>
+                                                <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-red-500 hover:underline ml-2">Delete</button>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500 my-2">No comments yet.</p>
+                                    )}
+                                    <textarea
+                                        value={commentContent}
+                                        onChange={(e) => setCommentContent(e.target.value)}
+                                        placeholder="Add a comment..."
+                                        className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
+                                    />
+                                    <button 
+                                        onClick={() => handleComment(post.id)} 
+                                        className="submit-comment-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                    >
+                                        Submit Comment
+                                    </button>
+                                </div>
                             )}
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 mb-3">
-                            {post.tags.map(tag => (
-                              <span key={tag.id} 
-                                className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
-                              >
-                                #{tag.name}
-                              </span>
-                            ))}
-                          </div>
 
-                          <pre className="text-gray-600 text-sm mb-4 whitespace-pre-wrap font-sans">{post.content}</pre>
-
-                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                            <button
-                              onClick={() => setSelectedPost(selectedPost === post.id ? null : post.id)}
-                              className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                            >
-                              {post.comments.length} comments
-                            </button>
-                            <span className="text-sm text-gray-400">
-                              {new Date(post.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
+                                {/* Render Comments if toggled */}
+                                {showComments[post.id] && post.comments.map(comment => (
+                                    <div key={comment.id} className="mt-2">
+                                        <p className="text-gray-600">{comment.content}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                      </div>
                     ))}
                   </div>
                 </div>
               </div>
             </div>
+
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+
 
       {/* New Post Popup Modal */}
       {showNewPostPopup && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
                   <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-semibold text-gray-700">Create New Post</h3>
+                      <h3 className="text-xl font-semibold text-gray-700">
+                          {editingPost ? 'Edit Post' : 'Create New Post'}
+                      </h3>
                       <button 
                           onClick={() => setShowNewPostPopup(false)}
                           className="text-gray-500 hover:text-gray-700"
@@ -556,8 +682,8 @@ export default function Blog() {
                       <div>
                           <input
                               type="text"
-                              value={title}
-                              onChange={(e) => setTitle(e.target.value)}
+                              value={editTitle || title}
+                              onChange={(e) => setEditTitle(e.target.value)}
                               placeholder="Post title"
                               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
                               required
@@ -566,8 +692,8 @@ export default function Blog() {
 
                       <div>
                           <textarea
-                              value={content}
-                              onChange={(e) => setContent(e.target.value)}
+                              value={editContent || content}
+                              onChange={(e) => setEditContent(e.target.value)}
                               placeholder="Write your post..."
                               className="w-full h-48 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
                               required
@@ -618,7 +744,7 @@ export default function Blog() {
                               type="submit"
                               className="px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#1a91da] transition-colors"
                           >
-                              Create Post
+                              {editingPost ? 'Update Post' : 'Create Post'}
                           </button>
                       </div>
                   </form>
