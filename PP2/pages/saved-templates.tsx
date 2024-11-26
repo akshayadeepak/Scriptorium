@@ -47,6 +47,8 @@ const SavedCodeTemplates = () => {
   const [itemsPerPage] = useState(10);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredTemplates, setFilteredTemplates] = useState<CodeTemplate[]>([]);
 
   const router = useRouter();
 
@@ -157,31 +159,65 @@ const SavedCodeTemplates = () => {
     }
   };
 
-  return (
-    <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
-      {/* Top Navigation */}
-      <Navbar />
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query) {
+      setFilteredTemplates(templates);
+      return;
+    }
+    const lowerCaseQuery = query.toLowerCase();
+    const filtered = templates.filter(template =>
+      template.title.toLowerCase().includes(lowerCaseQuery) ||
+      template.explanation.toLowerCase().includes(lowerCaseQuery) ||
+      (template.tags && template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery)))
+    );
+    setFilteredTemplates(filtered);
+  };
 
-      <div className="container mx-auto px-4 py-8 bg-white mt-8 rounded-lg">
+  const nextPage = () => {
+    if (filteredTemplates.length >= 10) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
+  return (
+    <div className="h-screen overflow-hidden">
+      <Navbar />
+    <div className={`${styles.blogBackground} overflow-hidden`}>
+      
+      <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg mb-5" style={{ maxWidth: '97.5%' }}>
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
-        <h1 className="text-center text-2xl font-bold text-gray-800 mb-6">Saved Templates</h1>
-        <div className="flex justify-center items-center gap-6">
-          <button
-            onClick={() => router.push('/code-templates')}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto mb-6"
-          >
-            Back
-          </button>
+
+        <div className="flex items-center mb-4 justify-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Saved Templates</h1>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-325px)] overflow-y-scroll">
-          <div className="overflow-y-auto h-full">
-            {(templates).length === 0 ? (
+        {/* Search Bar */}
+        <div className="relative mb-6 flex items-center space-x-4">
+          <input
+            type="text"
+            placeholder="Search templates..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
+          />
+        </div>
+
+        {/* Templates */}
+        <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
+          <div className="overflow-y-auto h-96">
+            {(searchQuery ? filteredTemplates : templates).length === 0 ? (
               <p className="text-center text-gray-600 italic p-8">No templates available</p>
             ) : (
               <ul className="list-none p-0">
-                {(templates).map((template) => (
+                {(searchQuery ? filteredTemplates : templates).map((template) => (
                   <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-lg font-bold text-gray-800 flex-1">
@@ -191,12 +227,12 @@ const SavedCodeTemplates = () => {
                         <p className="text-xs text-gray-600 ml-4">Forked</p>
                       )}
                     </div>
+                    {template.explanation && (
+                      <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
+                    )}
                     <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
                       <code>{template.content}</code>
                     </pre>
-                    {template.explanation && (
-                      <p className="mt-2 text-gray-600">{template.explanation}</p>
-                    )}
                     <div className="flex flex-wrap gap-2 mt-2">
                       {(template.tags || []).map((tag) => (
                         <span key={tag.id} className="text-blue-500 text-sm">
@@ -204,10 +240,6 @@ const SavedCodeTemplates = () => {
                         </span>
                       ))}
                     </div>
-                    {/* {template.blogPost.length > 0 && (
-                      <p>Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
-                    )} */}
-                    {/* Footer with Fork, Save, and Delete Buttons */}
                     <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
                       <button
                         onClick={() => handleRunCode(template)}
@@ -223,7 +255,6 @@ const SavedCodeTemplates = () => {
                       >
                         Fork
                       </button>
-                      
                       <button
                         onClick={() => handleUnSaveTemplate(template.id)}
                         className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
@@ -238,10 +269,28 @@ const SavedCodeTemplates = () => {
           </div>
         </div>
 
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4 p-4">
+          <button
+            onClick={prevPage}
+            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span>Page {currentPage}</span>
+          <button
+            onClick={nextPage}
+            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={filteredTemplates.length < 10}
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
-  )
-
-}
+    </div>
+  );
+};
 
 export default SavedCodeTemplates

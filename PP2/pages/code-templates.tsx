@@ -9,7 +9,11 @@ import { codeTemplate } from '@prisma/client';
 
 interface CodeTemplate {
   id: number;
-  authorId: number,
+  authorId: number;
+  author: {
+    id: number;
+    username: string;
+  };
   title: string;
   explanation: string;
   tags: Tag[];
@@ -17,7 +21,7 @@ interface CodeTemplate {
   content: string;
   fork: boolean;
   blogPost: BlogPost[];
-  parentTemplateId: number,
+  parentTemplateId: number;
 }
 
 interface BlogPost {
@@ -175,8 +179,8 @@ const CodeTemplates = () => {
       if (response.ok) {
         setTemplates((prevTemplates) => [...prevTemplates, data]);
         setNewTemplate({ title: '', explanation: '', tags: '', language: '', content: '' });
-        setSuccessMessage('Template forked successfully!');
-        setCreateTemplate(false)
+        alert('Template forked successfully!');
+        setCreateTemplate(false);
       } else {
         setError(data.error || 'Failed to fork template');
       }
@@ -242,7 +246,9 @@ const CodeTemplates = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setSuccessMessage('Template saved successfully!');
+        alert('Template saved successfully!');
+      } else {
+        setError(data.error || 'Failed to save template');
       }
 
     } catch (error) {
@@ -254,217 +260,223 @@ const CodeTemplates = () => {
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
-    <div className={`${styles.blogBackground} overflow-hidden`}>
-      <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg mb-5" style={{ maxWidth: '97.5%' }}>
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-        {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
+      <div className={`${styles.blogBackground} overflow-hidden`}>
+        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', marginBottom: '20px', paddingBottom: '20px' }}>
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+          {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
-        <div className="relative mb-6 flex items-center space-x-4">
-          {/* Search Bar */}
-          <div className="relative w-full">
-            <input
-              type="text"
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value, searchBy)}
-              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
-            />
-            <svg 
-              className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-              fill="none" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth="2" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+          <div className="flex items-center mb-4 justify-center">
+            <h1 className="text-2xl font-bold text-gray-800 mb-4">Code Templates</h1>
           </div>
-        </div>
 
-        {/* Dropdown Menu */}
-        <div className="flex justify-center">
-          <p className="text-gray-600 mr-2">Search by:</p>
-        <select
-          value={searchBy}
-          onChange={async (e) => {
-            const selectedSearchBy = e.target.value;
-            setSearchBy(selectedSearchBy);
-            if (selectedSearchBy === "") {
-              // Fetch all templates and filter based on the current search query
-              const response = await fetch('/api/code/template');
-              const data: CodeTemplate[] = await response.json();
-              const lowerCaseQuery = searchQuery.toLowerCase();
-              const filtered = data.filter(template => 
-                template.title.toLowerCase().includes(lowerCaseQuery) ||
-                template.explanation.toLowerCase().includes(lowerCaseQuery) ||
-                template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery))
-              );
-              setFilteredTemplates(filtered);
-            } else {
-              handleSearch(searchQuery, selectedSearchBy); // Update search with the selected criteria
-            }
-          }}
-          className="px-4 py-3 text-m border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 bg-white mb-6"
-        >
-          <option value="">Any</option>
-          <option value="title">Title</option>
-          <option value="tags">Tags</option>
-          <option value="content">Content</option>
-        </select>
-        </div>
+          <div className="relative mb-6 flex items-center space-x-4">
 
-        {/* <div className="flex justify-center mb-6">
-          <button
-            onClick={handleViewSaved}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto"
-          >
-            Saved Templates
-          </button>
-        </div> */}
-
-        {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
-          <div className="overflow-y-auto h-96">
-            {(searchQuery ? filteredTemplates : templates).length === 0 ? (
-              <p className="text-center text-gray-600 italic p-8">No templates available</p>
-            ) : (
-              <ul className="list-none p-0">
-                {(searchQuery ? filteredTemplates : templates).map((template) => (
-                  <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-lg font-bold text-gray-800 flex-1">
-                        {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
-                      </h4>
-                      {template.fork && (
-                        <p className="text-xs text-gray-600 ml-4">Forked</p>
-                      )}
-                    </div>
-                    {template.explanation && (
-                      <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
-                    )}
-                    <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
-                      <code>{template.content}</code>
-                    </pre>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {(template.tags || []).map((tag) => (
-                        <span key={tag.id} className="text-blue-500 text-sm">
-                          #{tag.name}
-                        </span>
-                      ))}
-                    </div>
-                    {(template.blogPost || []).length > 0 && (
-                      <p className="text-sm text-gray-500 mt-1"> Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
-                    )}
-                    {/* Footer with Fork, Save, and Delete Buttons */}
-                    <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
-                      <button
-                        onClick={() => handleRunCode(template)}
-                        className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                      >
-                        Run Code
-                      </button>
-                    </div>
-                    {user && (
-                      <div className="flex gap-4">
-                        <button
-                          onClick={() => handleForkTemplate(template.id)}
-                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                        >
-                          Fork
-                        </button>
-                        
-                        <button
-                          onClick={() => handleSaveTemplate(template.id)}
-                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4 p-4">
-          <button
-            onClick={prevPage}
-            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span>Page {currentPage}</span>
-          <button
-            onClick={nextPage}
-            className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={filteredTemplates.length < 10}
-          >
-            Next
-          </button>
-        </div>
-
-        {/* Create a New Template */}
-        {createTemplate && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 max-w-lg">
-              <h2 className="text-xl font-semibold mb-4">Create a New Template</h2>
+            {/* Search Bar */}
+            <div className="relative w-full">
               <input
                 type="text"
-                placeholder="Title"
-                value={newTemplate.title}
-                onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
-                className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value, searchBy)}
+                className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
               />
-              <textarea
-                placeholder="Explanation"
-                value={newTemplate.explanation}
-                onChange={(e) => setNewTemplate({ ...newTemplate, explanation: e.target.value })}
-                className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <input
-                type="text"
-                placeholder="Tags (comma-separated)"
-                value={newTemplate.tags}
-                onChange={(e) => setNewTemplate({ ...newTemplate, tags: e.target.value })}
-                className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <input
-                type="text"
-                placeholder="Language"
-                value={newTemplate.language}
-                onChange={(e) => setNewTemplate({ ...newTemplate, language: e.target.value })}
-                className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-              <textarea
-                placeholder="Code Content"
-                value={newTemplate.content}
-                onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
-                className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 h-24"
-              />
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setCreateTemplate(false)}
-                  className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateTemplate}
-                  className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                  Create
-                </button>
-              </div>
+              <svg 
+                className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
           </div>
-        )}
+
+          {/* Dropdown Menu */}
+          <div className="flex justify-center">
+            <p className="text-gray-600 mr-2">Search by:</p>
+          <select
+            value={searchBy}
+            onChange={async (e) => {
+              const selectedSearchBy = e.target.value;
+              setSearchBy(selectedSearchBy);
+              if (selectedSearchBy === "") {
+                // Fetch all templates and filter based on the current search query
+                const response = await fetch('/api/code/template');
+                const data: CodeTemplate[] = await response.json();
+                const lowerCaseQuery = searchQuery.toLowerCase();
+                const filtered = data.filter(template => 
+                  template.title.toLowerCase().includes(lowerCaseQuery) ||
+                  template.explanation.toLowerCase().includes(lowerCaseQuery) ||
+                  template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery))
+                );
+                setFilteredTemplates(filtered);
+              } else {
+                handleSearch(searchQuery, selectedSearchBy); // Update search with the selected criteria
+              }
+            }}
+            className="px-4 py-3 text-m border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 bg-white mb-6"
+          >
+            <option value="">Any</option>
+            <option value="title">Title</option>
+            <option value="tags">Tags</option>
+            <option value="content">Content</option>
+          </select>
+          </div>
+
+          {/* <div className="flex justify-center mb-6">
+            <button
+              onClick={handleViewSaved}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 w-auto"
+            >
+              Saved Templates
+            </button>
+          </div> */}
+
+          {/* Templates */}
+          <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
+            <div className="overflow-y-auto h-96">
+              {(searchQuery ? filteredTemplates : templates).length === 0 ? (
+                <p className="text-center text-gray-600 italic p-8">No templates available</p>
+              ) : (
+                <ul className="list-none p-0">
+                  {(searchQuery ? filteredTemplates : templates).map((template) => (
+                    <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-lg font-bold text-gray-800 flex-1">
+                          {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
+                        </h4>
+                        {template.fork && (
+                          <p className="text-xs text-gray-600 ml-4">Forked</p>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">Author: {template.author ? template.author.username : 'Unknown'}</p>
+                      {template.explanation && (
+                        <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
+                      )}
+                      <pre className="bg-gray-200 p-2 rounded overflow-x-auto">
+                        <code>{template.content}</code>
+                      </pre>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {(template.tags || []).map((tag) => (
+                          <span key={tag.id} className="text-blue-500 text-sm">
+                            #{tag.name}
+                          </span>
+                        ))}
+                      </div>
+                      {(template.blogPost || []).length > 0 && (
+                        <p className="text-sm text-gray-500 mt-1"> Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
+                      )}
+                      {/* Footer with Fork, Save, and Delete Buttons */}
+                      <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => handleRunCode(template)}
+                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                        >
+                          Run Code
+                        </button>
+                      </div>
+                      {user && (
+                        <div className="flex gap-4">
+                          <button
+                            onClick={() => handleForkTemplate(template.id)}
+                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                          >
+                            Fork
+                          </button>
+                          
+                          <button
+                            onClick={() => handleSaveTemplate(template.id)}
+                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          {/* Pagination Controls */}
+          <div className="flex justify-between items-center mt-4 p-4">
+            <button
+              onClick={prevPage}
+              className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            <span>Page {currentPage}</span>
+            <button
+              onClick={nextPage}
+              className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={filteredTemplates.length < 10}
+            >
+              Next
+            </button>
+          </div>
+
+          {/* Create a New Template */}
+          {createTemplate && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-3/4 max-w-lg">
+                <h2 className="text-xl font-semibold mb-4">Create a New Template</h2>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={newTemplate.title}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, title: e.target.value })}
+                  className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <textarea
+                  placeholder="Explanation"
+                  value={newTemplate.explanation}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, explanation: e.target.value })}
+                  className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Tags (comma-separated)"
+                  value={newTemplate.tags}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, tags: e.target.value })}
+                  className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Language"
+                  value={newTemplate.language}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, language: e.target.value })}
+                  className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <textarea
+                  placeholder="Code Content"
+                  value={newTemplate.content}
+                  onChange={(e) => setNewTemplate({ ...newTemplate, content: e.target.value })}
+                  className="w-full mb-4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400 h-24"
+                />
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setCreateTemplate(false)}
+                    className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateTemplate}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );
 };

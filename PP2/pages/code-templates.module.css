@@ -11,9 +11,6 @@
   background-position: center;
   background-repeat: repeat-y;
   background-attachment: fixed;
-  min-height: 100vh;
-  padding-bottom: 5rem;
-  width: 100%;
   position: relative;
 }
 
