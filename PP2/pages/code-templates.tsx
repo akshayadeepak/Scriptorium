@@ -277,63 +277,17 @@ const CodeTemplates = () => {
             <h1 className="text-2xl font-bold text-gray-800 mb-4">Code Templates</h1>
           </div>
 
+          {/* Search Bar */}
           <div className="relative mb-6 flex items-center space-x-4">
-
-            {/* Search Bar */}
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value, searchBy)}
-                className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
-              />
-              <svg 
-                className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                fill="none" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth="2" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value, searchBy)}
+              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
+            />
           </div>
 
-          {/* Dropdown Menu */}
-          <div className="flex justify-center">
-            <p className="text-gray-600 mr-2">Search by:</p>
-          <select
-            value={searchBy}
-            onChange={async (e) => {
-              const selectedSearchBy = e.target.value;
-              setSearchBy(selectedSearchBy);
-              if (selectedSearchBy === "") {
-                // Fetch all templates and filter based on the current search query
-                const response = await fetch('/api/code/template');
-                const data: CodeTemplate[] = await response.json();
-                const lowerCaseQuery = searchQuery.toLowerCase();
-                const filtered = data.filter(template => 
-                  template.title.toLowerCase().includes(lowerCaseQuery) ||
-                  template.explanation.toLowerCase().includes(lowerCaseQuery) ||
-                  template.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery))
-                );
-                setFilteredTemplates(filtered);
-              } else {
-                handleSearch(searchQuery, selectedSearchBy); // Update search with the selected criteria
-              }
-            }}
-            className="px-4 py-3 text-m border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 bg-white mb-6"
-          >
-            <option value="">Any</option>
-            <option value="title">Title</option>
-            <option value="tags">Tags</option>
-            <option value="content">Content</option>
-          </select>
-          </div>
-          
           {/* Templates */}
           <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
             <div className="overflow-y-auto h-96">
@@ -365,41 +319,33 @@ const CodeTemplates = () => {
                           </span>
                         ))}
                       </div>
-                      {(template.blogPost || []).length > 0 && (
-                        <p className="text-sm text-gray-500 mt-1"> Related Blog Posts: {template.blogPost.map((blogPost) => blogPost.title).join(', ')}</p>
-                      )}
-                      {/* Footer with Fork, Save, and Delete Buttons */}
-                      <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
                         <button
                           onClick={() => handleRunCode(template)}
-                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                          className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                         >
                           Run Code
                         </button>
+                        <button
+                          onClick={() => handleForkTemplate(template)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                        >
+                          Fork
+                        </button>
+                        <button
+                          onClick={() => handleSaveTemplate(template.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm"
+                        >
+                          Save
+                        </button>
                       </div>
-                      {user && (
-                        <div className="flex gap-4">
-                          <button
-                            onClick={() => handleForkTemplate(template)}
-                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                          >
-                            Fork
-                          </button>
-                          
-                          <button
-                            onClick={() => handleSaveTemplate(template.id)}
-                            className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      )}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
           </div>
+
           {/* Pagination Controls */}
           <div className="flex justify-between items-center mt-4 p-4">
             <button

@@ -110,34 +110,33 @@ const SavedCodeTemplates = () => {
 
   const handleUnSaveTemplate = async (id: number) => {
     setError('');
-    setSuccessMessage('');
     try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setError('Authorization token is missing. Please log in.');
-        return;
-      }
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+            setError('Authorization token is missing. Please log in.');
+            return;
+        }
 
-      const response = await fetch('/api/code/saved', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ templateId: id }),
-      });
+        const response = await fetch('/api/code/saved', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ templateId: id }),
+        });
 
-      const data = await response.json();
-      if (response.ok) {
-        setTemplates(templates.filter(template => template.id !== id));
-        setSuccessMessage('Template unsaved successfully!');
-      } else {
-        setError(data.error || 'Failed to unsave template');
-      }
+        const data = await response.json();
+        if (response.ok) {
+            setTemplates(templates.filter(template => template.id !== id));
+            alert('Template unsaved successfully!');
+        } else {
+            setError(data.error || 'Failed to unsave template');
+        }
     } catch (error) {
-      console.error('Error unsaving template:', error);
-      setError('Failed to unsave template');
+        console.error('Error unsaving template:', error);
+        setError('Failed to unsave template');
     }
   };
 
@@ -258,24 +257,22 @@ const SavedCodeTemplates = () => {
                           </span>
                         ))}
                       </div>
-                      <div className="flex gap-4 items-center mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
                         <button
                           onClick={() => handleRunCode(template)}
-                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                          className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                         >
                           Run Code
                         </button>
-                      </div>
-                      <div className="flex gap-4">
                         <button
                           onClick={() => handleForkTemplate(template)}
-                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
                         >
                           Fork
                         </button>
                         <button
                           onClick={() => handleUnSaveTemplate(template.id)}
-                          className="text-sm text-gray-500 hover:text-[#1da1f2] transition-colors"
+                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm"
                         >
                           Unsave
                         </button>
