@@ -17,6 +17,10 @@ interface CodeTemplate {
   fork: boolean;
   blogPost: BlogPost[];
   parentTemplateId: number,
+  author?: {
+    id: number;
+    username: string;
+  };
 }
 
 interface BlogPost {
@@ -49,6 +53,7 @@ const SavedCodeTemplates = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTemplates, setFilteredTemplates] = useState<CodeTemplate[]>([]);
+  const [createTemplate, setCreateTemplate] = useState(false);
 
   const router = useRouter();
 
@@ -82,7 +87,8 @@ const SavedCodeTemplates = () => {
       const data = await response.json();
       if (response.ok) {
         setTemplates((prevTemplates) => [...prevTemplates, data]);
-        setSuccessMessage('Template forked successfully!');
+        alert('Template forked successfully!');
+        setCreateTemplate(false);
       } else {
         setError(data.error || 'Failed to fork template');
       }
@@ -226,7 +232,9 @@ const SavedCodeTemplates = () => {
                       {template.fork && (
                         <p className="text-xs text-gray-600 ml-4">Forked</p>
                       )}
+                    
                     </div>
+                    <p className="text-sm text-gray-500">Author: {template.author ? template.author.username : 'Unknown'}</p>
                     {template.explanation && (
                       <p className="mt-2 mb-2 text-gray-600">{template.explanation}</p>
                     )}
