@@ -62,6 +62,7 @@ export default function Blog() {
   const [searchQuery, setSearchQuery] = useState('');
   const [votes, setVotes] = useState<Record<number, number>>({});
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [filteredBlogs, setFilteredBlogs] = useState<BlogPost[]>([]);
 
 
   useEffect(() => {
@@ -270,8 +271,18 @@ export default function Blog() {
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+    const query = e.target.value;
+    setSearchQuery(query);
+
+
+    const lowerCaseQuery = query.toLowerCase();
+      const filtered = posts.filter(
+        (post) =>
+          post.title.toLowerCase().includes(lowerCaseQuery) ||
+          post.content.toLowerCase().includes(lowerCaseQuery)
+      );
+      setFilteredBlogs(filtered);
+    };
 
   const handleNewPostClick = () => {
     if (!user) {

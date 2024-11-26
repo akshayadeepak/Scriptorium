@@ -10,13 +10,15 @@ import { codeTemplate } from '@prisma/client';
 
 interface CodeTemplate {
   id: number;
+  authorId: number,
   title: string;
   explanation: string;
-  tags: string[];
+  tags: Tag[];
   language: string;
   content: string;
   fork: boolean;
   blogPost: BlogPost[];
+  parentTemplateId: number,
 }
 
 interface BlogPost {
@@ -57,7 +59,6 @@ const CodeTemplates = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [createTemplate, setCreateTemplate] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
 
   const router = useRouter();
 
@@ -86,7 +87,7 @@ const CodeTemplates = () => {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/code/template');
+      const response = await fetch(`/api/code/template?page=${currentPage}`);
       const data = await response.json();
       if (response.ok) {
         setTemplates(data);
@@ -139,9 +140,9 @@ const CodeTemplates = () => {
     }
   };
 
-  const goToPage = (page: number) => {
-    setCurrentPage(page);
-  };
+  // const goToPage = (page: number) => {
+  //   setCurrentPage(page);
+  // };
 
   const nextPage = () => {
     setCurrentPage((prevPage) => prevPage + 1);
@@ -199,18 +200,21 @@ const CodeTemplates = () => {
           template.title.toLowerCase().includes(lowerCaseQuery)
       );
       setFilteredTemplates(filtered);
+      setCurrentPage(1);
     } else if (searchBy === 'tags') {
       const filtered = templates.filter(
         (template) =>
           template.tags.some((tag) => tag.name.toLowerCase().includes(lowerCaseQuery))
       );
       setFilteredTemplates(filtered);
+      setCurrentPage(1);
     } else if (searchBy === 'content') {
       const filtered = templates.filter(
         (template) =>
           template.explanation.toLowerCase().includes(lowerCaseQuery)
       );
       setFilteredTemplates(filtered);
+      setCurrentPage(1);
     }
   };
 
@@ -246,11 +250,11 @@ const CodeTemplates = () => {
   }
 
   return (
-    <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+    <div className={`${styles.blogBackground}`}>
       {/* Top Navigation */}
       <Navbar />
 
-      <div className="container mx-auto px-4 py-8 bg-white shadow mt-8 rounded-lg">
+      <div className="container mx-auto px-4 py-8 bg-white shadow mt-8 rounded-lg mb-5">
         {error && <p className="text-red-500 text-center mb-4">{error}</p>}
         {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
@@ -310,7 +314,7 @@ const CodeTemplates = () => {
           )}
 
         {/* Templates */}
-        <div className="bg-white shadow rounded-lg p-6 max-h-[calc(100vh-325px)] overflow-y-scroll">
+        <div className="bg-white shadow rounded-lg p-6">
           <div className="overflow-y-auto h-full">
             {(searchQuery ? filteredTemplates : templates).length === 0 ? (
               <p className="text-center text-gray-600 italic p-8">No templates available</p>
@@ -372,6 +376,23 @@ const CodeTemplates = () => {
                 ))}
               </ul>
             )}
+            <div className="flex justify-between items-center mt-4">
+              <button
+                onClick={prevPage}
+                className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <span>Page {currentPage}</span>
+              <button
+                onClick={nextPage}
+                className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={filteredTemplates.length < 0}
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
 

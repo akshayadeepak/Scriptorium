@@ -19,8 +19,13 @@ interface CodeTemplate {
     language: string;
     content: string;
     explanation?: string;
-    tags: { name: string }[];
+    tags: Tag[];
     fork: boolean;
+}
+
+interface Tag {
+    id: number,
+    name: string,
 }
 
 const Profile: React.FC = () => {
@@ -32,6 +37,7 @@ const Profile: React.FC = () => {
     const [successMessage, setSuccessMessage] = useState('');
     const [editModal, setEditModal] = useState<CodeTemplate | null>(null);
     const [tagInput, setTagInput] = useState('');
+    const [tags, setTags] = useState('')
 
 
     useEffect(() => {
@@ -136,7 +142,7 @@ const Profile: React.FC = () => {
                     id: editModal.id,
                     title: editModal.title,
                     explanation: editModal.explanation,
-                    tags: editModal.tags.split(',').map(tag => tag.trim()),
+                    tags: tags.split(',').map(tag => tag.trim()),
                     language: editModal.language,
                     content: editModal.content,
                 }),
@@ -295,9 +301,9 @@ const Profile: React.FC = () => {
                                             : editModal.tags
                                     }
                                     onChange={(e) => {
+                                        setTags(e.target.value),
                                         setEditModal({
                                             ...editModal,
-                                            tags: e.target.value
                                         });
                                     }}
                                     className="w-full mb-4 p-2 border rounded"

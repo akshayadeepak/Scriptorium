@@ -6,10 +6,15 @@ const prisma = new PrismaClient();
 
 const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResponse, userId: number | null) => {
   try {
-    const { search } = req.query;
+    const { search, page } = req.query;
     const searchQuery = search ? String(search).toLowerCase() : '';
       console.log('Search query:', searchQuery);
 
+      if (!page) {
+        return res.status(500).json({ error: 'Failed to send page number' });
+      }
+      console.log(page);
+      const offset = Number(page) * 10;
       const templates = await prisma.codeTemplate.findMany({
         where: {
           ...(userId ? { authorId: Number(userId) } : {}),
@@ -26,7 +31,9 @@ const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResp
           childTemplates: true,
           savedByUsers: true,
           blogPost: true,
-        }
+        },
+        skip: offset,
+        take: 10,
       });
 
     return res.status(200).json(templates);
