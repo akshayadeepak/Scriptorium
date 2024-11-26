@@ -1,5 +1,5 @@
 FROM openjdk:11-jdk-slim
 
-WORKDIR /
+WORKDIR /app
 
 CMD ["java", "Main"]

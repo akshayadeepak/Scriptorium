@@ -1,5 +1,5 @@
 FROM swift:latest
 
-WORKDIR /
+WORKDIR /app
 
 CMD ["./main"]

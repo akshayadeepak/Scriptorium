@@ -1,5 +1,5 @@
 FROM rust:latest
 
-WORKDIR /
+WORKDIR /app
 
 CMD ["./target/release/my_app"]
