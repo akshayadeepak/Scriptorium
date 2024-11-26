@@ -187,29 +187,32 @@ const CodeTemplates = () => {
     }
   };
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     if (!query) {
       setFilteredTemplates(templates);
       return;
     }
+
+    const response = await fetch('/api/code/template');
+    const data: CodeTemplate[] = await response.json();
     const lowerCaseQuery = query.toLowerCase();
     if (searchBy === 'title') {
-      const filtered = templates.filter(
+      const filtered = data.filter(
         (template) =>
           template.title.toLowerCase().includes(lowerCaseQuery)
       );
       setFilteredTemplates(filtered);
       setCurrentPage(1);
     } else if (searchBy === 'tags') {
-      const filtered = templates.filter(
+      const filtered = data.filter(
         (template) =>
           template.tags.some((tag) => tag.name.toLowerCase().includes(lowerCaseQuery))
       );
       setFilteredTemplates(filtered);
       setCurrentPage(1);
     } else if (searchBy === 'content') {
-      const filtered = templates.filter(
+      const filtered = data.filter(
         (template) =>
           template.explanation.toLowerCase().includes(lowerCaseQuery)
       );
@@ -388,7 +391,7 @@ const CodeTemplates = () => {
               <button
                 onClick={nextPage}
                 className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={filteredTemplates.length < 0}
+                disabled={filteredTemplates.length < 10}
               >
                 Next
               </button>
