@@ -10,6 +10,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentMessage, setCurrentMessage] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false); // State to manage theme
+  const [showCookieNotice, setShowCookieNotice] = useState(true);
 
   // Messages to rotate in the hero section
   const messages = [
@@ -42,15 +43,20 @@ export default function Home() {
     setIsDarkMode(!isDarkMode);
   };
 
+  const handleAcceptCookies = () => {
+    setShowCookieNotice(false);
+  };
+
+  useEffect(() => {
+    // const cookiesAccepted = localStorage.getItem('cookiesAccepted');
+    // if (cookiesAccepted) {
+    //   setShowCookieNotice(false);
+    // }
+  }, []);
+
   return (
     <div className={`${styles.pageContainer} ${isDarkMode ? styles.darkMode : ''}`}>
       <Navbar />
-
-      {/* Theme Toggle Button */}
-      <button onClick={toggleDarkMode} className={styles.themeToggleButton}>
-        {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-      </button>
-
 
       {/* Main Content Section */}
       <main className={styles.mainContent}>
@@ -127,6 +133,24 @@ export default function Home() {
         <a href="/terms" className={styles.footerLink}>Terms of Service</a>
         <a href="/privacy" className={styles.footerLink}>Privacy Policy</a>
       </footer>
+
+      {/* Theme Toggle Button - Moved to Bottom Right */}
+      <button onClick={toggleDarkMode} className={styles.themeToggleButton}>
+        {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+      </button>
+
+      {/* Cookie Notification */}
+      {showCookieNotice && (
+        <div className={styles.cookieNotification}>
+          <p>
+            We use cookies to enhance your browsing experience.
+            <a href="/privacy" className={styles.cookieLink}> Learn more</a>.
+          </p>
+          <button onClick={handleAcceptCookies} className={styles.cookieButton}>
+            Accept
+          </button>
+        </div>
+      )}
     </div>
   );
 }
