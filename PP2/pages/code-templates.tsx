@@ -1,5 +1,3 @@
-// TODO: handle pagination
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
@@ -268,7 +266,7 @@ const CodeTemplates = () => {
   }
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-screen">
       <Navbar />
       <div className={`${styles.blogBackground} overflow-hidden`}>
         <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', marginBottom: '20px', paddingBottom: '20px' }}>
@@ -281,7 +279,7 @@ const CodeTemplates = () => {
 
           {/* Search Bar */}
           <div className="flex items-center mb-4 justify-center"></div>
-          <div className="relative mb-6 flex items-center space-x-4">
+          <div className="relative mb-6 flex items-center space-x-4 p-6">
             <input
               type="text"
               placeholder="Search templates..."
@@ -289,6 +287,17 @@ const CodeTemplates = () => {
               onChange={(e) => handleSearch(e.target.value, searchBy)}
                 className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
             />
+          <svg 
+            className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth="2" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
           </div>
 
           <div className="flex items-center mb-4 justify-center">
@@ -338,6 +347,11 @@ const CodeTemplates = () => {
                             #{tag.name}
                           </span>
                         ))}
+                      </div>
+                      <div className="flex flex-wrap mt-2">
+                        {template.blogPost.length > 0 && (
+                          <p className='text-sm text-gray-500'>Relevant Blog Posts: {template.blogPost.map((post) => post.title).join(', ')}</p>
+                        )}
                       </div>
                       <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
                         <button
