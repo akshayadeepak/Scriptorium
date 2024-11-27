@@ -9,6 +9,7 @@ export default function Home() {
   const { isLoggedIn, logout } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentMessage, setCurrentMessage] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false); // State to manage theme
 
   // Messages to rotate in the hero section
   const messages = [
@@ -37,14 +38,22 @@ export default function Home() {
     }
   };
 
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => !prev);
+  };
+
   return (
-    <div className={styles.pageContainer}>
+    <div className={`${styles.pageContainer} ${isDarkMode ? styles.darkMode : ''}`}>
       <Navbar />
+
+      <button className={styles.themeToggle} onClick={toggleTheme}>
+        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+      </button>
 
       {/* Main Content Section */}
       <main className={styles.mainContent}>
         <section className={styles.heroSection}>
-          <div className={styles.heroTextBackground}>
+          <div className={`${styles.heroTextBackground} ${isDarkMode ? styles.darkHero : ''}`}>
             <h1 className={styles.heroTitle}>Welcome to Scriptorium</h1>
             <p className={styles.heroSubtitle}>{messages[currentMessage]}</p>
             {!isLoggedIn && (
@@ -111,7 +120,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className={styles.footer}>
+      <footer className={`${styles.footer} ${isDarkMode ? styles.darkFooter : ''}`}>
         <span>&copy; 2024 Scriptorium. All rights reserved.</span>
         <a href="/terms" className={styles.footerLink}>Terms of Service</a>
         <a href="/privacy" className={styles.footerLink}>Privacy Policy</a>
