@@ -8,9 +8,6 @@ const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResp
   try {
     const { search, page } = req.query;
     const searchQuery = search ? String(search).toLowerCase() : '';
-      console.log('Search query:', searchQuery);
-    const pageQuery = page;
-      console.log('Page query:', pageQuery);
 
       if (!page) {
         const templates = await prisma.codeTemplate.findMany({

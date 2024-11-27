@@ -12,6 +12,7 @@
   background-repeat: repeat-y;
   background-attachment: fixed;
   position: relative;
+  height: 100vh;
 }
 
 .blogBackground::before {

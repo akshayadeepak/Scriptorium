@@ -227,7 +227,7 @@ const SavedCodeTemplates = () => {
 
           {/* Templates */}
           <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
-            <div className="overflow-y-auto h-96">
+            <div className="ooverflow-y-auto max-h-[calc(100vh-28rem)]">
               {(searchQuery ? filteredTemplates : templates).length === 0 ? (
                 <p className="text-center text-gray-600 italic p-8">No templates available</p>
               ) : (
@@ -285,7 +285,7 @@ const SavedCodeTemplates = () => {
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-4 p-4">
+          <div className="bg-white border-t border-gray-300 p-4 fixed bottom-0 left-0 w-full mt-4 p-4 flex justify-between z-10">
             <button
               onClick={prevPage}
               className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
