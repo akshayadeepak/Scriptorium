@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import styles from './index.module.css';
 import Navbar from '../components/Navbar';
+import TextScramble from '../components/TextScramble';
 import { useAuth } from '../context/AuthContext';
+
 
 export default function Home() {
   const router = useRouter();
@@ -24,7 +26,7 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentMessage((prev) => (prev + 1) % messages.length);
-    }, 3000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [messages.length]);
 
@@ -63,7 +65,7 @@ export default function Home() {
         <section className={styles.heroSection}>
           <div className={styles.heroTextBackground}>
             <h1 className={styles.heroTitle}>Welcome to Scriptorium</h1>
-            <p className={styles.heroSubtitle}>{messages[currentMessage]}</p>
+            <TextScramble text={messages[currentMessage]} className={styles.heroSubtitle} />
             {!isLoggedIn && (
               <button onClick={() => router.push('/signup')} className={`${styles.heroButton} rounded`}>Get Started</button>
             )}
