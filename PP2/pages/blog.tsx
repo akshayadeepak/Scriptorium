@@ -871,7 +871,9 @@ export default function Blog() {
                                                     </p>
                                                 </div>
                                                 <button onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="px-3 py-1 ml-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">Edit</button>
-                                                <button onClick={() => handleDeleteComment(post.id, comment.id)} className="px-3 py-1 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">Delete</button>
+                                                {user && user.username === comment.author.username && ( // Check if the current user is the author
+                                                    <button onClick={() => handleDeleteComment(post.id, comment.id)} className="px-3 py-1 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">Delete</button>
+                                                )}
                                             </div>
                                         ))
                                     ) : (
