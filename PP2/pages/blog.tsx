@@ -78,6 +78,9 @@ export default function Blog() {
   const [forkedExplanation, setForkedExplanation] = useState('');
   const [forkedTags, setForkedTags] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState<string>('');
+  const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
+  const [showCommentInput, setShowCommentInput] = useState<Record<number, boolean>>({});
 
   const router = useRouter();
 
@@ -120,6 +123,13 @@ export default function Blog() {
   useEffect(() => {
     fetchTags();
   }, []);
+
+  const toggleCommentInput = (postId: number) => {
+    setShowCommentInput(prev => ({
+        ...prev,
+        [postId]: !prev[postId] // Toggle the visibility for the specific post
+    }));
+};
 
   const handleTagClick = (tagName: string) => {
     setActiveTags((prevActiveTags) => {
@@ -577,6 +587,48 @@ export default function Blog() {
     }
   };
 
+  const handleReply = async (postId: number, commentId: number) => {
+    if (!user) return;
+    if (!replyContent.trim()) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/blog/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content: replyContent, parentCommentId: commentId })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('Reply error:', data.error);
+            return;
+        }
+
+        // Update the posts state to include the new reply
+        setPosts(prevPosts => 
+            prevPosts.map(post => 
+                post.id === postId 
+                    ? { 
+                        ...post, 
+                        comments: [...post.comments, { ...data, parentCommentId: commentId }] 
+                    } 
+                    : post
+            )
+        );
+
+        // Clear the reply input
+        setReplyContent('');
+        setReplyToCommentId(null);
+    } catch (error) {
+        console.error('Error posting reply:', error);
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
@@ -772,43 +824,78 @@ export default function Blog() {
                             {showComments[post.id] && (
                                 <div className="comments-section mt-4 border-t border-gray-200 pt-4">
                                     <h3 className="text-lg font-semibold text-gray-800 mb-3">Comments</h3>
+
+                                    
+
+                                    {showCommentInput[post.id] && (
+                                        <div className="comment-input mt-4">
+                                            <textarea
+                                                value={commentContent}
+                                                onChange={(e) => setCommentContent(e.target.value)}
+                                                placeholder="Add a comment..."
+                                                className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
+                                            />
+                                            <button 
+                                                onClick={() => handleComment(post.id)} 
+                                                className="submit-comment-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                            >
+                                                Submit Comment
+                                            </button>
+                                        </div>
+                                    )}
+                                        
+                                    {showCommentInput[post.id] ? ( // Check if the comment input is showing
+                                        <button 
+                                            onClick={() => toggleCommentInput(post.id)} // Toggle the comment input visibility
+                                            className="mb-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200"
+                                        >
+                                            Cancel {/* Change button text to "Cancel" */}
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            onClick={() => toggleCommentInput(post.id)} // Toggle the comment input visibility
+                                            className="mb-2 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                        >
+                                            Add Comment {/* Original button text */}
+                                        </button>
+                                    )}
+                                    <hr className="my-4 border-gray-300" />
+
                                     {post.comments.length > 0 ? (
                                         post.comments.map(comment => (
                                             <div key={comment.id} className="comment mb-3 p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200 flex justify-between">
                                                 <div className="flex-1">
-                                                    <p className="text-gray-800"><strong>{comment.author.username}</strong>: {comment.content}</p>
+                                                    <p className="text-gray-800">
+                                                        <strong>{comment.author.username}</strong>: {comment.content}
+                                                        <span className="text-gray-500 text-sm ml-2">({formatTimestamp(comment.createdAt)})</span>
+                                                    </p>
                                                 </div>
-                                                <p className="text-gray-500 text-sm ml-4 self-center">{formatTimestamp(comment.createdAt)}</p>
                                                 <button onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="text-blue-500 hover:underline ml-2">Edit</button>
                                                 <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-red-500 hover:underline ml-2">Delete</button>
+                                                <button onClick={() => setReplyToCommentId(comment.id)} className="text-blue-500 hover:underline ml-2">Reply</button>
+                                                {replyToCommentId === comment.id && (
+                                                    <div className="reply-input mt-2">
+                                                        <textarea
+                                                            value={replyContent}
+                                                            onChange={(e) => setReplyContent(e.target.value)}
+                                                            placeholder="Add a reply..."
+                                                            className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
+                                                        />
+                                                        <button 
+                                                            onClick={() => handleReply(post.id, comment.id)} 
+                                                            className="submit-reply-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                                        >
+                                                            Submit Reply
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))
                                     ) : (
                                         <p className="text-gray-500 my-2">No comments yet.</p>
                                     )}
-                                    <textarea
-                                        value={commentContent}
-                                        onChange={(e) => setCommentContent(e.target.value)}
-                                        placeholder="Add a comment..."
-                                        className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
-                                    />
-                                    <button 
-                                        onClick={() => handleComment(post.id)} 
-                                        className="submit-comment-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
-                                    >
-                                        Submit Comment
-                                    </button>
                                 </div>
                             )}
-
-                                {/* Render Comments if toggled */}
-                                {showComments[post.id] && post.comments.map(comment => (
-                                    <div key={comment.id} className="mt-2">
-                                        <p className="text-gray-600">{comment.content}</p>
-                                    </div>
-                                ))}
-
-                                
                             </div>
                         </div>
                     ))}
