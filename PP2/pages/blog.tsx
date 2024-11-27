@@ -155,49 +155,53 @@ export default function Blog() {
   
   const handleReport = async () => {
     try {
-      console.log(templateToReport)
-      if (templateToReport) {
-        const response = await fetch('/api/blog/report', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            blogPostId: templateToReport.id,
-            content: ICRExplanation
-          })
-        })
-
-        if (response.ok) {
-          setTemplateToReport(null)
-          setIsICROpen(false)
-          setICRTitle('')
-          setICRExplanation('')
-        } else {
-          console.error('Failed to report template');
+        console.log(templateToReport);
+        if (!ICRExplanation.trim()) { // Check if explanation is empty
+            setError('Explanation is required to submit a report.'); // Set error message
+            return; // Prevent further execution
         }
-      } else if (commentToReport) {
-        const response = await fetch('/api/blog/report', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ commentId: commentToReport.id, content: ICRExplanation })
-        });
+        if (templateToReport) {
+            const response = await fetch('/api/blog/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    blogPostId: templateToReport.id,
+                    content: ICRExplanation
+                })
+            });
 
-        if (response.ok) {
-          setCommentToReport(null);
-          setIsICROpen(false)
-          setICRTitle('')
-          setICRExplanation('')
-        } else {
-          console.error('Failed to report comment');
+            if (response.ok) {
+                setTemplateToReport(null);
+                setIsICROpen(false);
+                setICRTitle('');
+                setICRExplanation('');
+            } else {
+                console.error('Failed to report template');
+            }
+        } else if (commentToReport) {
+            const response = await fetch('/api/blog/report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ commentId: commentToReport.id, content: ICRExplanation })
+            });
+
+            if (response.ok) {
+                setCommentToReport(null);
+                setIsICROpen(false);
+                setICRTitle('');
+                setICRExplanation('');
+            } else {
+                console.error('Failed to report comment');
+            }
         }
-      }
     } catch (error) {
-      console.error('Error reporting comment:', error);
+        console.error('Error reporting comment:', error);
     }
-  }
+  };
   
   const fetchTemplates = async () => {
     try {
@@ -1141,30 +1145,10 @@ export default function Blog() {
                                     )
                                   } 
 
-                                  {/* Comment Input Section */}
-                                  <div className="comment-input-container mt-4">
-                                    <textarea
-                                      value={commentContent}
-                                      onChange={(e) => setCommentContent(e.target.value)}
-                                      placeholder="Write a comment..."
-                                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none mb-3"
-                                    />
-                                    <button
-                                      onClick={() => handleComment(post.id)}
-                                      className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition"
-                                    >
-                                      Submit Comment
-                                    </button>
-                                  </div>
                                 </div>
                                 )}
 
-                                {/* Render Comments if toggled */}
-                                {/* {showComments[post.id] && post.comments.map(comment => (
-                                    <div key={comment.id} className="mt-2">
-                                        <p className="text-gray-600">{comment.content}</p>
-                                    </div>
-                                ))} */}
+                          
                               </div>
                         </div>
                     ))}
