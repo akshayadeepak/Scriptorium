@@ -75,13 +75,6 @@ const CodeTemplates = () => {
     });
   };
 
-  const handleViewSaved = () => {
-    router.push({
-      pathname: '/saved-templates',
-    })
-  }
-
-  // Fetch templates on load
   useEffect(() => {
     if (isLoggedIn) {
       fetchTemplates();
@@ -145,10 +138,6 @@ const CodeTemplates = () => {
       setError('Failed to create template');
     }
   };
-
-  // const goToPage = (page: number) => {
-  //   setCurrentPage(page);
-  // };
 
   const nextPage = () => {
     setCurrentPage((prevPage) => prevPage + 1);
@@ -266,10 +255,10 @@ const CodeTemplates = () => {
   }
 
   return (
-    <div className="h-screen">
+    <div className="h-screen overflow-hidden">
       <Navbar />
       <div className={`${styles.blogBackground} overflow-hidden`}>
-        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', marginBottom: '20px', paddingBottom: '20px' }}>
+        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', paddingBottom: '20px' }}>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
@@ -319,7 +308,7 @@ const CodeTemplates = () => {
 
           {/* Templates */}
           <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
-            <div className="overflow-y-auto h-96">
+            <div className="overflow-y-auto max-h-[calc(100vh-32rem)]">
               {(searchQuery ? filteredTemplates : templates).length === 0 ? (
                 <p className="text-center text-gray-600 italic p-8">No templates available</p>
               ) : (
@@ -381,7 +370,7 @@ const CodeTemplates = () => {
           </div>
 
           {/* Pagination Controls */}
-          <div className="flex justify-between items-center mt-4 p-4">
+          <div className="bg-white border-t border-gray-300 p-4 fixed bottom-0 left-0 w-full mt-4 p-4 flex justify-between z-10">
             <button
               onClick={prevPage}
               className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
