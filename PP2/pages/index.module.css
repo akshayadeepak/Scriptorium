@@ -312,6 +312,41 @@
   background-color: #00cfc1;
 }
 
+/* Server Status Indicator */
+.serverStatusContainer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  background-color: transparent;
+}
+
+.serverStatusLabel {
+  font-size: 0.9rem;
+  color: inherit;
+  margin-right: 0.5rem;
+}
+
+.serverStatusIndicator {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background-color: gray; /* Default color */
+}
+
+/* Status Colors */
+.gray {
+  background-color: gray;
+}
+
+.yellow {
+  background-color: yellow;
+}
+
+.green {
+  background-color: green;
+}
+
 /* Theme Toggle Button */
 .themeToggleButton {
   position: fixed;
@@ -440,5 +475,22 @@
 
 .darkMode .cookieNotification .cookieButton:hover {
   background-color: #63b3ed;
+}
+
+/* Adjust for dark mode */
+.darkMode .serverStatusLabel {
+  color: #f7fafc;
+}
+
+.darkMode .gray {
+  background-color: #a0aec0; /* Lighter gray for dark mode */
+}
+
+.darkMode .yellow {
+  background-color: #ecc94b;
+}
+
+.darkMode .green {
+  background-color: #48bb78;
 }
 

@@ -13,6 +13,7 @@ export default function Home() {
   const [currentMessage, setCurrentMessage] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false); // State to manage theme
   const [showCookieNotice, setShowCookieNotice] = useState(true);
+  const [serverStatus, setServerStatus] = useState('gray');
 
   // Messages to rotate in the hero section
   const messages = [
@@ -50,15 +51,31 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // const cookiesAccepted = localStorage.getItem('cookiesAccepted');
-    // if (cookiesAccepted) {
-    //   setShowCookieNotice(false);
-    // }
+    // Statuses: 'gray' (Offline), 'yellow' (Starting), 'green' (Online)
+    const statuses = ['gray', 'yellow', 'green'];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      setServerStatus(statuses[index]);
+      index++;
+
+      if (index >= statuses.length) {
+        clearInterval(interval);
+      }
+    }, 2000); // wait for rest of website to load
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <div className={`${styles.pageContainer} ${isDarkMode ? styles.darkMode : ''}`}>
       <Navbar />
+
+      {/* Server Status Indicator */}
+      <div className={styles.serverStatusContainer}>
+        <span className={styles.serverStatusLabel}>Website Status:</span>
+        <div className={`${styles.serverStatusIndicator} ${styles[serverStatus]}`}></div>
+      </div>
 
       {/* Main Content Section */}
       <main className={styles.mainContent}>
