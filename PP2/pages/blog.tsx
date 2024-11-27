@@ -91,6 +91,7 @@ export default function Blog() {
   const [replyContent, setReplyContent] = useState<string>('');
   const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
   const [showCommentInput, setShowCommentInput] = useState<Record<number, boolean>>({});
+  const [replyBoxVisible, setReplyBoxVisible] = useState<boolean>(false);
 
   const router = useRouter();
 
@@ -155,51 +156,51 @@ export default function Blog() {
   
   const handleReport = async () => {
     try {
-        console.log(templateToReport);
-        if (!ICRExplanation.trim()) { // Check if explanation is empty
-            setError('Explanation is required to submit a report.'); // Set error message
-            return; // Prevent further execution
-        }
-        if (templateToReport) {
-            const response = await fetch('/api/blog/report', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    blogPostId: templateToReport.id,
-                    content: ICRExplanation
-                })
-            });
+      console.log(templateToReport);
+      if (!ICRExplanation.trim()) { // Check if explanation is empty
+          setError('Explanation is required to submit a report.'); // Set error message
+          return; // Prevent further execution
+      }
+      if (templateToReport) {
+        const response = await fetch('/api/blog/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            blogPostId: templateToReport.id,
+            content: ICRExplanation
+          })
+        });
 
-            if (response.ok) {
-                setTemplateToReport(null);
-                setIsICROpen(false);
-                setICRTitle('');
-                setICRExplanation('');
-            } else {
-                console.error('Failed to report template');
-            }
-        } else if (commentToReport) {
-            const response = await fetch('/api/blog/report', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ commentId: commentToReport.id, content: ICRExplanation })
-            });
-
-            if (response.ok) {
-                setCommentToReport(null);
-                setIsICROpen(false);
-                setICRTitle('');
-                setICRExplanation('');
-            } else {
-                console.error('Failed to report comment');
-            }
+        if (response.ok) {
+          setTemplateToReport(null);
+          setIsICROpen(false);
+          setICRTitle('');
+          setICRExplanation('');
+        } else {
+          console.error('Failed to report template');
         }
+      } else if (commentToReport) {
+        const response = await fetch('/api/blog/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ commentId: commentToReport.id, content: ICRExplanation })
+        });
+
+        if (response.ok) {
+          setCommentToReport(null);
+          setIsICROpen(false);
+          setICRTitle('');
+          setICRExplanation('');
+        } else {
+          console.error('Failed to report comment');
+        }
+      }
     } catch (error) {
-        console.error('Error reporting comment:', error);
+      console.error('Error reporting comment:', error);
     }
   };
   
@@ -814,7 +815,7 @@ export default function Blog() {
 
   const handleReplies = async (postId: number, commentId: number) => {
     if (!user) return;
-    if (!replyContent.trim()) return;
+    if (replyContent.trim() === "") return;
 
     try {
         const token = localStorage.getItem('token');
@@ -824,7 +825,7 @@ export default function Blog() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ content: replyContent, parentCommentId: commentId })
+            body: JSON.stringify({ content: replyContent, parentId: commentId })
         });
 
         const data = await response.json();
@@ -848,7 +849,7 @@ export default function Blog() {
 
         // Clear the reply input
         setReplyContent('');
-        setReplyToCommentId(null);
+        setReplyBoxVisible(false);
     } catch (error) {
         console.error('Error posting reply:', error);
     }
@@ -1076,91 +1077,149 @@ export default function Blog() {
                                         : 'No Comments'}
                                 </button>
 
-
                                 {/* Comments Section */}
                                 {showComments[post.id] && (
-                                <div className="comments-section mt-4 border-t border-gray-200 pt-4">
-                                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Comments</h3>
-                                  {showCommentInput[post.id] && (
-                                    <div className="comment-input mt-4">
+                                  <div className="comments-section mt-4 border-t border-gray-200 pt-4">
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Comments</h3>
+                                    {showCommentInput[post.id] && (
+                                      <div className="comment-input mt-4">
                                         <textarea
-                                            value={commentContent}
-                                            onChange={(e) => setCommentContent(e.target.value)}
-                                            placeholder="Add a comment..."
-                                            className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
+                                          value={commentContent}
+                                          onChange={(e) => setCommentContent(e.target.value)}
+                                          placeholder="Add a comment..."
+                                          className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
                                         />
                                         <button 
-                                            onClick={() => handleComment(post.id)} 
-                                            className="submit-comment-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                          onClick={() => handleComment(post.id)} 
+                                          className="submit-comment-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
                                         >
-                                            Submit Comment
+                                          Submit Comment
                                         </button>
-                                    </div>
-                                  )}
-                                        
-                                  {showCommentInput[post.id] ? ( // Check if the comment input is showing
-                                    <button 
-                                      onClick={() => toggleCommentInput(post.id)} // Toggle the comment input visibility
-                                      className="mb-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200"
-                                    >
-                                      Cancel {/* Change button text to "Cancel" */}
-                                    </button>
-                                  ) : (
-                                    <button 
-                                      onClick={() => toggleCommentInput(post.id)} // Toggle the comment input visibility
-                                      className="mb- px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
-                                    >
-                                      Add Comment {/* Original button text */}
-                                    </button>
-                                  )}
-                                  <hr className="my-4 border-gray-300" />
-
-                                  {post.comments.length > 0 ? (
-                                    post.comments.map(comment => (
-                                      <div key={comment.id} className="comment mb-3 p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200 flex justify-between">
-                                        <div className="flex-1">
-                                        <p className="text-gray-800">
-                                          <strong>{comment.author.username}</strong>
-                                          {comment.hiddenFlag && <span className=" ml-1 text-red-500">(hidden comment)</span>}: {comment.content}
-                                          <span className="text-gray-500 text-sm ml-2">({formatTimestamp(comment.createdAt)})</span>
-                                        </p>
-                                        </div>
-                                        <button 
-                                          onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="px-3 py-1 ml-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
-                                            Edit
-                                        </button>
-                                        {user && user.username === comment.author.username && (
-                                          <button onClick={() => handleDeleteComment(post.id, comment.id)} className="px-3 py-1 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">Delete</button>
-                                        )}
-                                        {user && !comment.hiddenFlag && (
-                                          <button onClick={() => handleHideComment(post.id, comment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Hide</button>
-                                        )}
-                                        {user && comment.hiddenFlag && (
-                                          <button onClick={() => handleUnHideComment(post.id, comment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Unhide</button>
-                                        )}
                                       </div>
-                                    ),
-                                    )) : (
-                                      <p className="text-gray-500 my-4 text-center">No comments yet. Be the first to comment!</p>
-                                    )
-                                  } 
+                                    )}
 
-                                </div>
+                                    {showCommentInput[post.id] ? (
+                                      <button 
+                                        onClick={() => toggleCommentInput(post.id)} 
+                                        className="mb-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200"
+                                      >
+                                        Cancel
+                                      </button>
+                                    ) : (
+                                      <button 
+                                        onClick={() => toggleCommentInput(post.id)} 
+                                        className="mb- px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                      >
+                                        Add Comment
+                                      </button>
+                                    )}
+                                    <hr className="my-4 border-gray-300" />
+
+                                    {/* Render root comments and their children */}
+                                    {post.comments.filter(comment => !comment.parentCommentId).length > 0 ? (
+                                      post.comments
+                                        .filter(comment => !comment.parentCommentId)
+                                        .map(rootComment => (
+                                          <div key={rootComment.id} className="comment mb-3 p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200">
+                                            <p className="text-gray-800">
+                                              <strong>{rootComment.author.username}</strong>
+                                              {rootComment.hiddenFlag && <span className="ml-1 text-red-500">(hidden comment)</span>}: {rootComment.content}
+                                              <span className="text-gray-500 text-sm ml-2">({formatTimestamp(rootComment.createdAt)})</span>
+                                            </p>
+
+                                            {/* Action buttons for root comments */}
+                                            <div className="flex justify-end">
+                                              {user && user.username === rootComment.author.username && (
+                                                <>
+                                                <button 
+                                                onClick={() => handleEditComment(post.id, rootComment.id, prompt('Edit comment:', rootComment.content) || rootComment.content)} 
+                                                className="px-3 py-1 ml-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
+                                                  Edit
+                                              </button>
+                                              <button onClick={() => handleDeleteComment(post.id, rootComment.id)} className="px-3 py-1 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">Delete</button>
+                                              </>
+                                              )}
+                                              {user && !rootComment.hiddenFlag && (
+                                                <button onClick={() => handleHideComment(post.id, rootComment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Hide</button>
+                                              )}
+                                              {user && rootComment.hiddenFlag && (
+                                                <button onClick={() => handleUnHideComment(post.id, rootComment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Unhide</button>
+                                              )}
+                                              {user && (
+                                                <button onClick={() => setReplyBoxVisible(true)} className="text-blue-500 hover:underline ml-2">Reply</button>
+                                              )}
+                                            </div>
+
+                                            {/* Render reply input box */}
+                                            {replyBoxVisible && (
+                                              <div className="reply-input mt-2 ml-6">
+                                                <textarea
+                                                  value={replyContent}
+                                                  onChange={(e) => setReplyContent(e.target.value)}
+                                                  placeholder="Write a reply..."
+                                                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none mb-3"
+                                                />
+                                                <button
+                                                  onClick={() => handleReplies(post.id, rootComment.id)}
+                                                  className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition"
+                                                >
+                                                  Submit Reply
+                                                </button>
+                                                <button
+                                                  onClick={() => setReplyBoxVisible(false)}
+                                                  className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition ml-2"
+                                                >
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            )}
+
+                                            {/* Render children comments */}
+                                            <div className="ml-6 mt-2">
+                                              {(rootComment.childrenComments || []).map(childComment => (
+                                                <div key={childComment.id} className="child-comment mb-2 p-2 border border-gray-200 rounded-md hover:bg-gray-50 transition duration-200">
+                                                  <p className="text-gray-800">
+                                                    <strong>{childComment.author.username}</strong>
+                                                    {childComment.hiddenFlag && <span className="ml-1 text-red-500">(hidden comment)</span>}: {childComment.content}
+                                                    <span className="text-gray-500 text-sm ml-2">({formatTimestamp(childComment.createdAt)})</span>
+                                                  </p>
+                                                  <div className="flex justify-end">
+                                                    <button 
+                                                      onClick={() => handleEditComment(post.id, childComment.id, prompt('Edit comment:', childComment.content) || childComment.content)} 
+                                                      className="px-3 py-1 ml-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">
+                                                        Edit
+                                                    </button>
+                                                    {user && user.username === childComment.author.username && (
+                                                      <button onClick={() => handleDeleteComment(post.id, childComment.id)} className="px-3 py-1 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">Delete</button>
+                                                    )}
+                                                    {user && !childComment.hiddenFlag && (
+                                                      <button onClick={() => handleHideComment(post.id, childComment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Hide</button>
+                                                    )}
+                                                    {user && childComment.hiddenFlag && (
+                                                      <button onClick={() => handleUnHideComment(post.id, childComment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Unhide</button>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))
+                                    ) : (
+                                      <p className="text-gray-500 my-4 text-center">No comments yet. Be the first to comment!</p>
+                                    )}
+                                  </div>
                                 )}
 
-                          
                               </div>
+                            </div>
+                          ))}
                         </div>
-                    ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-              </div>
-            </div>
-          </div>
-
 
       {/* New Post Popup Modal */}
       {showNewPostPopup && (
