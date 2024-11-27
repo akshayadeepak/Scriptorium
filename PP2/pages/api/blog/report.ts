@@ -14,12 +14,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!content || typeof content !== 'string') {
       return res.status(400).json({ error: "Content is required and must be a string" });
     }
-
     try {
       // Check if the blog post or comment exists
       if (blogPostId) {
         const blogPostExists = await prisma.blogPost.findUnique({
-          where: { id: blogPostId }
+          where: { id: Number(blogPostId) }
         });
 
         if (!blogPostExists) {
@@ -27,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       } else if (commentId) {
         const commentExists = await prisma.comment.findUnique({
-          where: { id: commentId }
+          where: { id: Number(commentId) }
         });
 
         if (!commentExists) {

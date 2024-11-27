@@ -8,9 +8,13 @@ interface Comment {
   id: number;
   content: string;
   author: {
+    id: number,
     username: string;
   };
   createdAt: string;
+  hiddenFlag: boolean,
+  parentCommentId?: number,
+  childrenComments?: Comment[],
 }
 
 interface Tag {
@@ -43,6 +47,7 @@ interface BlogPost {
   tags: Tag[];
   links: CodeTemplate[];
   ratings: number;
+  hiddenFlag: boolean,
 }
 
 const formatTimestamp = (timestamp: string) => {
@@ -77,7 +82,15 @@ export default function Blog() {
   const [forkedTemplateName, setForkedTemplateName] = useState('');
   const [forkedExplanation, setForkedExplanation] = useState('');
   const [forkedTags, setForkedTags] = useState('');
+  const [isICROpen, setIsICROpen] = useState(false);
+  const [ICRTitle, setICRTitle] = useState('');
+  const [ICRExplanation, setICRExplanation] = useState('');
+  const [templateToReport, setTemplateToReport] = useState<BlogPost | null>(null);
+  const [commentToReport, setCommentToReport] = useState<Comment | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [replyingToComment, setReplyingToComment] = useState<number |null>(null);
+  const [replyContent, setReplyContent] = useState('');
+
 
   const router = useRouter();
 
@@ -133,7 +146,51 @@ export default function Blog() {
     });
   };
   
+  const handleReport = async () => {
+    try {
+      console.log(templateToReport)
+      if (templateToReport) {
+        const response = await fetch('/api/blog/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            blogPostId: templateToReport.id,
+            content: ICRExplanation
+          })
+        })
 
+        if (response.ok) {
+          setTemplateToReport(null)
+          setIsICROpen(false)
+          setICRTitle('')
+          setICRExplanation('')
+        } else {
+          console.error('Failed to report template');
+        }
+      } else if (commentToReport) {
+        const response = await fetch('/api/blog/report', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ commentId: commentToReport.id, content: ICRExplanation })
+        });
+
+        if (response.ok) {
+          setCommentToReport(null);
+          setIsICROpen(false)
+          setICRTitle('')
+          setICRExplanation('')
+        } else {
+          console.error('Failed to report comment');
+        }
+      }
+    } catch (error) {
+      console.error('Error reporting comment:', error);
+    }
+  }
   
   const fetchTemplates = async () => {
     try {
@@ -160,7 +217,14 @@ export default function Blog() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/blog');
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/blog', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` })
+        },
+    });
       if (response.ok) {
         const data = await response.json();
         setPosts(data);
@@ -175,6 +239,10 @@ export default function Blog() {
       console.error('Error fetching posts:', error);
     }
   };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,7 +344,7 @@ export default function Blog() {
             setPosts(prevPosts => 
                 prevPosts.map(post => 
                     post.id === postId 
-                        ? { ...post, comments: [...post.comments, { id: data.id, content: commentContent, author: { username: user.username }, createdAt: new Date().toISOString() }] } 
+                        ? { ...post, comments: [...post.comments, { id: data.id, content: commentContent, author: { id: user.id, username: user.username }, createdAt: new Date().toISOString(), hiddenFlag: false } ] } 
                         : post
                 )
             );
@@ -577,6 +645,194 @@ export default function Blog() {
     }
   };
 
+  const handleHideReport = async (id: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch(`/api/blog?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ hiddenFlag: true }),
+      });
+
+      if (response.ok) {
+        const postsResponse = await fetch('/api/blog', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+        });
+        const postsData = await postsResponse.json();
+        setPosts(postsData);
+        setFilteredBlogs(postsData);
+      } else {
+        setError('Error hiding post')
+        console.log('Error')
+      }
+    } catch (error) {
+      setError(`Error hiding report: ${error}`)
+      console.log('Error')
+    }
+  }
+
+  const handleUnHideReport = async (id: number) => {
+      try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch(`/api/blog?id=${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ hiddenFlag: false }),
+      });
+
+      if (response.ok) {
+        const postsResponse = await fetch('/api/blog', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+        });
+        const postsData = await postsResponse.json();
+        setPosts(postsData);
+        setFilteredBlogs(postsData);
+      } else {
+        setError('Error hiding post')
+        console.log('Error')
+      }
+    } catch (error) {
+      setError(`Error hiding report: ${error}`)
+      console.log('Error')
+    }
+  }
+
+  const handleHideComment = async (id: number, commentId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch(`/api/blog/posts/${id}/comments?commentId=${commentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ hiddenFlag: true }),
+      });
+
+      if (response.ok) {
+        const postsResponse = await fetch('/api/blog', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+        });
+        const postsData = await postsResponse.json();
+        setPosts(postsData);
+        setFilteredBlogs(postsData);
+      } else {
+        setError('Error hiding post')
+        console.log('Error')
+      }
+    } catch (error) {
+      setError(`Error hiding report: ${error}`)
+      console.log('Error')
+    }
+  }
+
+  const handleUnHideComment = async (id: number, commentId: number) => {
+      try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch(`/api/blog/posts/${id}/comments?commentId=${commentId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ hiddenFlag: false }),
+      });
+
+      if (response.ok) {
+        const postsResponse = await fetch('/api/blog', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { 'Authorization': `Bearer ${token}` })
+            },
+        });
+        const postsData = await postsResponse.json();
+        setPosts(postsData);
+        setFilteredBlogs(postsData);
+      } else {
+        setError('Error hiding post')
+        console.log('Error')
+      }
+    } catch (error) {
+      setError(`Error hiding report: ${error}`)
+      console.log('Error')
+    }
+  }
+
+  const handleReplies = async (postId: number, parentId: number) => {
+    if (!user) return;
+    if (!replyContent.trim()) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/blog/posts/${postId}/comments`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ content: replyContent, parentId: parentId })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            console.error('Comment error:', data.error);
+            return;
+        }
+
+        if (response.ok) {
+
+            setCommentContent('');
+            fetchPosts;
+        }
+    } catch (error) {
+        console.error('Error posting comment:', error);
+    }
+  };
+
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
@@ -690,7 +946,40 @@ export default function Blog() {
 
                             {/* Post Content */}
                             <div className="flex-1">
-                                <h2 className="text-xl text-gray-800 font-bold">{post.title}</h2>
+                              <div className="flex items-center justify-between mb-2">
+                              <h2 className="flex-1 text-xl text-gray-800 font-bold">
+                                {post.title} {post.hiddenFlag && <span className="text-xs text-red-500">(hidden post)</span>}
+                              </h2>
+                                <div className="flex gap-4">
+                                  {!post.hiddenFlag && (<button 
+                                      onClick={() => {
+                                        setTemplateToReport(post);
+                                        setIsICROpen(true);
+                                      }}
+                                    className="text-sm text-gray-400 hover hover:text-red-400 hover:underline">
+                                    Report
+                                  </button>)}
+                                  {user && !post.hiddenFlag && (
+                                    <div>
+                                      <button
+                                        onClick={() => handleHideReport(post.id)}
+                                        className="text-sm text-gray-400 hover hover:text-red-400 hover:underline">
+                                        Hide
+                                      </button>
+                                    </div>
+                                  )}
+                                  {user && post.hiddenFlag && (
+                                    <div>
+                                      <button
+                                        onClick={() => handleUnHideReport(post.id)}
+                                        className="text-sm text-gray-400 hover hover:text-red-400 hover:underline">
+                                        Unhide
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
                                 <div className="flex justify-between mb-2 text-gray-500 text-sm">
                                     <span>By {post.author.username}, {formatTimestamp(post.createdAt)}</span>
                                 </div>
@@ -709,12 +998,12 @@ export default function Blog() {
                                 {/* Edit and Delete Buttons - Only show if the current user is the author */}
                                 {user && user.id === post.author.id && (
                                     <div className="flex mb-5 space-x-2">
-                                        <button 
+                                        {!post.hiddenFlag && (<button 
                                             onClick={() => handleEditPost(post)} 
                                             className="text-blue-500 hover:underline"
                                         >
                                             Edit
-                                        </button>
+                                        </button>)}
                                         <button 
                                             onClick={() => handleDeletePost(post.id)} 
                                             className="text-red-500 hover:underline"
@@ -766,47 +1055,233 @@ export default function Blog() {
                                         : 'No Comments'}
                                 </button>
 
-                              
+                                {/* Comments Section */}
+                                {showComments[post.id] && (
+                                  <div className="comments-section mt-6 p-4 border-t border-gray-200 bg-gray-50 rounded-md shadow-sm">
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Comments</h3>
 
-                                 {/* Comments Section */}
-                            {showComments[post.id] && (
-                                <div className="comments-section mt-4 border-t border-gray-200 pt-4">
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Comments</h3>
                                     {post.comments.length > 0 ? (
-                                        post.comments.map(comment => (
-                                            <div key={comment.id} className="comment mb-3 p-2 border border-gray-300 rounded-md hover:bg-gray-50 transition duration-200 flex justify-between">
-                                                <div className="flex-1">
-                                                    <p className="text-gray-800"><strong>{comment.author.username}</strong>: {comment.content}</p>
-                                                </div>
-                                                <p className="text-gray-500 text-sm ml-4 self-center">{formatTimestamp(comment.createdAt)}</p>
-                                                <button onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="text-blue-500 hover:underline ml-2">Edit</button>
-                                                <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-red-500 hover:underline ml-2">Delete</button>
+                                      post.comments.filter(comment => comment.parentCommentId === null).map((comment) => (
+                                        <div
+                                          key={comment.id}
+                                          className="comment mb-4 p-3 bg-white border border-gray-200 rounded-lg shadow-sm flex-col items-start justify-between gap-4 hover:bg-gray-100 transition"
+                                        >
+                                          <div className="flex-1">
+                                            <p className="text-gray-800 mb-1">
+                                              <strong className="text-blue-500">{comment.author.username}</strong>
+                                              {comment.hiddenFlag && (
+                                                <div className="text-xs text-red-500">(hidden comment)</div>
+                                              )}
+                                              <span className="ml-2 text-gray-700">{comment.content}</span>
+                                            </p>
+                                            <p className="text-gray-500 text-sm">{formatTimestamp(comment.createdAt)}</p>
+                                          </div>
+
+                                          {/* Action Buttons (Edit, Delete, Report, Hide/Unhide) */}
+                                          <div className="flex items-center gap-2">
+                                            {post.authorId === user?.id && (
+                                              <>
+                                                <button
+                                                  onClick={() =>
+                                                    handleEditComment(
+                                                      post.id,
+                                                      comment.id,
+                                                      prompt('Edit comment:', comment.content) || comment.content
+                                                    )
+                                                  }
+                                                  className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+                                                >
+                                                  Edit
+                                                </button>
+                                                <button
+                                                  onClick={() => handleDeleteComment(post.id, comment.id)}
+                                                  className="text-red-600 hover:text-red-800 hover:underline text-sm"
+                                                >
+                                                  Delete
+                                                </button>
+                                              </>
+                                            )}
+                                            <button
+                                              onClick={() => {
+                                                setCommentToReport(comment);
+                                                setIsICROpen(true);
+                                              }}
+                                              className="text-gray-500 hover:text-red-500 hover:underline text-sm"
+                                            >
+                                              Report
+                                            </button>
+
+                                            {/* Hide/Unhide Buttons for Admin */}
+                                            {user && !comment.hiddenFlag && (
+                                              <button
+                                                onClick={() => handleHideComment(post.id, comment.id)}
+                                                className="text-sm text-gray-400 hover:text-red-500 hover:underline"
+                                              >
+                                                Hide
+                                              </button>
+                                            )}
+                                            {user && comment.hiddenFlag && (
+                                              <button
+                                                onClick={() => handleUnHideComment(post.id, comment.id)}
+                                                className="text-sm text-gray-400 hover:text-red-400 hover:underline"
+                                              >
+                                                Unhide
+                                              </button>
+                                            )}
+                                          </div>
+
+                                          {/* Reply Button under action buttons */}
+                                          <button
+                                            onClick={() => setReplyingToComment(comment.id)}
+                                            className="text-[#1da1f2] hover:underline text-sm"
+                                          >
+                                            Reply
+                                          </button>
+
+                                          {/* Reply Form */}
+                                          {replyingToComment === comment.id && (
+                                            <form onSubmit={(e) => handleReplies(post.id, comment.id)} className="mt-2 flex gap-2">
+                                              <input
+                                                type="text"
+                                                value={replyContent}
+                                                onChange={(e) => setReplyContent(e.target.value)}
+                                                placeholder="Write a reply..."
+                                                className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                              />
+                                              <button
+                                                type="submit"
+                                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                              >
+                                                Submit
+                                              </button>
+                                              <button
+                                                type="reset"
+                                                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                                onClick={() => setReplyingToComment(null)}
+                                              >
+                                                Cancel
+                                              </button>
+                                            </form>
+                                          )}
+
+                                          {/* Display Replies */}
+                                          {(comment.childrenComments || []).length > 0 && (
+                                            <div className="mt-4">
+                                              <div className="pl-4 border-l-2 border-gray-300">
+                                                {(comment.childrenComments || []).map((reply) => (
+                                                  <div
+                                                    key={reply.id}
+                                                    className="reply mb-2 p-2 bg-gray-100 border border-gray-200 rounded-lg shadow-sm hover:bg-gray-200 transition"
+                                                  >
+                                                    <div className="flex justify-between items-start">
+                                                      <div className="flex-1">
+                                                        <p className="text-gray-700 mb-1">
+                                                          <strong className="text-blue-500">{reply.author.username}</strong>: {reply.content}
+                                                        </p>
+                                                        <p className="text-gray-500 text-xs">{formatTimestamp(reply.createdAt)}</p>
+                                                      </div>
+
+                                                      {/* Action Buttons for Replies (Edit, Delete, Report, Hide/Unhide) */}
+                                                      <div className="flex items-center gap-2">
+                                                        {/* Report Button */}
+                                                        <button
+                                                          onClick={() => {
+                                                            setCommentToReport(reply);
+                                                            setIsICROpen(true);
+                                                          }}
+                                                          className="text-gray-500 hover:text-red-500 hover:underline text-sm"
+                                                        >
+                                                          Report
+                                                        </button>
+
+                                                        {/* Hide/Unhide Buttons for Admin */}
+                                                        {user && !reply.hiddenFlag && (
+                                                          <button
+                                                            onClick={() => handleHideComment(post.id, reply.id)}
+                                                            className="text-sm text-gray-400 hover:text-red-500 hover:underline"
+                                                          >
+                                                            Hide
+                                                          </button>
+                                                        )}
+                                                        {user && reply.hiddenFlag && (
+                                                          <button
+                                                            onClick={() => handleUnHideComment(post.id, reply.id)}
+                                                            className="text-sm text-gray-400 hover:text-red-400 hover:underline"
+                                                          >
+                                                            Unhide
+                                                          </button>
+                                                        )}
+                                                      </div>
+                                                    </div>
+
+                                                    {/* Reply Button for Replies */}
+                                                    <button
+                                                      onClick={() => setReplyingToComment(reply.id)}
+                                                      className="text-[#1da1f2] hover:underline text-sm mt-2"
+                                                    >
+                                                      Reply
+                                                    </button>
+
+                                                    {/* Reply Form for Replies */}
+                                                    {replyingToComment === reply.id && (
+                                                      <form onSubmit={(e) => handleReplies(post.id, reply.id)} className="mt-2 flex gap-2">
+                                                        <input
+                                                          type="text"
+                                                          value={replyContent}
+                                                          onChange={(e) => setReplyContent(e.target.value)}
+                                                          placeholder="Write a reply..."
+                                                          className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                        />
+                                                        <button
+                                                          type="submit"
+                                                          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                                        >
+                                                          Submit
+                                                        </button>
+                                                        <button
+                                                          type="reset"
+                                                          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                                                          onClick={() => setReplyingToComment(null)}
+                                                        >
+                                                          Cancel
+                                                        </button>
+                                                      </form>
+                                                    )}
+                                                  </div>
+                                                ))}
+                                              </div>
                                             </div>
-                                        ))
+                                          )}
+                                        </div>
+                                      ))
                                     ) : (
-                                        <p className="text-gray-500 my-2">No comments yet.</p>
+                                      <p className="text-gray-500 my-4 text-center">No comments yet. Be the first to comment!</p>
                                     )}
-                                    <textarea
+
+                                    {/* Comment Input Section */}
+                                    <div className="comment-input-container mt-4">
+                                      <textarea
                                         value={commentContent}
                                         onChange={(e) => setCommentContent(e.target.value)}
-                                        placeholder="Add a comment..."
-                                        className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
-                                    />
-                                    <button 
-                                        onClick={() => handleComment(post.id)} 
-                                        className="submit-comment-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
-                                    >
+                                        placeholder="Write a comment..."
+                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none mb-3"
+                                      />
+                                      <button
+                                        onClick={() => handleComment(post.id)}
+                                        className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition"
+                                      >
                                         Submit Comment
-                                    </button>
-                                </div>
-                            )}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
 
                                 {/* Render Comments if toggled */}
-                                {showComments[post.id] && post.comments.map(comment => (
+                                {/* {showComments[post.id] && post.comments.map(comment => (
                                     <div key={comment.id} className="mt-2">
                                         <p className="text-gray-600">{comment.content}</p>
                                     </div>
-                                ))}
+                                ))} */}
 
                                 
                             </div>
@@ -990,6 +1465,50 @@ export default function Blog() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ICR Modal */}
+      {isICROpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h3 className="text-lg font-semibold mb-4">Inappropriate Content Report</h3>
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={ICRTitle}
+              onChange={(e) => setICRTitle(e.target.value)}
+              placeholder="Report title"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <textarea
+              value={ICRExplanation}
+              onChange={(e) => setICRExplanation(e.target.value)}
+              placeholder="Explanation"
+              className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={handleReport}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                Report
+              </button>
+              <button
+                onClick={() => {
+                  setIsICROpen(false);
+                  setICRTitle('');
+                  setICRExplanation('');
+                  setTemplateToReport(null);
+                  setCommentToReport(null);
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       )}
     </div>
   );

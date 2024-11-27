@@ -13,7 +13,6 @@ const getHandler = withOptionalAuth( async(req: NextApiRequest, res: NextApiResp
       console.log('Page query:', pageQuery);
 
       if (!page) {
-        console.log('Here!')
         const templates = await prisma.codeTemplate.findMany({
           where: {
             ...(userId ? { authorId: Number(userId) } : {}),

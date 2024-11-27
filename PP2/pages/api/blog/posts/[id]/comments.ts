@@ -47,7 +47,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 // Handler for authenticated routes
 const protectedHandler = withAuth(async (req: NextApiRequest, res: NextApiResponse, userId: number): Promise<void | NextApiResponse> => {
-    const { id, commentId } = req.query;
+    const { id } = req.query;
+    const { commentId } = req.query;
   
     // Check if id is provided and is a valid number
     if (!id || isNaN(Number(id))) {
@@ -56,7 +57,7 @@ const protectedHandler = withAuth(async (req: NextApiRequest, res: NextApiRespon
   
     switch (req.method) {
     case 'POST': {
-      const { content } = req.body;
+      const { content, parentId } = req.body;
       if (!content?.trim()) {
         return res.status(400).json({ error: "Content is required" });
       }
@@ -77,7 +78,8 @@ const protectedHandler = withAuth(async (req: NextApiRequest, res: NextApiRespon
           data: {
             content: content.trim(),
             authorId: userId,
-            blogPostId: blogPostId
+            blogPostId: blogPostId,
+            parentCommentId: parentId,
           },
           include: {
             author: {
@@ -96,15 +98,11 @@ const protectedHandler = withAuth(async (req: NextApiRequest, res: NextApiRespon
     }
 
     case 'PUT': {
-      const { content } = req.body;
-      if (!content?.trim()) {
-        return res.status(400).json({ error: "Content is required" });
-      }
-
+      const { content, hiddenFlag } = req.body;
       if (!commentId) {
         return res.status(400).json({ error: "Comment ID is required" });
       }
-
+      
       try {
         const existingComment = await prisma.comment.findUnique({
           where: { id: Number(commentId) },
@@ -114,24 +112,42 @@ const protectedHandler = withAuth(async (req: NextApiRequest, res: NextApiRespon
         if (!existingComment) {
           return res.status(404).json({ error: "Comment not found" });
         }
+        
+        if (content) {
+          if (existingComment.author.id !== userId) {
+            return res.status(403).json({ error: "You can only edit your own comments" });
+          }
 
-        if (existingComment.author.id !== userId) {
-          return res.status(403).json({ error: "You can only edit your own comments" });
-        }
-
-        const updatedComment = await prisma.comment.update({
-          where: { id: Number(commentId) },
-          data: { content },
-          include: {
-            author: {
-              select: {
-                username: true
+          const updatedComment = await prisma.comment.update({
+            where: { id: Number(commentId) },
+            data: { content },
+            include: {
+              author: {
+                select: {
+                  username: true
+                }
               }
             }
-          }
-        });
+          });
 
-        return res.status(200).json(updatedComment);
+          return res.status(200).json(updatedComment);
+        } else {
+          const updatedComment = await prisma.comment.update({
+            where: { id: Number(commentId) },
+            data: { 
+              hiddenFlag: hiddenFlag,
+             },
+            include: {
+              author: {
+                select: {
+                  username: true
+                }
+              }
+            }
+          });
+
+          return res.status(200).json(updatedComment)
+        }
       } catch (error) {
         console.error('Comment update error:', error);
         return res.status(500).json({ error: "Failed to update comment" });
