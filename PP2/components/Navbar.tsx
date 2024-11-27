@@ -57,7 +57,7 @@ export default function Navbar() {
                 </span>
             </div>
             <div className="flex items-center gap-4">
-                {/* <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     <input
                         type="text"
                         placeholder="Search blog posts, code templates..."
@@ -71,7 +71,7 @@ export default function Navbar() {
                     >
                         Search
                     </button>
-                </div> */}
+                </div>
                 {!isLoggedIn ? (
                     <div className="flex items-center gap-3">
                         <button 
