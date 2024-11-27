@@ -854,7 +854,7 @@ export default function Blog() {
                                     ) : (
                                         <button 
                                             onClick={() => toggleCommentInput(post.id)} // Toggle the comment input visibility
-                                            className="mb-2 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
+                                            className="mb- px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
                                         >
                                             Add Comment {/* Original button text */}
                                         </button>
@@ -870,25 +870,8 @@ export default function Blog() {
                                                         <span className="text-gray-500 text-sm ml-2">({formatTimestamp(comment.createdAt)})</span>
                                                     </p>
                                                 </div>
-                                                <button onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="text-blue-500 hover:underline ml-2">Edit</button>
-                                                <button onClick={() => handleDeleteComment(post.id, comment.id)} className="text-red-500 hover:underline ml-2">Delete</button>
-                                                <button onClick={() => setReplyToCommentId(comment.id)} className="text-blue-500 hover:underline ml-2">Reply</button>
-                                                {replyToCommentId === comment.id && (
-                                                    <div className="reply-input mt-2">
-                                                        <textarea
-                                                            value={replyContent}
-                                                            onChange={(e) => setReplyContent(e.target.value)}
-                                                            placeholder="Add a reply..."
-                                                            className="comment-input w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent resize-none"
-                                                        />
-                                                        <button 
-                                                            onClick={() => handleReply(post.id, comment.id)} 
-                                                            className="submit-reply-button my-4 px-4 py-2 bg-[#1da1f2] text-white rounded-md hover:bg-[#00cfc1] transition duration-200"
-                                                        >
-                                                            Submit Reply
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                <button onClick={() => handleEditComment(post.id, comment.id, prompt('Edit comment:', comment.content) || comment.content)} className="px-3 py-1 ml-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm">Edit</button>
+                                                <button onClick={() => handleDeleteComment(post.id, comment.id)} className="px-3 py-1 ml-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm">Delete</button>
                                             </div>
                                         ))
                                     ) : (
