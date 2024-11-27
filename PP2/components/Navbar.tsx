@@ -49,9 +49,15 @@ export default function Navbar() {
                 >
                     Code Templates
                 </span>
+                <span 
+                    className="text-sm text-[#1da1f2] cursor-pointer p-1 hover:text-[#00cfc1] transition-colors" 
+                    onClick={() => router.push('/saved-templates')}
+                >
+                    Saved Templates
+                </span>
             </div>
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                     <input
                         type="text"
                         placeholder="Search blog posts, code templates..."
@@ -65,7 +71,7 @@ export default function Navbar() {
                     >
                         Search
                     </button>
-                </div>
+                </div> */}
                 {!isLoggedIn ? (
                     <div className="flex items-center gap-3">
                         <button 

@@ -415,7 +415,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     };
 
     return (
-        <div className="min-h-screen">
+        <div className="h-screen overflow-hidden">
             <Navbar />
             <div className={styles.codeBackground}>
                 <div className="flex-1 flex">

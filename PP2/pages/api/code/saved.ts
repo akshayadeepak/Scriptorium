@@ -19,6 +19,10 @@ export default withAuth(async (req: NextApiRequest, res: NextApiResponse, userId
             }
           },
         },
+        include: {
+          author: true,
+          tags: true,
+        }
       })
 
       return res.status(200).json(savedCodeTemplates);

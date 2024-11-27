@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import styles from './blog.module.css';
+import { useRouter } from 'next/router';
 
 interface Comment {
   id: number;
@@ -16,6 +17,9 @@ interface Tag {
   id: number;
   name: string;
   blogPosts: BlogPost[];
+  _count: {
+    blogPosts: number;
+  };
 }
 
 interface CodeTemplate {
@@ -68,6 +72,14 @@ export default function Blog() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<BlogPost[]>([]);
   const [showComments, setShowComments] = useState<Record<number, boolean>>({});
+  const [templateToFork, setTemplateToFork] = useState<CodeTemplate | null>(null);
+  const [isForkModalOpen, setIsForkModalOpen] = useState(false);
+  const [forkedTemplateName, setForkedTemplateName] = useState('');
+  const [forkedExplanation, setForkedExplanation] = useState('');
+  const [forkedTags, setForkedTags] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const router = useRouter();
 
 
   useEffect(() => {
@@ -98,6 +110,7 @@ export default function Blog() {
       if (response.ok) {
         const data = await response.json();
         setAvailableTags(data);
+        console.log(data); // Log the fetched tags data
       }
     } catch (error) {
       console.error('Error fetching tags:', error);
@@ -172,6 +185,9 @@ export default function Blog() {
         return;
     }
 
+    // Prepare tags: split by comma, trim spaces, and filter out empty values
+    const tagsToSubmit = selectedTags.map(tag => tag.trim()).filter(tag => tag);
+
     try {
         const token = localStorage.getItem('token');
         const method = editingPost ? 'PUT' : 'POST';
@@ -186,17 +202,40 @@ export default function Blog() {
             body: JSON.stringify({
                 title: editTitle,
                 content: editContent,
-                tags: selectedTags,
+                tags: tagsToSubmit, // Use the prepared tags
                 templateId: selectedTemplateId
             })
         });
 
         if (response.ok) {
+            const postData = await response.json(); // Get the created/updated post data
+
+            // Update tags with the new post ID
+            await Promise.all(tagsToSubmit.map(async (tag) => {
+                const tagResponse = await fetch(`/api/tag`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: tag,
+                        blogPosts: [postData.id] // Add the new post ID to the blogPosts array
+                    })
+                });
+
+                if (!tagResponse.ok) {
+                    const errorData = await tagResponse.json();
+                    console.error('Error adding tag to blogPosts:', errorData.error);
+                }
+            }));
+
+            // Clear inputs and close modal
             setTitle('');
             setContent('');
             setEditTitle('');
             setEditContent('');
-            setSelectedTags([]);
+            setSelectedTags([]); // Clear tags after submission
             setSelectedTemplateId(null);
             setShowNewPostPopup(false);
             await fetchPosts();
@@ -302,6 +341,50 @@ export default function Blog() {
       }
     } catch (error) {
       console.error('Error updating post:', error);
+    }
+  };
+
+  const handleRunCode = (template: CodeTemplate) => {
+    router.push({
+      pathname: '/code',
+      query: { code: template.content, language: template.language, id: template.id },
+    });
+  };
+
+  const handleForkTemplate = (template: CodeTemplate) => {
+    setTemplateToFork(template);
+    setIsForkModalOpen(true);
+  };
+
+  const handleSaveForkedTemplate = async () => {
+    if (!templateToFork) return;
+
+    const token = localStorage.getItem('token');
+    const response = await fetch('/api/code/template', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: forkedTemplateName,
+        explanation: forkedExplanation,
+        tags: forkedTags.split(','),
+        language: templateToFork.language,
+        content: templateToFork.content,
+      }),
+    });
+
+    if (response.ok) {
+      const newTemplate = await response.json();
+      setIsForkModalOpen(false);
+      setForkedTemplateName('');
+      setForkedExplanation('');
+      setForkedTags('');
+      setTemplateToFork(null);
+    } else {
+      const errorData = await response.json();
+      setError(errorData.error || 'Failed to fork template');
     }
   };
 
@@ -433,6 +516,38 @@ export default function Blog() {
     }
   };
 
+  const handleSaveTemplate = async (id: number) => {
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authorization token is missing. Please log in.');
+        return;
+      }
+
+      const response = await fetch('/api/code/save', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ templateId: id }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Template saved successfully!');
+      } else {
+        setError(data.error || 'Failed to save template');
+      }
+
+    } catch (error) {
+      console.error('Error saving template:', error);
+      setError('Failed to save template');
+    }
+  }
+
   const handleDeleteComment = async (postId: number, commentId: number) => {
     if (!user) return;
 
@@ -483,7 +598,7 @@ export default function Blog() {
                           #{tag.name}
                         </span>
                         <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                          {tag.blogPosts && Array.isArray(tag.blogPosts) ? tag.blogPosts.length : 0}
+                          {tag._count ? tag._count.blogPosts : 0}
                         </span>
                       </div>
                     ))}
@@ -579,6 +694,18 @@ export default function Blog() {
                                 <div className="flex justify-between mb-2 text-gray-500 text-sm">
                                     <span>By {post.author.username}, {formatTimestamp(post.createdAt)}</span>
                                 </div>
+                                
+                                {/* Display Tags */}
+                                {post.tags && post.tags.length > 0 && (
+                                    <div className="my-2">
+                                        {post.tags.map(tag => (
+                                            <span key={tag.id} className="text-[#1da1f2] hover:underline cursor-pointer ml-2">
+                                                #{tag.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
                                 {/* Edit and Delete Buttons - Only show if the current user is the author */}
                                 {user && user.id === post.author.id && (
                                     <div className="flex mb-5 space-x-2">
@@ -599,15 +726,48 @@ export default function Blog() {
 
                                 <p className="text-gray-700 mb-4">{post.content}</p>
 
+                                  {/* Render Code Template */}
+                                  {post.links && post.links.length > 0 && (
+                                  <div className="code-template mt-4">
+                                    <h4 className="font-bold mb-2">{post.links[0].title} ({post.links[0].language})</h4>
+                                    <pre className="bg-gray-100 p-2 rounded my-2">
+                                      <code>{post.links[0].content}</code>
+                                    </pre>
+                                    <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
+                                    <button
+                                    onClick={() => handleRunCode(post.links[0])}
+                                    className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                                  >
+                                    Run Code
+                                  </button>
+                                  <button
+                                    onClick={() => handleForkTemplate(post.links[0])}
+                                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                                  >
+                                    Fork
+                                  </button>
+                                  <button
+                                    onClick={() => handleSaveTemplate(post.links[0].id)}
+                                    className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                                  >
+                                    Save
+                                  </button>
+                                  </div>
+                                  </div>
+                                )}
+
                                 {/* Toggle Comments Button */}
                                 <button 
                                     onClick={() => toggleComments(post.id)} 
-                                    className="text-[#1da1f2] hover:underline mb-2"
+                                    className="text-[#1da1f2] mt-4 hover:underline mb-2"
                                 >
                                     {post.comments.length > 0 
                                         ? `Comments (${post.comments.length})` 
                                         : 'No Comments'}
                                 </button>
+
+                              
+
                                  {/* Comments Section */}
                             {showComments[post.id] && (
                                 <div className="comments-section mt-4 border-t border-gray-200 pt-4">
@@ -647,6 +807,8 @@ export default function Blog() {
                                         <p className="text-gray-600">{comment.content}</p>
                                     </div>
                                 ))}
+
+                                
                             </div>
                         </div>
                     ))}
@@ -669,7 +831,12 @@ export default function Blog() {
                           {editingPost ? 'Edit Post' : 'Create New Post'}
                       </h3>
                       <button 
-                          onClick={() => setShowNewPostPopup(false)}
+                          onClick={() => {
+                              setShowNewPostPopup(false);
+                              setSelectedTags([]); // Clear tags when closing the modal
+                              setEditTitle(''); // Clear title when closing the modal
+                              setEditContent(''); // Clear content when closing the modal
+                          }}
                           className="text-gray-500 hover:text-gray-700"
                       >
                           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -700,37 +867,35 @@ export default function Blog() {
                           />
                       </div>
 
+                      {/* Tags Input */}
                       <div>
-                          <select
-                              multiple
-                              value={selectedTags}
-                              onChange={(e) => setSelectedTags(Array.from(e.target.selectedOptions, option => option.value))}
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Enter Tags (comma separated)</label>
+                          <input
+                              type="text"
+                              value={selectedTags.join(', ')} // Join selected tags for display
+                              onChange={(e) => setSelectedTags(e.target.value.split(',').map(tag => tag.trim()))} // Split input into tags
+                              placeholder="Enter tags..."
                               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
-                          >
-                              {availableTags.map(tag => (
-                                  <option key={tag.id} value={tag.name}>
-                                      {tag.name}
-                                  </option>
-                              ))}
-                          </select>
-                          <p className="text-sm text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple tags</p>
+                          />
+                          <p className="text-sm text-gray-500 mt-1">Separate tags with commas</p>
                       </div>
 
-                      {/* Code template */}
+                      {/* Code Template Selection */}
                       <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Select Code Template</label>
                           <select
-                              value={selectedTags}
-                              onChange={(e) => setSelectedTemplateId(Number(e.target.id))}
-                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent"
+                              value={selectedTemplateId || ''}
+                              onChange={(e) => setSelectedTemplateId(Number(e.target.value))}
+                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition duration-200"
                           >
+                              <option value="" disabled>Select a template</option>
                               {availableTemplates.map(template => (
-                                  <option key={template.id} value={template.title}>
-                                      {template.title}
+                                  <option key={template.id} value={template.id}>
+                                      {template.title} ({template.language})
                                   </option>
                               ))}
                           </select>
-                      </div> 
-                      
+                      </div>
 
                       <div className="flex justify-end space-x-3">
                           <button
@@ -774,6 +939,57 @@ export default function Blog() {
                   </div>
               </div>
           </div>
+      )}
+
+      {/* Fork Template Modal */}
+      {isForkModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Fork Template</h3>
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={forkedTemplateName}
+                onChange={(e) => setForkedTemplateName(e.target.value)}
+                placeholder="Template name"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <textarea
+                value={forkedExplanation}
+                onChange={(e) => setForkedExplanation(e.target.value)}
+                placeholder="Explanation (optional)"
+                className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+              <input
+                type="text"
+                value={forkedTags}
+                onChange={(e) => setForkedTags(e.target.value)}
+                placeholder="Tags (comma-separated)"
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={handleSaveForkedTemplate}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                >
+                  Fork
+                </button>
+                <button
+                  onClick={() => {
+                    setIsForkModalOpen(false);
+                    setForkedTemplateName('');
+                    setForkedExplanation('');
+                    setForkedTags('');
+                    setTemplateToFork(null);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
