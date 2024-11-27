@@ -38,22 +38,24 @@ export default function Home() {
     }
   };
 
-  const toggleTheme = () => {
-    setIsDarkMode((prev) => !prev);
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
   };
 
   return (
     <div className={`${styles.pageContainer} ${isDarkMode ? styles.darkMode : ''}`}>
       <Navbar />
 
-      <button className={styles.themeToggle} onClick={toggleTheme}>
-        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+      {/* Theme Toggle Button */}
+      <button onClick={toggleDarkMode} className={styles.themeToggleButton}>
+        {isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       </button>
+
 
       {/* Main Content Section */}
       <main className={styles.mainContent}>
         <section className={styles.heroSection}>
-          <div className={`${styles.heroTextBackground} ${isDarkMode ? styles.darkHero : ''}`}>
+          <div className={styles.heroTextBackground}>
             <h1 className={styles.heroTitle}>Welcome to Scriptorium</h1>
             <p className={styles.heroSubtitle}>{messages[currentMessage]}</p>
             {!isLoggedIn && (
@@ -120,7 +122,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className={`${styles.footer} ${isDarkMode ? styles.darkFooter : ''}`}>
+      <footer className={styles.footer}>
         <span>&copy; 2024 Scriptorium. All rights reserved.</span>
         <a href="/terms" className={styles.footerLink}>Terms of Service</a>
         <a href="/privacy" className={styles.footerLink}>Privacy Policy</a>
