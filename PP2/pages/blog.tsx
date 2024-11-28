@@ -890,6 +890,28 @@ export default function Blog() {
     }
   };
 
+  const handleSortByReports = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const sortBy = "reports"
+      const response = await fetch(`/api/blog?sortBy=${sortBy}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPosts([...data]);
+        setFilteredBlogs(data);
+      } else {
+        console.error('Failed to fetch posts');
+      }
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  }
+
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
@@ -950,7 +972,7 @@ export default function Blog() {
                     </svg>
                   </div>
 
-                  <div className="text-center">
+                  <div className="flex justify-center text-center gap-4">
                     <button 
                       onClick={handleNewPostClick}
                       className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
@@ -958,13 +980,22 @@ export default function Blog() {
                     >
                       New Post
                     </button>
+                    {user && (
+                      <button 
+                      onClick={handleSortByReports}
+                      className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
+                               font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
+                    >
+                      Sort Posts by Reports
+                    </button>
+                    )}
                   </div>
                 </div>
 
                 {/* Bottom Section - Posts List */}
                 <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-6">
-                    {[...filteredPosts].sort((a, b) => (b.ratings || 0) - (a.ratings || 0)).map((post) => (
+                    {[...filteredPosts].map((post) => (
                         <div key={post.id} className="post-container bg-white rounded-lg shadow-md p-4 flex">
                             {/* Voting Section */}
                             <div className="flex flex-col items-center gap-1 mr-4">
