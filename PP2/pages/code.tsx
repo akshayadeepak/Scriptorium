@@ -10,7 +10,6 @@ import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { javascript } from '@codemirror/lang-javascript';
 import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
-import { githubLight, githubDark } from '@uiw/codemirror-theme-github'; // Import themes
 import { useTheme } from '../context/ThemeContext'; // Assuming you have a ThemeContext
 
   export default function Code() {
@@ -736,7 +735,7 @@ import { useTheme } from '../context/ThemeContext'; // Assuming you have a Theme
                                         setTags('');
                                         setExplanation('');
                                     }}
-                                    cclassName={`px-4 py-2 ${isDarkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} rounded-md transition-colors`}
+                                    className={`px-4 py-2 ${isDarkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} rounded-md transition-colors`}
                                 >
                                     Cancel
                                 </button>
