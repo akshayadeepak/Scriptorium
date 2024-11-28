@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import styles from './blog.module.css';
 import { useRouter } from 'next/router';
+import { useTheme } from '../context/ThemeContext'; // Import ThemeContext
 
 interface Comment {
   id: number;
@@ -91,6 +92,7 @@ export default function Blog() {
   const [replyContent, setReplyContent] = useState<Record<number, string>>({});
   const [replyBoxVisible, setReplyBoxVisible] = useState<Record<number, boolean>>({});
   const [showCommentInput, setShowCommentInput] = useState<Record<number, boolean>>({});
+  const { isDarkMode, toggleDarkMode } = useTheme(); // Use the theme context
   
 
   const router = useRouter();
@@ -915,12 +917,33 @@ export default function Blog() {
   return (
     <div className="h-screen overflow-hidden">
       <Navbar />
-      <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+      <div
+        className={`${styles.blogBackground} h-[calc(100vh-64px)] ${
+          isDarkMode ? styles.darkMode : ''
+        }`}
+      >
+      {/* Theme Toggle Button */}
+        <button
+          onClick={toggleDarkMode}
+          className={`fixed top-4 left-4 p-3 rounded-full shadow-md focus:outline-none ${
+            isDarkMode
+              ? 'bg-gray-700 text-white hover:bg-gray-600'
+              : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+          title="Toggle Theme"
+          aria-label="Toggle Theme"
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
         <div className="px-4 h-full">
           <div className="grid grid-cols-6 gap-8 h-full">
             {/* Left Column - Tags */}
             <div className="col-span-1">
-              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-8 h-[calc(100vh-112.5px)] mt-8 overflow-y-auto">
+              <div
+                className={`bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-8 h-[calc(100vh-112.5px)] mt-8 overflow-y-auto ${
+                  isDarkMode ? 'bg-gray-800 text-gray-200' : ''
+                }`}
+              >
                 <h2 className="text-xl font-bold text-gray-700 mb-4">Tags</h2>
                 <div className="space-y-2">
                     {availableTags
@@ -946,9 +969,17 @@ export default function Blog() {
             {/* Right Column - Posts */}
             <div className="col-span-5 py-8">
               {/* White box container */}
-              <div className="bg-white rounded-lg shadow-lg flex flex-col max-h-[calc(100vh-112.5px)]">
+              <div
+                className={`rounded-lg flex flex-col max-h-[calc(100vh-112.5px)] ${
+                  isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white'
+                }`}
+              >
                 {/* Top Section - Search & Button */}
-                <div className="p-6 border-b border-gray-200">
+                <div
+                  className={`p-6 border-b ${
+                    isDarkMode ? 'border-gray-700' : 'border-gray-200'
+                  }`}
+                >
                   <div className="relative max-w-2xl mx-auto mb-6">
                     <input
                       type="text"
