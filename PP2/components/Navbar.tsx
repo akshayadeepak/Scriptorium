@@ -3,19 +3,11 @@ import Image from 'next/image';
 import { useAuth } from '../context/AuthContext';
 import logo from '../images/logo.jpg';
 import placeholderPfp from '../images/placeholderpfp.webp';
-import { useState } from 'react';
 
 export default function Navbar() {
     const router = useRouter();
-    const { user, avatar, logout } = useAuth();
+    const { user, logout } = useAuth();
     const isLoggedIn = !!user;
-    const [searchTerm, setSearchTerm] = useState('');
-
-    const handleSearch = () => {
-        if (searchTerm.trim()) {
-            router.push(`/search?query=${searchTerm}`);
-        }
-    };
 
     return (
         <header className="flex justify-between items-center p-2 md:p-4 bg-white border-b border-gray-200 shadow-sm">
@@ -82,7 +74,7 @@ export default function Navbar() {
                             Log Out
                         </button>
                         <Image 
-                            src={avatar || placeholderPfp} 
+                            src={user.avatar || placeholderPfp} 
                             alt="User Avatar" 
                             width={24}
                             height={24}
