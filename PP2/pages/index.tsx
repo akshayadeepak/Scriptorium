@@ -9,7 +9,6 @@ import { useAuth } from '../context/AuthContext';
 export default function Home() {
   const router = useRouter();
   const { isLoggedIn, logout } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentMessage, setCurrentMessage] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false); // State to manage theme
   const [showCookieNotice, setShowCookieNotice] = useState(true);
@@ -31,16 +30,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [messages.length]);
 
-  const handleLogout = () => {
-    logout();
-  };
-
-  // Handle search button click to navigate to the search results page
-  const handleSearch = () => {
-    if (searchTerm.trim()) {
-      router.push(`/search?query=${searchTerm}`);
-    }
-  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -110,18 +99,18 @@ export default function Home() {
           <h2 className={styles.sectionTitle}>Popular Code Templates</h2>
           <div className={styles.templateGrid}>
             {/* Placeholder Template Cards */}
-            <div className={`${styles.templateCard} rounded-xl`}>
+            <a href="/code-templates" className={`${styles.templateCard} rounded-xl`}>
               <h3>JavaScript Array Algorithms</h3>
               <p>A collection of useful array manipulation functions for JavaScript projects.</p>
-            </div>
-            <div className={`${styles.templateCard} rounded-xl`}>
+            </a>
+            <a href="/code-templates" className={`${styles.templateCard} rounded-xl`}>
               <h3>Python Mass Data Processing</h3>
               <p>Parallelized data processing utilities for data science and machine learning.</p>
-            </div>
-            <div className={`${styles.templateCard} rounded-xl`}>
+            </a>
+            <a href="/code-templates" className={`${styles.templateCard} rounded-xl`}>
               <h3>Java HTTP Client</h3>
               <p>Reusable HTTP client functions for making API requests in Java.</p>
-            </div>
+            </a>
           </div>
         </section>
 
@@ -130,18 +119,18 @@ export default function Home() {
           <h2 className={styles.sectionTitle}>Featured Blog Posts</h2>
           <div className={styles.blogGrid}>
             {/* Placeholder Blog Post Cards */}
-            <div className={`${styles.blogCard} rounded-xl`}>
+            <a href="/blog" className={`${styles.blogCard} rounded-xl`}>
               <h3>Cryptographer wins Turing Award</h3>
               <p>Mark Mu recently won a Turing award for their contributions to the pina colada algorithm.</p>
-            </div>
-            <div className={`${styles.blogCard} rounded-xl`}>
+            </a>
+            <a href="/blog" className={`${styles.blogCard} rounded-xl`}>
               <h3>Getting Started with Next.js</h3>
               <p>A comprehensive guide to building web applications with Next.js.</p>
-            </div>
-            <div className={`${styles.blogCard} rounded-xl`}>
+            </a>
+            <a href="/blog" className={`${styles.blogCard} rounded-xl`}>
               <h3>10 Rust Tips & Tricks</h3>
               <p>Enhance your Rust skills with these practical tips and tricks.</p>
-            </div>
+            </a>
           </div>
         </section>
       </main>
