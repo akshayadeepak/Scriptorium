@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
+import { useTheme } from '../context/ThemeContext'; // Import ThemeContext
 
 export default function Login() {
     const router = useRouter();
@@ -10,6 +11,7 @@ export default function Login() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const { login } = useAuth();
+    const { isDarkMode, toggleDarkMode } = useTheme(); // Use the theme context
 
     useEffect(() => {
         if (router.query.signup === 'success') {
@@ -48,19 +50,19 @@ export default function Login() {
     };
 
     return (
-      <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+      <div className={`${styles.blogBackground} h-[calc(100vh-64px)] ${isDarkMode ? styles.darkMode : ''}`}>
         <div className="min-h-screen w-full flex justify-center items-center p-5">
-          <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+          <div className={`w-full max-w-md ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white'} p-8 rounded-lg shadow-md`}>
             <h1 className="text-center font-bold text-xl p-1">Login to Your Account</h1>
       
             {success && (
-              <div className="text-green-600 my-2 p-2 bg-green-100 rounded">
+              <div className={`${isDarkMode ? 'text-green-400 bg-green-900' : 'text-green-600 bg-green-100'} my-2 p-2 rounded`}>
                 {success}
               </div>
             )}
       
             {error && (
-              <div className="text-red-600 my-2 p-2 bg-red-100 rounded">
+              <div className={`${isDarkMode ? 'text-red-400 bg-red-900' : 'text-red-600 bg-red-100'} my-2 p-2 rounded`}>
                 {error}
               </div>
             )}
@@ -73,7 +75,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className={`w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-300 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'border-gray-300'}`}
                 />
               </div>
               <div className="mb-6">
@@ -83,20 +85,28 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-300"
+                  className={`w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-orange-300 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'border-gray-300'}`}
                 />
               </div>
               <div className="flex justify-center gap-5 mt-5">
                 <button
                   type="button"
-                  className="px-4 py-1 bg-white text-blue-400 rounded border border-blue-400 hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className={`px-4 py-1 rounded border focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                    isDarkMode
+                      ? 'bg-gray-800 text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                      : 'bg-white text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                  }`}
                   onClick={() => router.push('/')}
                 >
                   Back
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1 bg-white text-blue-400 rounded border border-blue-400 hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className={`px-4 py-1 rounded border focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                    isDarkMode
+                      ? 'bg-gray-800 text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                      : 'bg-white text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                  }`}
                 >
                   Login
                 </button>
@@ -107,13 +117,26 @@ export default function Login() {
                 </p>
                 <button 
                   type="button"
-                  className="px-2 py-1 bg-white rounded text-xs hover:bg-gray-200"
+                  className={`px-2 py-1 rounded text-xs hover:bg-gray-200 ${
+                    isDarkMode ? 'bg-gray-800 text-blue-400 hover:bg-gray-700' : 'bg-white'
+                  }`}
                   onClick={() => router.push('/signup')}>
                     Sign up
                 </button>
               </div>
             </form>
           </div>
+          <button
+                onClick={toggleDarkMode}
+                className={`fixed bottom-4 right-4 p-3 rounded-full shadow-md focus:outline-none ${
+                    isDarkMode
+                        ? 'bg-gray-700 text-white hover:bg-gray-600'
+                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+                title="Toggle Theme"
+            >
+                {isDarkMode ? '☀️' : '🌙'}
+            </button>
         </div>
       </div>
     );

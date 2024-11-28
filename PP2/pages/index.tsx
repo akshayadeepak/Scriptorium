@@ -155,7 +155,7 @@ export default function Home() {
 
       {/* Theme Toggle Button - Moved to Bottom Right */}
       <button onClick={toggleDarkMode} className={styles.themeToggleButton}>
-        {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+        {isDarkMode ? '☀️' : '🌙'}
       </button>
 
       {/* Cookie Notification */}

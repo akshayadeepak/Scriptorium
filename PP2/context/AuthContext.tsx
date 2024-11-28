@@ -12,7 +12,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     avatar: string;
-    setAvatar: (avatar: string) => void;
+    handleSetAvatar: (avatar: string) => void;
     login: (token: string, userData: User) => Promise<void>;
     logout: () => void;
     isLoggedIn: boolean;
@@ -32,42 +32,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 const token = localStorage.getItem('token');
                 const storedUser = localStorage.getItem('user');
-
-                console.log('Stored token:', token);
-                console.log('Stored user:', storedUser);
-
+                const storedAvatar = localStorage.getItem('avatar');
+    
                 if (token && storedUser) {
                     const payload = verifyToken(token);
-                    console.log('Verification result:', payload);
-
                     if (payload && payload.userId) {
-                        try {
-                            const userData = JSON.parse(storedUser);
-                            setUser(userData);
-                            setIsLoggedIn(true);
-                            console.log('Auth initialized successfully');
-                        } catch (parseError) {
-                            console.log('Error parsing user data from localStorage:', parseError);
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('user');
-                        }
+                        const userData = JSON.parse(storedUser);
+                        setUser(userData);
+                        setAvatar(storedAvatar || '');
+                        setIsLoggedIn(true);
                     } else {
-                        console.log('Token verification failed, clearing auth state');
                         localStorage.removeItem('token');
                         localStorage.removeItem('user');
+                        localStorage.removeItem('avatar');
                     }
                 }
             } catch (error) {
                 console.error('Auth initialization error:', error);
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
+                localStorage.removeItem('avatar');
             } finally {
-                setIsLoading(false); // Ensure this only runs after all logic completes
+                setIsLoading(false);
             }
         };
-
+    
         initializeAuth();
     }, []);
+    
 
     const login = async (token: string, userData: User) => {
         console.log('Login called with:', { token, userData });
@@ -89,8 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return <div>Loading...</div>;
     }
 
+    const handleSetAvatar = (avatar: string) => {
+        setAvatar(avatar);
+        localStorage.setItem('avatar', avatar);
+    };
+    
     return (
-        <AuthContext.Provider value={{ user, avatar, setAvatar, login, logout, isLoggedIn, isLoading }}>
+        <AuthContext.Provider value={{ user, avatar, handleSetAvatar, login, logout, isLoggedIn, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
