@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import styles from './code-templates.module.css';
+import { useTheme } from '../context/ThemeContext'; // Import ThemeContext
 
 export default function Signup() {
     const router = useRouter();
@@ -10,6 +11,7 @@ export default function Signup() {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [error, setError] = useState('');
+    const { isDarkMode, toggleDarkMode } = useTheme(); // Use the theme context
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,13 +78,13 @@ export default function Signup() {
     };
 
     return (
-        <div className={`${styles.blogBackground} h-[calc(100vh-64px)]`}>
+        <div className={`${styles.blogBackground} h-[calc(100vh-64px)] ${isDarkMode ? styles.darkMode : ''}`}>
         <div className="min-h-screen w-full flex justify-center items-center p-5">
-        <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+        <div className={`w-full max-w-md ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white'} p-8 rounded-lg shadow-md`}>
             <h2 className="text-center mb-6 text-xl font-bold">Create your account</h2>
 
             {error && (
-            <div className="text-red-700 bg-red-100 p-3 rounded mb-4">
+            <div className={`${isDarkMode ? 'text-red-400 bg-red-900' : 'text-red-700 bg-red-100'} p-3 rounded mb-4`}>
                 {error}
             </div>
             )}
@@ -94,7 +96,7 @@ export default function Signup() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
+                className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded`}
                 required
                 />
             </div>
@@ -116,7 +118,7 @@ export default function Signup() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
+                className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded`}
                 required
                 />
             </div>
@@ -127,7 +129,7 @@ export default function Signup() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
+                className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded`}
                 required
                 />
             </div>
@@ -138,7 +140,7 @@ export default function Signup() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded"
+                className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded`}
                 required
                 />
             </div>
@@ -146,14 +148,22 @@ export default function Signup() {
             <div className="flex justify-center gap-4 mt-6">
                 <button
                 type="submit"
-                className="px-4 py-1 bg-white text-blue-400 rounded border border-blue-400 hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`px-4 py-1 rounded border focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                                    isDarkMode
+                                        ? 'bg-gray-800 text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                                        : 'bg-white text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                }`}
                 >
                 Sign Up
                 </button>
                 <button
                 type="button"
                 onClick={() => router.push('/')}
-                className="px-4 py-1 bg-white text-blue-400 rounded border border-blue-400 hover:bg-blue-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className={`px-4 py-1 rounded border focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                                    isDarkMode
+                                        ? 'bg-gray-800 text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                                        : 'bg-white text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white'
+                }`}
                 >
                 Back
                 </button>
@@ -164,14 +174,29 @@ export default function Signup() {
                 </p>
                 <button 
                   type="button"
-                  className="px-2 py-1 bg-white rounded text-xs hover:bg-gray-200"
+                  className={`px-2 py-1 rounded text-xs hover:bg-gray-200 ${
+                                    isDarkMode ? 'bg-gray-800 text-blue-400 hover:bg-gray-700' : 'bg-white'
+                  }`}
                   onClick={() => router.push('/login')}>
                     Login
                 </button>
               </div>
             </form>
         </div>
+        {/* Theme Toggle Button */}
+            <button
+                onClick={toggleDarkMode}
+                className={`fixed bottom-4 right-4 p-3 rounded-full shadow-md focus:outline-none ${
+                    isDarkMode
+                        ? 'bg-gray-700 text-white hover:bg-gray-600'
+                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                }`}
+                title="Toggle Theme"
+            >
+                {isDarkMode ? '☀️' : '🌙'}
+            </button>
         </div>
+        
         </div>
     );
 } 
