@@ -101,7 +101,7 @@ const EditProfile: React.FC = () => {
                                     <div className="w-1/3 p-4">
                                         <h3 className="text-center text-lg font-bold text-gray-800">Select Avatar</h3>
                                         <div className="grid grid-cols-3 gap-4 mt-4">
-                                            {['https://csc309pp2profilepictures.s3.us-east-2.amazonaws.com/test1.png'].map((avatar, index) => (
+                                            {Array.from({ length: 9 }, (_, i) => `https://csc309pp2profilepictures.s3.us-east-2.amazonaws.com/test${i + 2}.png`).map((avatar, index) => (
                                                 <div key={index} className="flex justify-center">
                                                     <img 
                                                         src={avatar} 
