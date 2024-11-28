@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
 import { useTheme } from '../context/ThemeContext'; // Import ThemeContext
+import Navbar from '@/components/Navbar';
 
 export default function Login() {
     const router = useRouter();
