@@ -749,7 +749,13 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                     value={timeoutDuration || ''}
                                     onChange={(e) => {
                                         const value = e.target.value;
-                                        setTimeoutDuration(value ? Number(value) : null);
+                                        const numericValue = value ? Number(value) : null;
+                                        // Enforce a maximum timeout of 60 seconds
+                                        if (numericValue !== null && numericValue > 60) {
+                                            setTimeoutDuration(60);
+                                        } else {
+                                            setTimeoutDuration(numericValue);
+                                        }
                                     }}
                                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
