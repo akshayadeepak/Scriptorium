@@ -272,17 +272,17 @@ const CodeTemplates = () => {
         >
           {isDarkMode ? '☀️' : '🌙'}
         </button>
-        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', paddingBottom: '20px' }}>
+        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 mb-4 rounded-lg" style={{ maxWidth: '97.5%', paddingBottom: '20px' }}>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
-          <div className="flex items-center mb-4 justify-center">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Code Templates</h1>
+          <div className="flex items-center justify-center">
+            <h1 className="text-2xl font-bold text-gray-800">Code Templates</h1>
           </div>
 
           {/* Search Bar */}
-          <div className="flex items-center mb-4 justify-center"></div>
-          <div className="relative mb-6 flex items-center space-x-4 p-6">
+          <div className="flex items-center justify-center"></div>
+          <div className="relative flex items-center space-x-4 p-6">
             <input
               type="text"
               placeholder="Search templates..."
@@ -322,7 +322,7 @@ const CodeTemplates = () => {
 
           {/* Templates */}
           <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
-            <div className="overflow-y-auto max-h-[calc(100vh-32rem)]">
+            <div className="max-h-[calc(100vh-32rem)]">
               {(searchQuery ? filteredTemplates : templates).length === 0 ? (
                 <p className="text-center text-gray-600 italic p-8">No templates available</p>
               ) : (
