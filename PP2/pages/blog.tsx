@@ -88,10 +88,10 @@ export default function Blog() {
   const [templateToReport, setTemplateToReport] = useState<BlogPost | null>(null);
   const [commentToReport, setCommentToReport] = useState<Comment | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState<string>('');
-  const [replyToCommentId, setReplyToCommentId] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState<Record<number, string>>({});
+  const [replyBoxVisible, setReplyBoxVisible] = useState<Record<number, boolean>>({});
   const [showCommentInput, setShowCommentInput] = useState<Record<number, boolean>>({});
-  const [replyBoxVisible, setReplyBoxVisible] = useState<boolean>(false);
+  
 
   const router = useRouter();
 
@@ -352,11 +352,20 @@ export default function Blog() {
 
         if (response.ok) {
             setCommentContent('');
-            // Update the posts state to include the new comment
+            // Update the posts state to include the new comment immediately
             setPosts(prevPosts => 
                 prevPosts.map(post => 
                     post.id === postId 
-                        ? { ...post, comments: [...post.comments, { id: data.id, content: commentContent, author: { id: user.id, username: user.username }, createdAt: new Date().toISOString(), hiddenFlag: false } ] } 
+                        ? { 
+                            ...post, 
+                            comments: [...post.comments, { 
+                                id: data.id, 
+                                content: commentContent, 
+                                author: { id: user.id, username: user.username }, 
+                                createdAt: new Date().toISOString(), 
+                                hiddenFlag: false 
+                            }] 
+                        } 
                         : post
                 )
             );
@@ -365,11 +374,6 @@ export default function Blog() {
         console.error('Error posting comment:', error);
     }
 };
-
-  const handleDeleteClick = (postId: number) => {
-    setPostToDelete(postId);
-    setShowConfirmDeletePopup(true);
-  };
 
   const confirmDelete = async () => {
     if (!postToDelete || !user) return;
@@ -641,10 +645,14 @@ export default function Blog() {
         });
 
         if (response.ok) {
+            // Update the posts state to remove the deleted comment immediately
             setPosts(prevPosts => 
                 prevPosts.map(post => 
                     post.id === postId 
-                        ? { ...post, comments: post.comments.filter(comment => comment.id !== commentId) } 
+                        ? { 
+                            ...post, 
+                            comments: post.comments.filter(comment => comment.id !== commentId) // Filter out the deleted comment
+                          } 
                         : post
                 )
             );
@@ -813,9 +821,23 @@ export default function Blog() {
     }
   }
 
-  const handleReplies = async (postId: number, commentId: number) => {
+  const toggleReplyBox = (commentId: number) => {
+    setReplyBoxVisible(prev => ({
+        ...prev,
+        [commentId]: !prev[commentId] // Toggle visibility for the specific comment
+    }));
+  };
+
+  const handleReplyChange = (commentId: number, value: string) => {
+    setReplyContent(prev => ({
+        ...prev,
+        [commentId]: value // Update content for the specific comment
+    }));
+  };
+
+  const handleReplies = async (postId: number, commentId: number, replyContent: string) => {
     if (!user) return;
-    if (replyContent.trim() === "") return;
+    if (!replyContent || replyContent.trim() === "") return;
 
     try {
         const token = localStorage.getItem('token');
@@ -835,13 +857,23 @@ export default function Blog() {
             return;
         }
 
-        // Update the posts state to include the new reply
+        // Update the posts state to include the new reply immediately
         setPosts(prevPosts => 
             prevPosts.map(post => 
                 post.id === postId 
                     ? { 
                         ...post, 
-                        comments: [...post.comments, { ...data, parentCommentId: commentId }] 
+                        comments: [
+                            ...post.comments, 
+                            { 
+                                id: data.id, // Use the ID returned from the server
+                                content: replyContent, 
+                                author: { id: user.id, username: user.username }, 
+                                createdAt: new Date().toISOString(), 
+                                hiddenFlag: false, 
+                                parentCommentId: commentId // Set the parent comment ID
+                            } 
+                        ] 
                     } 
                     : post
             )
@@ -849,7 +881,10 @@ export default function Blog() {
 
         // Clear the reply input
         setReplyContent('');
-        setReplyBoxVisible(false);
+        setReplyBoxVisible(prev => ({
+            ...prev,
+            [commentId]: false // Set the specific comment's reply box to false
+        }));
     } catch (error) {
         console.error('Error posting reply:', error);
     }
@@ -1146,27 +1181,27 @@ export default function Blog() {
                                                 <button onClick={() => handleUnHideComment(post.id, rootComment.id)} className="px-3 py-1 ml-2 bg-gray-300 text-white rounded-md hover:bg-gray-500 transition-colors text-sm">Unhide</button>
                                               )}
                                               {user && (
-                                                <button onClick={() => setReplyBoxVisible(true)} className="text-blue-500 hover:underline ml-2">Reply</button>
+                                                <button onClick={() => toggleReplyBox(rootComment.id)} className="text-blue-500 hover:underline ml-2">Reply</button>
                                               )}
                                             </div>
 
                                             {/* Render reply input box */}
-                                            {replyBoxVisible && (
+                                            {replyBoxVisible[rootComment.id] && (
                                               <div className="reply-input mt-2 ml-6">
                                                 <textarea
-                                                  value={replyContent}
-                                                  onChange={(e) => setReplyContent(e.target.value)}
+                                                  value={replyContent[rootComment.id] || ''}
+                                                  onChange={(e) => handleReplyChange(rootComment.id, e.target.value)}
                                                   placeholder="Write a reply..."
                                                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-transparent resize-none mb-3"
                                                 />
                                                 <button
-                                                  onClick={() => handleReplies(post.id, rootComment.id)}
+                                                  onClick={() => handleReplies(post.id, rootComment.id, replyContent[rootComment.id])}
                                                   className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition"
                                                 >
                                                   Submit Reply
                                                 </button>
                                                 <button
-                                                  onClick={() => setReplyBoxVisible(false)}
+                                                  onClick={() => toggleReplyBox(rootComment.id)}
                                                   className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition ml-2"
                                                 >
                                                   Cancel
