@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import styles from './code-templates.module.css';
 import Navbar from '../components/Navbar';
 import { codeTemplate } from '@prisma/client';
+import { useTheme } from '../context/ThemeContext'; // Import ThemeContext
 
 interface CodeTemplate {
   id: number;
@@ -59,6 +60,7 @@ const SavedCodeTemplates = () => {
   const [forkedExplanation, setForkedExplanation] = useState('');
   const [forkedTags, setForkedTags] = useState('');
   const [templateToFork, setTemplateToFork] = useState<CodeTemplate | null>(null);
+  const { isDarkMode, toggleDarkMode } = useTheme(); // Use the theme context
 
   const router = useRouter();
 
@@ -202,16 +204,30 @@ const SavedCodeTemplates = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className={`h-screen overflow-hidden ${isDarkMode ? styles.darkMode : ''}`}>
       <Navbar />
       <div className={`${styles.blogBackground} overflow-hidden`}>
-
-        <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', marginBottom: '20px', paddingBottom: '20px' }}>
+        <button
+          onClick={toggleDarkMode}
+          className={`fixed top-4 left-4 p-3 rounded-full shadow-md focus:outline-none ${
+            isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+          title="Toggle Theme"
+          aria-label="Toggle Theme"
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+        <div
+          className={`container mx-auto px-4 pt-8 shadow mt-4 rounded-lg ${
+            isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-800'
+          }`}
+          style={{ maxWidth: '97.5%', marginBottom: '20px', paddingBottom: '20px' }}
+        >
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
 
           <div className="flex items-center mb-4 justify-center">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Saved Templates</h1>
+            <h1 className="text-2xl font-bold mb-4">Saved Templates</h1>
           </div>
 
           {/* Search Bar */}
@@ -221,19 +237,30 @@ const SavedCodeTemplates = () => {
               placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full px-6 py-4 text-lg border border-gray-200 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14"
+              className={`w-full px-6 py-4 text-lg border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1da1f2] focus:border-transparent transition-all duration-300 pl-14 ${
+                isDarkMode ? 'bg-gray-700 text-gray-200 border-gray-600' : 'bg-white text-gray-800 border-gray-200'
+              }`}
             />
           </div>
 
           {/* Templates */}
-          <div className="bg-white shadow rounded-lg p-6 overflow-y-auto">
+          <div
+            className={`shadow rounded-lg p-6 overflow-y-auto ${
+              isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-white'
+            }`}
+          >
             <div className="ooverflow-y-auto max-h-[calc(100vh-28rem)]">
               {(searchQuery ? filteredTemplates : templates).length === 0 ? (
                 <p className="text-center text-gray-600 italic p-8">No templates available</p>
               ) : (
                 <ul className="list-none p-0">
                   {(searchQuery ? filteredTemplates : templates).map((template) => (
-                    <li key={template.id} className="mb-6 p-4 border border-gray-300 rounded-lg transition hover:shadow-lg">
+                    <li
+                      key={template.id}
+                      className={`mb-6 p-4 border rounded-lg transition hover:shadow-lg ${
+                        isDarkMode ? 'border-gray-700' : 'border-gray-300'
+                      }`}
+                    >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="text-lg font-bold text-gray-800 flex-1">
                           {template.title} <span className="text-gray-600 text-sm">{`(${template.language})`}</span>
@@ -285,10 +312,20 @@ const SavedCodeTemplates = () => {
           </div>
 
           {/* Pagination Controls */}
-          <div className="bg-white border-t border-gray-300 p-4 fixed bottom-0 left-0 w-full mt-4 p-4 flex justify-between z-10">
+          <div
+            className={`border-t p-4 fixed bottom-0 left-0 w-full mt-4 p-4 flex justify-between z-10 ${
+              isDarkMode
+                ? 'bg-gray-800 text-gray-200 border-gray-700'
+                : 'bg-white text-gray-800 border-gray-300'
+            }`}
+          >
             <button
               onClick={prevPage}
-              className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`px-4 py-2 text-sm rounded-lg hover:bg-gray-300 ${
+                isDarkMode
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700'
+              } ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={currentPage === 1}
             >
               Previous
@@ -296,7 +333,11 @@ const SavedCodeTemplates = () => {
             <span>Page {currentPage}</span>
             <button
               onClick={nextPage}
-              className={`px-4 py-2 text-sm bg-gray-200 rounded-lg hover:bg-gray-300 ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`px-4 py-2 text-sm rounded-lg hover:bg-gray-300 ${
+                isDarkMode
+                  ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700'
+              } ${filteredTemplates.length < 10 ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={filteredTemplates.length < 10}
             >
               Next
@@ -304,8 +345,16 @@ const SavedCodeTemplates = () => {
 
             {/* Fork Template Modal */}
         {isForkModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div
+              className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-800'
+              }`}
+            >
+            <div
+                className={`rounded-lg p-6 w-full max-w-md ${
+                  isDarkMode ? 'bg-gray-800' : 'bg-white'
+                }`}
+              >
               <h3 className="text-lg font-semibold mb-4">Fork Template</h3>
               <div className="space-y-4">
                 <input
@@ -313,20 +362,26 @@ const SavedCodeTemplates = () => {
                   value={forkedTemplateName}
                   onChange={(e) => setForkedTemplateName(e.target.value)}
                   placeholder="Template name"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : ''
+                    }`}
                 />
                 <textarea
                   value={forkedExplanation}
                   onChange={(e) => setForkedExplanation(e.target.value)}
                   placeholder="Explanation (optional)"
-                  className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className={`w-full h-32 p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : ''
+                    }`}
                 />
                 <input
                   type="text"
                   value={forkedTags}
                   onChange={(e) => setForkedTags(e.target.value)}
                   placeholder="Tags (comma-separated)"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : ''
+                    }`}
                 />
                 <div className="flex justify-end space-x-2">
                   <button
@@ -343,7 +398,9 @@ const SavedCodeTemplates = () => {
                       setForkedTags('');
                       setTemplateToFork(null);
                     }}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                    className={`px-4 py-2 rounded-md hover:bg-gray-300 transition-colors ${
+                        isDarkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700'
+                      }`}
                   >
                     Cancel
                   </button>

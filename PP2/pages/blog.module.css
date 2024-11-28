@@ -24,3 +24,8 @@
     position: relative;
     z-index: 1;
 } 
+
+/* Dark Mode Styles */
+.darkMode .blogBackground::before {
+  background-color: rgba(26, 32, 44, 0.8);
+}
