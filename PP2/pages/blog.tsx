@@ -111,6 +111,7 @@ export default function Blog() {
             return acc;
           }, {});
           setVotes(initialVotes);
+          setFilteredBlogs(data);
         }
       } catch (error) {
         console.error('Error fetching posts:', error);
