@@ -9,7 +9,6 @@ import { useAuth } from '../context/AuthContext';
 export default function Home() {
   const router = useRouter();
   const { isLoggedIn, logout } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentMessage, setCurrentMessage] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false); // State to manage theme
   const [showCookieNotice, setShowCookieNotice] = useState(true);
@@ -31,16 +30,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [messages.length]);
 
-  const handleLogout = () => {
-    logout();
-  };
-
-  // Handle search button click to navigate to the search results page
-  const handleSearch = () => {
-    if (searchTerm.trim()) {
-      router.push(`/search?query=${searchTerm}`);
-    }
-  };
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
