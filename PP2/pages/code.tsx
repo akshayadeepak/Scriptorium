@@ -10,6 +10,8 @@ import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { javascript } from '@codemirror/lang-javascript';
 import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
+import { githubLight, githubDark } from '@uiw/codemirror-theme-github'; // Import themes
+import { useTheme } from '../context/ThemeContext'; // Assuming you have a ThemeContext
 
   export default function Code() {
     const { query } = useRouter();
@@ -28,6 +30,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [timeoutDuration, setTimeoutDuration] = useState<number | null>(null);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const { isDarkMode, toggleDarkMode } = useTheme(); // Use theme context
 
     useEffect(() => {
         if (query.code) {
@@ -415,12 +418,12 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
     };
 
     return (
-        <div className="h-screen overflow-hidden">
+        <div className={`h-screen overflow-hidden ${isDarkMode ? styles.darkMode : ''}`}>
             <Navbar />
             <div className={styles.codeBackground}>
                 <div className="flex-1 flex">
                     {/* Language Icons Sidebar - added pt-4 for top padding */}
-                    <div className="w-15 bg-white/80 backdrop-blur-sm shadow-lg flex flex-col space-y-4 pt-4">
+                    <div className={`w-15 ${isDarkMode ? 'bg-gray-800' : 'bg-white/80'} backdrop-blur-sm shadow-lg flex flex-col space-y-4 pt-4`}>
                         <button 
                             onClick={() => setLanguage('python')}
                             className={`p-2 rounded-lg transition-colors ${language === 'python' ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
@@ -542,6 +545,13 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                             />
                         </button>
                         <div className="flex-grow"></div>
+			<button
+                            onClick={toggleDarkMode}
+                            className={`p-2 rounded-lg ${isDarkMode ? 'hover:bg-gray-700 text-white' : 'hover:bg-gray-100'}`}
+                            title="Toggle Theme"
+                        >
+                            {isDarkMode ? '🌙' : '☀️'}
+                        </button>
                         <button 
                             onClick={() => setIsSettingsOpen(true)}
                             className="p-2 rounded-lg hover:bg-gray-100 pb-5"
@@ -556,7 +566,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                             {/* Left Column - Code Editor */}
                             <div className="h-[calc(100vh-96px)]">
-                                <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                                <div className={`h-10 px-4 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'} font-mono text-sm rounded-t-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} border-b-0 flex justify-between items-center`}>
                                     <span>
                                         {language === 'python' && 'main.py'}
                                         {language === 'java' && 'Main.java'}
@@ -572,11 +582,11 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                     <div className="flex gap-2 relative">
                                         <div className="relative inline-flex items-center group">
                                             <span 
-                                                className="cursor-pointer bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
+                                                className={`cursor-pointer rounded-full w-6 h-6 flex items-center justify-center ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-300 text-gray-700'}`}
                                             >
                                                 ?
                                             </span>
-                                            <div className="absolute hidden group-hover:block bg-gray-700 text-white w-[1000%] text-xs rounded p-2 top-full left-1/2 transform -translate-x-1/2 mt-1 z-50">
+                                            <div className={`absolute hidden group-hover:block ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-700 text-white'} w-[1000%] text-xs rounded p-2 top-full left-1/2 transform -translate-x-1/2 mt-1 z-50`}>
                                                 Note: you cannot run code that requires a graphical interface or user input.
                                             </div>
                                         </div>
@@ -589,9 +599,9 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         <button
                                             onClick={() => setActiveTab(activeTab === 2 ? 1 : 2)}
                                             className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                activeTab === 2 
-                                                    ? 'bg-gray-300 text-gray-700' 
-                                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                activeTab === 2
+                                                    ? `${isDarkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-300 text-gray-700'}`
+                                                    : `${isDarkMode ? 'bg-gray-600 text-gray-200 hover:bg-gray-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`
                                             }`}
                                         >
                                             Stdin
@@ -602,9 +612,9 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                                     onClick={handleSaveClick}
                                                     disabled={!code.trim()}
                                                     className={`px-3 py-1 text-sm rounded transition-colors ${
-                                                        code.trim() 
-                                                            ? 'bg-blue-500 text-white hover:bg-blue-600' 
-                                                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                    code.trim()
+                                                        ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                                        : `${isDarkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-300 text-gray-500'} cursor-not-allowed`
                                                     }`}
                                                 >
                                                     Save
@@ -613,7 +623,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                     </div>
                                 </div>
                                 <div className="relative h-[calc(100%-2.5rem)]">
-                                    <div className="h-full rounded-b-lg overflow-hidden border border-gray-300">
+                                    <div className={`h-full rounded-b-lg overflow-hidden border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}>
                                         <CodeMirror
                                             value={code}
                                             height="100%"
@@ -638,13 +648,13 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                             }}
                                         />
                                         {activeTab === 2 && (
-                                            <div className="absolute bottom-0 left-0 right-0 bg-white border border-gray-300 p-4 rounded-b-lg">
+                                            <div className={`absolute bottom-0 left-0 right-0 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} p-4 rounded-b-lg`}>
                                                 <input
                                                     type="text"
                                                     value={stdin}
                                                     onChange={handleStdinChange}
                                                     placeholder="Enter input values..."
-                                                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                                                    className={`w-full p-3 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500`}
                                                 />
                                             </div>
                                         )}
@@ -654,7 +664,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
 
                             {/* Right Column - Output */}
                             <div className="h-[calc(100vh-96px)]">
-                                <div className="h-10 px-4 bg-gray-100 text-gray-700 font-mono text-sm rounded-t-lg border border-gray-300 border-b-0 flex justify-between items-center">
+                                <div className={`h-10 px-4 ${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-100 text-gray-700'} font-mono text-sm rounded-t-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} border-b-0 flex justify-between items-center`}>
                                     <span>Output</span>
                                     <button
                                         onClick={() => {
@@ -666,13 +676,13 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         Clear
                                     </button>
                                 </div>
-                                <div className="h-[calc(100%-40px)] border border-gray-300 rounded-b-lg bg-white flex flex-col overflow-hidden">
+                                <div className={`h-[calc(100%-40px)] border ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} rounded-b-lg ${isDarkMode ? 'bg-gray-900' : 'bg-white'} flex flex-col overflow-hidden`}>
                                     <textarea
                                         readOnly
                                         value={output || error}
                                         className={`flex-1 p-4 font-mono text-sm resize-none focus:outline-none overflow-auto ${
-                                            error ? 'text-red-500' : 'text-gray-700'
-                                        }`}
+                                            error ? 'text-red-500' : `${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`
+                                        } ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
                                         placeholder="Output will appear here..."
                                     />
                                 </div>
@@ -685,7 +695,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
             {/* Save Template Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                    <div className={`${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white'} rounded-lg p-6 w-full max-w-md`}>
                         <h3 className="text-lg font-semibold mb-4">Save Template</h3>
                         
                         <div className="space-y-4">
@@ -694,14 +704,14 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                 value={templateName}
                                 onChange={(e) => setTemplateName(e.target.value)}
                                 placeholder="Template name"
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                             />
                             
                             <textarea
                                 value={explanation}
                                 onChange={(e) => setExplanation(e.target.value)}
                                 placeholder="Explanation (optional)"
-                                className="w-full h-32 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                                className={`w-full h-32 p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none`}
                             />
                             
                             <input
@@ -709,7 +719,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                 value={tags}
                                 onChange={(e) => setTags(e.target.value)}
                                 placeholder="Tags (comma-separated)"
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                             />
                             
                             <div className="flex justify-end space-x-2">
@@ -726,7 +736,7 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                         setTags('');
                                         setExplanation('');
                                     }}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                    cclassName={`px-4 py-2 ${isDarkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} rounded-md transition-colors`}
                                 >
                                     Cancel
                                 </button>
@@ -739,8 +749,8 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
             {/* Settings Modal */}
             {isSettingsOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                        <h3 className="text-lg font-semibold mb-4">Settings</h3>
+                    <div className={`${isDarkMode ? 'bg-gray-800 text-gray-200' : 'bg-white'} rounded-lg p-6 w-full max-w-md`}>
+                            <h3 className="text-lg font-semibold mb-4">Settings</h3>
                         <div className="space-y-4">
                             <label className="block">
                                 Timeout (seconds):
@@ -757,13 +767,13 @@ import { linter, lintGutter, Diagnostic } from '@codemirror/lint';
                                             setTimeoutDuration(numericValue);
                                         }
                                     }}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    className={`w-full p-2 border ${isDarkMode ? 'border-gray-600 bg-gray-700 text-gray-200' : 'border-gray-300'} rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                                 />
                             </label>
                             <div className="flex justify-end space-x-2">
                                 <button
                                     onClick={() => setIsSettingsOpen(false)}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                    className={`px-4 py-2 ${isDarkMode ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'} rounded-md transition-colors`}
                                 >
                                     Close
                                 </button>
