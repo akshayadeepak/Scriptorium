@@ -901,20 +901,22 @@ export default function Blog() {
               <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-sm p-6 sticky top-8 h-[calc(100vh-112.5px)] mt-8 overflow-y-auto">
                 <h2 className="text-xl font-bold text-gray-700 mb-4">Tags</h2>
                 <div className="space-y-2">
-                    {availableTags.map((tag) => (
-                      <div
-                        key={tag.id}
-                        className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors group"
-                        onClick={() => handleTagClick(tag.name)}  // Handle tag click to toggle filter
-                      >
-                        <span className={`text-gray-600 group-hover:text-[#1da1f2] ${activeTags.includes(tag.name) ? 'font-semibold' : ''}`}>
-                          #{tag.name}
-                        </span>
-                        <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
-                          {tag._count ? tag._count.blogPosts : 0}
-                        </span>
-                      </div>
-                    ))}
+                    {availableTags
+                      .sort((a, b) => b._count.blogPosts - a._count.blogPosts) // Sort tags by number of blog posts in descending order
+                      .map((tag) => (
+                        <div
+                          key={tag.id}
+                          className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 cursor-pointer transition-colors group"
+                          onClick={() => handleTagClick(tag.name)}  // Handle tag click to toggle filter
+                        >
+                          <span className={`text-gray-600 group-hover:text-[#1da1f2] ${activeTags.includes(tag.name) ? 'font-semibold' : ''}`}>
+                            #{tag.name}
+                          </span>
+                          <span className="text-sm text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                            {tag._count ? tag._count.blogPosts : 0}
+                          </span>
+                        </div>
+                      ))}
                   </div>
               </div>
             </div>
@@ -1077,7 +1079,7 @@ export default function Blog() {
                                   <div className="code-template mt-4">
                                     <h4 className="font-bold mb-2">{post.links[0].title} ({post.links[0].language})</h4>
                                     <pre className="bg-gray-100 p-2 rounded my-2">
-                                      <code>{post.links[0].content}</code>
+                                      <code>{post.links[0].content.slice(0, 100)}...</code>
                                     </pre>
                                     <div className="flex gap-2 items-center mt-4 pt-4 border-t border-gray-100">
                                     <button
