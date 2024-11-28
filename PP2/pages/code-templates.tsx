@@ -260,7 +260,18 @@ const CodeTemplates = () => {
     <div className={`h-screen overflow-hidden ${isDarkMode ? styles.darkMode : ''}`}>
       <Navbar />
       <div className={`${styles.blogBackground} overflow-hidden`}>
-        
+        <button
+          onClick={toggleDarkMode}
+          className={`fixed top-4 left-4 p-3 rounded-full shadow-md focus:outline-none ${
+            isDarkMode
+              ? 'bg-gray-700 text-white hover:bg-gray-600'
+              : 'bg-white text-gray-700 hover:bg-gray-100'
+          }`}
+          title="Toggle Theme"
+          aria-label="Toggle Theme"
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
         <div className="container mx-auto px-4 pt-8 bg-white shadow mt-4 rounded-lg" style={{ maxWidth: '97.5%', paddingBottom: '20px' }}>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           {successMessage && <p className="text-green-500 text-center mb-4">{successMessage}</p>}
