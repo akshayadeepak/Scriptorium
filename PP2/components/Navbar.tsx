@@ -57,21 +57,7 @@ export default function Navbar() {
                 </span>
             </div>
             <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                    <input
-                        type="text"
-                        placeholder="Search blog posts, code templates..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="h-7 px-3 border border-gray-200 rounded focus:border-[#1da1f2] focus:outline-none w-[250px] text-sm transition-colors"
-                    />
-                    <button 
-                        onClick={handleSearch} 
-                        className="h-7 px-3 text-sm border border-[#1da1f2] rounded bg-transparent text-[#1da1f2] flex items-center justify-center hover:bg-[#00cfc1] hover:border-[#00cfc1] hover:text-white transition-all"
-                    >
-                        Search
-                    </button>
-                </div>
+                
                 {!isLoggedIn ? (
                     <div className="flex items-center gap-3">
                         <button 
