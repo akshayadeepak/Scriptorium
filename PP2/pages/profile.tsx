@@ -175,7 +175,7 @@ const Profile: React.FC = () => {
                 <div style={{ position: 'relative', zIndex: 1 }}>
                     <Navbar />
                     <div className="flex w-full p-4">
-                        <div className="w-1/3 p-4 bg-white bg-opacity-80 rounded-l-lg shadow h-[88.5vh]">
+                        <div className="w-1/3 px-4 bg-white bg-opacity-80 rounded-l-lg shadow h-[95.5vh]">
                             <div className="flex justify-center">
                                 <h2 className="text-center text-2xl font-bold text-gray-800 m-6">Profile</h2>
                             </div>
@@ -211,14 +211,14 @@ const Profile: React.FC = () => {
                                 <div className="flex justify-center">
                                     <button 
                                         onClick={() => router.push('/edit-profile')}
-                                        className="px-6 py-3 m-7 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        className="px-6 py-3 m-4 bg-blue-500 text-white rounded hover:bg-blue-600"
                                     >
                                         Edit Profile
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <div className="w-2/3 p-4 bg-white bg-opacity-80 rounded-r-lg shadow h-[88.5vh] flex flex-col">
+                        <div className="w-2/3 p-4 bg-white bg-opacity-80 rounded-r-lg shadow h-[95.5vh] flex flex-col">
                             <div className="flex justify-center">
                                 <h2 className="text-center text-2xl font-bold text-gray-800 m-6">My Code Templates</h2>
                             </div>

@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 
 const EditProfile: React.FC = () => {
     const router = useRouter();
-    const { user, setAvatar } = useAuth();
+    const { user, handleSetAvatar } = useAuth();
     const [profile, setProfile] = useState({
         username: '',
         email: '',
@@ -17,6 +17,17 @@ const EditProfile: React.FC = () => {
     });
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const fixedAvatars = [
+        '/avatars/placeholderpfp.webp',
+        '/avatars/avatar1.png',
+        '/avatars/avatar2.png',
+        '/avatars/avatar3.png',
+        '/avatars/avatar4.png',
+        '/avatars/avatar5.png',
+        '/avatars/avatar6.png',
+        '/avatars/avatar7.png',
+        '/avatars/avatar8.png',
+    ];
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -46,7 +57,7 @@ const EditProfile: React.FC = () => {
     const handleAvatarSelect = (avatar: string) => {
         console.log('Selected Avatar:', avatar);
         setProfile(prevState => ({ ...prevState, avatar }));
-        setAvatar(avatar);
+        handleSetAvatar(avatar);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +112,7 @@ const EditProfile: React.FC = () => {
                                     <div className="w-1/3 p-4">
                                         <h3 className="text-center text-lg font-bold text-gray-800">Select Avatar</h3>
                                         <div className="grid grid-cols-3 gap-4 mt-4">
-                                            {['https://csc309pp2profilepictures.s3.us-east-2.amazonaws.com/test1.png'].map((avatar, index) => (
+                                            {fixedAvatars.map((avatar, index) => (
                                                 <div key={index} className="flex justify-center">
                                                     <img 
                                                         src={avatar} 
