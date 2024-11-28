@@ -478,15 +478,17 @@ export default function Blog() {
     const query = e.target.value;
     setSearchQuery(query);
 
-
     const lowerCaseQuery = query.toLowerCase();
-      const filtered = posts.filter(
-        (post) =>
-          post.title.toLowerCase().includes(lowerCaseQuery) ||
-          post.content.toLowerCase().includes(lowerCaseQuery)
-      );
-      setFilteredBlogs(filtered);
-    };
+    const filtered = posts.filter((post) => {
+        const matchesTitle = post.title.toLowerCase().includes(lowerCaseQuery);
+        const matchesContent = post.content.toLowerCase().includes(lowerCaseQuery);
+        const matchesTags = post.tags.some(tag => tag.name.toLowerCase().includes(lowerCaseQuery));
+        const matchesCode = post.links.some(link => link.content.toLowerCase().includes(lowerCaseQuery));
+
+        return matchesTitle || matchesContent || matchesTags || matchesCode;
+    });
+    setFilteredBlogs(filtered);
+  };
 
   const handleNewPostClick = () => {
     if (!user) {
@@ -826,7 +828,7 @@ export default function Blog() {
   const toggleReplyBox = (commentId: number) => {
     setReplyBoxVisible(prev => ({
         ...prev,
-        [commentId]: !prev[commentId] // Toggle visibility for the specific comment
+        [commentId]: !prev[commentId]
     }));
   };
 
@@ -923,7 +925,7 @@ export default function Blog() {
         }`}
       >
       {/* Theme Toggle Button */}
-        <button
+        {/* <button
           onClick={toggleDarkMode}
           className={`fixed top-4 left-4 p-3 rounded-full shadow-md focus:outline-none ${
             isDarkMode
@@ -934,7 +936,7 @@ export default function Blog() {
           aria-label="Toggle Theme"
         >
           {isDarkMode ? '☀️' : '🌙'}
-        </button>
+        </button> */}
         <div className="px-4 h-full">
           <div className="grid grid-cols-6 gap-8 h-full">
             {/* Left Column - Tags */}
@@ -1004,12 +1006,25 @@ export default function Blog() {
                   </div>
 
                   <div className="flex justify-center text-center gap-4">
+                    
                     <button 
                       onClick={handleNewPostClick}
                       className="px-6 py-3 bg-[#1da1f2] text-white border-none rounded-md cursor-pointer 
                                font-medium transition-all duration-300 hover:bg-[#00cfc1] hover:-translate-y-1"
                     >
                       New Post
+                    </button>
+                    <button
+                      onClick={toggleDarkMode}
+                      className={`fixed top-4 left-4 p-3 rounded-full shadow-md focus:outline-none ${
+                        isDarkMode
+                          ? 'bg-gray-700 text-white hover:bg-gray-600'
+                          : 'bg-white text-gray-700 hover:bg-gray-100'
+                      }`}
+                      title="Toggle Theme"
+                      aria-label="Toggle Theme"
+                    >
+                      {isDarkMode ? '☀️' : '🌙'}
                     </button>
                     {user && (
                       <button 
@@ -1026,7 +1041,7 @@ export default function Blog() {
                 {/* Bottom Section - Posts List */}
                 <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-6">
-                    {[...filteredPosts].map((post) => (
+                    {[...filteredBlogs].map((post) => (
                         <div key={post.id} className="post-container bg-white rounded-lg shadow-md p-4 flex">
                             {/* Voting Section */}
                             <div className="flex flex-col items-center gap-1 mr-4">
